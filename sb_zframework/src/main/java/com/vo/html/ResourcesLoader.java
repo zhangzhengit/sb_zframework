@@ -6,10 +6,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.WeakHashMap;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.HashBasedTable;
 
 /**
  * 从 resources 目录加载文件
@@ -18,68 +16,46 @@ import com.google.common.collect.Maps;
  * @date 2023年6月24日
  *
  */
+// FIXME 2023年6月29日 上午12:14:41 zhanghen:TODO 不要一次性全加载完，新增方法：一边读取一遍写入response
 public class ResourcesLoader {
-
-	private final static Map<String, Object> CACHE_MAP = new WeakHashMap<>(2, 1F);
-
 	public static final String NEW_LINE = "\n\r";
+
+	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
 
 	public static byte[] loadByteArray(final String name) {
 
-		final Object ba = CACHE_MAP.get(name);
-		if (ba != null) {
-			return (byte[]) ba;
+		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, name);
+		if (v != null) {
+			return (byte[]) v;
 		}
 
 		synchronized (name) {
-			final InputStream in = checkIN(name);
-			final byte[] ba2 = readByteArray(in);
+			final InputStream in = checkInputStream(name);
+			final byte[] ba2 = readByteArray0(in);
 
-			CACHE_MAP.put(name, ba2);
+			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, name, ba2);
 			return ba2;
 		}
 	}
 
-	private static byte[] readByteArray(final InputStream in) {
-		final BufferedInputStream bufferedInputStream = new BufferedInputStream(in);
-		final byte[] ba = new byte[1000 * 100];
-		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		while (true) {
-			try {
-				final int read = bufferedInputStream.read(ba);
-				if (read <= -1) {
-					break;
-				}
-
-				byteArrayOutputStream.write(ba, 0, read);
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-		final byte[] byteArray = byteArrayOutputStream.toByteArray();
-		return byteArray;
-	}
-
 	public static String loadString(final String name) {
-		final String v = (String) CACHE_MAP.get(name);
+
+		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.STRING, name);
 		if (v != null) {
-			return v;
+			return (String) v;
 		}
 
 		synchronized (name) {
-			final String v2 = load0(name);
-			CACHE_MAP.put(name, v2);
+			final String v2 = loadSring0(name);
+			CACHE_TABLE.put(ResourcesTypeEnum.STRING, name, v2);
 			return v2;
 		}
 	}
 
-
-
-	private static String load0(final String name) {
-		final InputStream in = checkIN(name);
-
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+	private static String loadSring0(final String name) {
+		final InputStream inputStream = checkInputStream(name);
+		final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+		final BufferedReader reader = new BufferedReader(inputStreamReader);
 
 		final StringBuilder builder = new StringBuilder();
 		while (true) {
@@ -95,16 +71,58 @@ public class ResourcesLoader {
 				e.printStackTrace();
 			}
 		}
+		try {
+			reader.close();
+			inputStreamReader.close();
+			inputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 
 		return builder.toString();
 	}
 
-	private static InputStream checkIN(final String name) {
-		final InputStream in = ResourcesLoader.class.getResourceAsStream(name);
-		if (in == null) {
-			throw new IllegalArgumentException("文件不存在,name = " + name);
+	private static byte[] readByteArray0(final InputStream inputStream) {
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+		final byte[] ba = new byte[1000 * 100];
+		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		while (true) {
+			try {
+				final int read = bufferedInputStream.read(ba);
+				if (read <= -1) {
+					break;
+				}
+
+				byteArrayOutputStream.write(ba, 0, read);
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
 		}
-		return in;
+		try {
+			// 空方法
+			byteArrayOutputStream.close();
+			bufferedInputStream.close();
+			inputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		final byte[] byteArray = byteArrayOutputStream.toByteArray();
+		return byteArray;
+	}
+
+
+	private static InputStream checkInputStream(final String name) {
+		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
+		if (inputStream == null) {
+			throw new IllegalArgumentException("资源不存在,name = " + name);
+		}
+		return inputStream;
+	}
+
+	public static enum ResourcesTypeEnum{
+
+		BINARY,STRING;
 	}
 
 }

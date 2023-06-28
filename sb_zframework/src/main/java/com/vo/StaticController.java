@@ -26,8 +26,8 @@ import cn.hutool.core.util.ArrayUtil;
 public class StaticController {
 
 	@ZRequestMapping(
-			mapping = { "/(.+)js", "/(.+)css", "/(.+)jpg", "/(.+)mp3", "/(.+)mp4","/(.+)pdf","/(.+)gif","/(.+)doc"},
-			isRegex = { true, true, true, true, true ,true,true,true})
+			mapping = { "/(.+)html", "/(.+)js", "/(.+)css", "/(.+)jpg", "/(.+)mp3", "/(.+)mp4","/(.+)pdf","/(.+)gif","/(.+)doc"},
+			isRegex = { true, true,true, true, true, true ,true,true,true})
 	public void staticResources(final HResponse response) {
 
 		final String rName = String.valueOf(ZMappingRegex.getAndRemove());
