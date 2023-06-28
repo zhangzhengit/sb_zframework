@@ -25,7 +25,6 @@ import com.vo.scanner.ZControllerScanner;
  * @date 2023年6月12日
  *
  */
-// FIXME 2023年6月20日 上午12:48:36 zhanghen: TODO ： 每个自定义注解的对应的AOP类最多只允许存在一个
 public class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
@@ -57,7 +56,7 @@ public class ZMain {
 		// 3
 		ZControllerScanner.scanAndCreateObject("com");
 
-		// 4 TODO 开始扫描  的组件的 @ZAutowired 字段
+		// 4 扫描组件的 @ZAutowired 字段
 		ZAutowiredScanner.scanAndCreateObject("com", ZComponent.class);
 		ZAutowiredScanner.scanAndCreateObject("com", ZController.class);
 
