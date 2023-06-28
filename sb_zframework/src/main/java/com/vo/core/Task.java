@@ -10,26 +10,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.configuration.PropertiesConfiguration.IOFactory;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Jedis;
-import org.springframework.data.repository.util.ReactiveWrappers.ReactiveLibrary;
-
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZRequestBody;
@@ -39,11 +32,9 @@ import com.vo.core.HRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.LineMap;
-import com.vo.http.ZConMap;
 //import com.vo.http.ZControllerMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
-import com.vo.http.ZRequestMapping;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.votool.common.CR;
@@ -51,9 +42,6 @@ import com.votool.common.CR;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.URLDecoder;
 import cn.hutool.core.util.StrUtil;
-import groovyjarjarantlr.FileLineFormatter;
-import io.protostuff.Message;
-import io.protostuff.StringSerializer.STRING;
 
 /**
  * 读取/响应的一个任务对象
@@ -109,33 +97,23 @@ public class Task {
 
 		final HRequest request = this.handleRead();
 
-		// 读取结束，开始解析
+		// 开始解析
 		final RequestLine requestLine = Task.parseRequest(request);
 
-		// 匹配fullname
+		// 匹配path
 		final String path = requestLine.getPath();
-		final String fullName = Task.gFullName(requestLine, path);
-		final String methodString = requestLine.getMethodEnum().getMethod();
 
-		// 1
-//		final Method method = ZControllerMap.getMethodByFullName(methodString + "@" + fullName);
-
-		// 2 ZControllerMap2
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
-
-		System.out.println("ZControllerMap2-method = " + method);
 
 		// 查找对应的控制器来处理
 		if (method == null) {
 
 			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
 			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-			System.out.println("entrySet = " + entrySet);
 			for (final Entry<String, Method> entry : entrySet) {
 				final Method methodTarget = entry.getValue();
 				final String requestMapping = entry.getKey();
 				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
-					System.out.println("模糊匹配了path = " + requestMapping + "\t" + "reuqestPath = " + path);
 
 					final Object object = ZControllerMap.getObjectByMethod(methodTarget);
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
@@ -156,12 +134,9 @@ public class Task {
 
 		try {
 
-			final Object[] arraygP = this.generateParameters(method, request, requestLine, path);
-			// 1
-//			final Object zController = ZControllerMap.getZControllerByPath(methodString + "@" + requestLine.getPath());
-			// 2
+			final Object[] p = this.generateParameters(method, request, requestLine, path);
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			this.invokeAndResponse(method, arraygP, zController);
+			this.invokeAndResponse(method, p, zController);
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), socket);
@@ -242,7 +217,6 @@ public class Task {
 			throw new IllegalArgumentException("方法参数个数小于数组length,method = " + method.getName()
 					+ " parametersArray.length = " + parametersArray.length);
 		}
-
 
 		int pI = 0;
 		for (final Parameter p : ps) {
@@ -347,7 +321,7 @@ public class Task {
 		}
 	}
 
-	static ConcurrentMap<Object, Object> cacheMap = Maps.newConcurrentMap();
+	static Map<Object, Object> cacheMap = new WeakHashMap<>(1024, 1F);
 
 	private static String gFullName(final RequestLine requestLine, final String path) {
 		String fullName = requestLine.getPath();
