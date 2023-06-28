@@ -366,11 +366,9 @@ public class Task {
 			if (me != null) {
 				requestLine.setMethodEnum(me);
 			} else {
-
 				// FIXME 2023年6月28日 下午10:04:18 zhanghen: 返回500
 //				handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, "不支持的请求方法 method = " + methodS), so);
 				throw new IllegalArgumentException("不支持的请求方法 method = " + methodS);
-
 			}
 		}
 
@@ -427,28 +425,14 @@ public class Task {
 
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
-				final String[] a = l.split(":");
-//			System.out.println("a = " + Arrays.toString(a));
 				hm.put(key, value);
-//			hm.put(a[0],a[1]);
 			}
-
 		}
 
 		requestLine.setHeaderMap(hm);
-
-//		System.out.println("requestLine = " + requestLine);
-
-		final Map<String, String> hm2 = requestLine.getHeaderMap();
-//		System.out.println("hm.size = " + hm2.size());
-		final Set<Entry<String, String>> es = hm2.entrySet();
-		for (final Entry<String, String> entry : es) {
-//			System.out.println(entry);
-		}
 	}
 
 	private static void parseVersion(final HRequest.RequestLine requestLine, final String line) {
-//		System.out.println("line = " + line);
 		final int hI = line.lastIndexOf("HTTP/");
 		if (hI > -1) {
 			final String version = line.substring(hI);
@@ -472,15 +456,11 @@ public class Task {
 				final String simplePath = fullPath.substring(0,wenI);
 				line.setPath(simplePath);
 
-//				System.out.println("param = " + param);
 				final String[] paramArray = param.split(SP);
 				for (final String p : paramArray) {
 					final String[] p0 = p.split("=");
-//					System.out.println("name = " + p0[0] + "\t" + "value = " + p0[1]);
-
 					final HRequest.RequestParam requestParam  = new HRequest.RequestParam();
 					requestParam.setName(p0[0]);
-					// FIXME 2023年6月19日 下午9:41:03 zhanghen: 中文乱码？ ASCii 编码转换过来
 					if (p0.length >= 2) {
 						final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING : URLDecoder.decode(p0[1], UTF_8_CHARSET);
 						requestParam.setValue(v);
