@@ -1,79 +1,57 @@
 package com.vo.http;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
-import com.vo.anno.ZRequestBody;
-import com.vo.anno.ZRequestHeader;
-import com.vo.core.HRequest;
-import com.vo.core.HResponse;
-import com.vo.template.ZModel;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
-
+import com.google.common.collect.Sets;
+import com.vo.enums.MethodEnum;
 
 /**
  *
- *
  * @author zhangzhen
- * @date 2023年6月12日
+ * @date 2023年6月28日
  *
  */
 public class ZControllerMap {
+	static final HashBasedTable<MethodEnum, String, Method> methodTable = HashBasedTable.create();
+	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
+	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
+	static final HashSet<String> mappingSet = Sets.newHashSet();
 
-	static ConcurrentMap<String, Method> nameMap = Maps.newConcurrentMap();
-	/**
-	 * <path,Method>
-	 */
-	static ConcurrentMap<String, Method> zcMap = Maps.newConcurrentMap();
-	static HashBasedTable<String, Method, Object> table = HashBasedTable.create();
-
-	public synchronized static void putBean(final String path, final Method method, final Object zControllerObject) {
-		table.put(path, method, zControllerObject);
-		zcMap.put(path, method);
-
-		String fullName = path;
-		final Parameter[] ps = method.getParameters();
-		if(ArrayUtil.isNotEmpty(ps)) {
-			for (final Parameter parameter : ps) {
-				final String name = parameter.getName();
-				final Class<?> type = parameter.getType();
-				final boolean isZHeader = parameter.isAnnotationPresent(ZRequestHeader.class);
-				final boolean isHRequest = type.getCanonicalName().equals(HRequest.class.getCanonicalName());
-				final boolean isHResponse = type.getCanonicalName().equals(HResponse.class.getCanonicalName());
-				final boolean isZModel = type.getCanonicalName().equals(ZModel.class.getCanonicalName());
-				final boolean isZRequestBodyAnnotation = parameter.isAnnotationPresent(ZRequestBody.class);
-
-				final boolean annotationPresent = type.isAnnotationPresent(ZRequestBody.class);
-
-				if (!isZHeader && !isHRequest && !isHResponse && !isZModel && !isZRequestBodyAnnotation) {
-					fullName = fullName + "@" + name;
-				}
-//				System.out.println("p-name = " + name);
-			}
+	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
+			final Object object, final boolean isRegex) {
+		final boolean add = mappingSet.add(mapping);
+		if (!add) {
+			throw new IllegalArgumentException(
+					"接口方法的 mapping值重复, mapping = " + mapping + "\t" + " method = " + method.getName());
 		}
-//		System.out.println("put-fullName = " + fullName);
-		nameMap.put(fullName, method);
+
+		methodTable.put(methodEnum, mapping, method);
+		methodIsregexTable.put(method, mapping, isRegex);
+		objectMap.put(method, object);
 	}
 
-	public static Method getMethodByFullName(final String fullName) {
-		final Method m = nameMap.get(fullName);
-		return m;
+	public static Object getObjectByMethod(final Method method) {
+		final Object object = objectMap.get(method);
+		return object;
 	}
 
-	public static Method getMethodByPath(final String path) {
-		final Method v = zcMap.get(path);
-		return v;
+	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
+		final Method method = methodTable.get(methodEnum, path);
+		return method;
 	}
 
-	public static Object getZControllerByPath(final String path) {
-		final Method m = getMethodByPath(path);
-		final Object zc = table.get(path, m);
-		return zc;
+	public static Map<String, Method> getByMethodEnum(final MethodEnum methodEnum) {
+
+		final Map<String, Method> row = methodTable.row(methodEnum);
+		return row;
 	}
 
+	public static Boolean getIsregexByMethodEnumAndPath(final Method method, final String path) {
+		return methodIsregexTable.get(method, path);
+	}
 }

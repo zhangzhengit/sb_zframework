@@ -18,7 +18,6 @@ import com.vo.enums.BeanModeEnum;
  * @date 2023年6月12日
  *
  */
-@Component
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })

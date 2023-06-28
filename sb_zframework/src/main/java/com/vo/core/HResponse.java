@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.vo.core.HRequest.ZCookie;
 import com.vo.core.HRequest.ZHeader;
+import com.votool.common.CR;
 import com.votool.redis.mq.TETS_MQ_1;
 
 import cn.hutool.core.util.ArrayUtil;
@@ -48,6 +50,31 @@ public class HResponse {
 		this.addHeader(new ZHeader(name, value));
 	}
 
+
+	public  void write(final CR cr,final String httpStatus) {
+		final byte[] baERROR = ArrayUtil.addAll(
+				Task.OK_200.getBytes(),
+				Task.NEW_LINE.getBytes(),
+				ContentTypeEnum.JSON.getValue().getBytes(),
+				Task.NEW_LINE.getBytes(),
+				Task.NEW_LINE.getBytes(),
+				JSON.toJSONString(cr).getBytes(),
+				Task.NEW_LINE.getBytes());
+
+		try {
+			this.outputStream.write(baERROR);
+			this.flush();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				this.outputStream.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
 
 	public void writeAndFlush() {
 		try {
@@ -107,7 +134,7 @@ public class HResponse {
 						Task.NEW_LINE.getBytes(),
 						contentTypeEnum.getValue().getBytes(),
 						Task.NEW_LINE.getBytes(),
-						("Content-Disposition:attachment;filename=" + new String(fileName.getBytes(Task.UTF_8), Task.UTF_8)).getBytes(),
+						("Content-Disposition:attachment;filename=" + new String(fileName.getBytes(Task.UTF_8_CHARSET), Task.UTF_8_CHARSET)).getBytes(),
 						Task.NEW_LINE.getBytes(),
 						Task.NEW_LINE.getBytes(),
 						ba,
