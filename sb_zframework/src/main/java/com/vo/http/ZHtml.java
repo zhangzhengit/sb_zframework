@@ -19,5 +19,4 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 public @interface ZHtml {
 
-	// FIXME 2023年6月24日 下午8:52:45 zhanghen: TODO ，启动时，校验：此注解的方法的返回值必须是String
 }
