@@ -85,6 +85,7 @@ public class Task {
 	private  InputStream inputStream;
 	private BufferedInputStream bufferedInputStream;
 
+
 	@SuppressWarnings("boxing")
 	public Task(final Socket socket) {
 		this.socket = socket;
@@ -128,7 +129,7 @@ public class Task {
 				}
 			}
 
-			Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法不存在 [" + path+"]", CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), socket);
+			Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), socket);
 			return;
 		}
 
@@ -139,7 +140,8 @@ public class Task {
 			this.invokeAndResponse(method, p, zController);
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), socket);
+			final CR<Object> error = CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR);
+			Task.handleWrite500(DEFAULT_CONTENT_TYPE, error, socket);
 			e.printStackTrace();
 		} finally {
 			this.closeSocketAndStream();
@@ -225,7 +227,7 @@ public class Task {
 				final String name = a.value();
 				final String headerValue = requestLine.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
-					Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法[" + path + "]的header[" + name + "]不存在", CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在"), this.socket);
+					Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在"), this.socket);
 					return null;
 				}
 				parametersArray[pI++] = headerValue;
@@ -251,7 +253,7 @@ public class Task {
 				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
 						.findAny();
 				if (!findAny.isPresent()) {
-					Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在", CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在"), this.socket);
+					Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在"), this.socket);
 					return null;
 				}
 
@@ -482,23 +484,25 @@ public class Task {
 	}
 
 	private HRequest handleRead() {
+
 		final HRequest request = new HRequest();
 
 		try {
 
-			final byte[] bs = new byte[DEFAULT_BUFFER_SIZE];
-			final List<Byte> list = new ArrayList<>(bs.length);
+			final int nk = READ_LENGTH;
+			final List<Byte> list = new ArrayList<>(nk);
 
 			while (true) {
+				final byte[] bs = new byte[nk];
 				final int read = this.bufferedInputStream.read(bs);
-				if (read > -1) {
-					for (int i = 0; i < read; i++) {
-						list.add(bs[i]);
-					}
-					if (read <= DEFAULT_BUFFER_SIZE) {
-						break;
-					}
-				} else {
+				if (read <= 0) {
+					break;
+				}
+
+				for (int i = 0; i < read; i++) {
+					list.add(bs[i]);
+				}
+				if (read <= nk) {
 					break;
 				}
 			}
@@ -574,11 +578,10 @@ public class Task {
 		}
 	}
 
-	private static void handleWrite404(final ContentTypeEnum contentTypeEnum, final String message, final CR cr, final Socket socket) {
+	private static void handleWrite404(final ContentTypeEnum contentTypeEnum, final CR cr, final Socket socket) {
 		try {
 
 			final String json = JSON.toJSONString(cr);
-//			final OutputStream outputStream = Task.this.socket.getOutputStream();
 			final OutputStream outputStream = socket.getOutputStream();
 
 			final PrintWriter pw = new PrintWriter(outputStream);
