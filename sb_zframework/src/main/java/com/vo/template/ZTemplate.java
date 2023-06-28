@@ -1,16 +1,12 @@
 package com.vo.template;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.swing.text.html.HTML;
-
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -31,36 +27,23 @@ public class ZTemplate {
 
 //	public static void main(final String[] args) {
 //		final String htmlContent =
-//				"<!DOCTYPE html>\r\n"
-//				+ "<html>\r\n"
-//				+ "<head>\r\n"
-//				+ "<meta charset=\"UTF-8\">\r\n"
-//				+ "<title>sb_zframework_TEST-OK</title>\r\n"
-//				+ "</head>\r\n"
-//				+ "<body>\r\n"
-//				+ "	<h1>OK-ok-TIME=ZH</h1>\r\n"
-//				+ "	<h2>这是h2</h2>\r\n"
-//				+ "	<h3>欢迎 @value[name]</h3>\r\n"
-//				+ "	<@list[list1] as a>\r\n"
-//				+ "		<h3>姓名：@value[a.name] | 年龄 @value[a.age]</h3>\r\n"
-//				+ "	</endlist[list1]>\r\n"
-//				+ "	<@list[list2] as a2>\r\n"
-//				+ "		<h3>姓名：@value[a2.name] | 年龄 @value[a2.age]</h3>\r\n"
-//				+ "	</endlist[list2]>\r\n"
-//				+ "	<@list[list3] as a3>\r\n"
-//				+ "		<h3>姓名：@value[a3.name] | 年龄 @value[a3.age]</h3>\r\n"
-//				+ "	</endlist[list3]>\r\n"
-//				+ "</body>\r\n"
-//				+ "</html>";
+//					"<h3>\r\n"
+//				+ "		if: \r\n"
+//				+ "		<@switch[i1]>\r\n"
+//				+ "			<case 1> 	一\r\n"
+//				+ "			<case 2> 	二\r\n"
+//				+ "			<case 3> 	三\r\n"
+//				+ "		</endswitch[i1]>\r\n"
+//				+ "	</h3>";
 //
 //		final ZModel model = new ZModel();
-//		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
-//		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
-//		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
-//		model.set("name", "zhangsan");
+////		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
+////		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
+////		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
+////		model.set("name", "zhangsan");
+//		model.set("i1", "2");
 //
-//		new ZTemplate();
-//		final String r = ZTemplate.generate(htmlContent, model);
+//		final String r = ZTemplate.generate(htmlContent);
 //
 //		System.out.println("r = ");
 //		System.out.println(r);
@@ -68,12 +51,54 @@ public class ZTemplate {
 
 	public static String generate(final String htmlContent) {
 
-//		System.out.println("htmlContent = " + htmlContent);
-
 		final String r1 = parseValue(htmlContent);
 		final String r2 = parseList(r1);
+		final String r3 = parseIf(r2);
 
-		return r2;
+		return r3;
+	}
+
+	public static String parseIf(String r) {
+		final ZTEnum SWITCH = ZTEnum.SWITCH;
+		int from = 0;
+		for (final Entry<String, Object> entry : ZModel.get().entrySet()) {
+			final String k = SWITCH.generateKeyword(entry.getKey());
+
+			final int r1 = r.indexOf('<' + k,from);
+			if (r1 > -1) {
+				final int end1 = r.indexOf('>', r1);
+				if (end1 > r1) {
+					final SwitchPattern p = new SwitchPattern();
+					final String start = r.substring(r1, end1 + 1);
+					p.setStart(start);
+
+					final String endK = "</endswitch[" + entry.getKey() + "]>";
+					final int i2 = r.indexOf(endK, end1);
+					if (i2 > end1) {
+						final String end = r.substring(i2, i2 + endK.length());
+						p.setEnd(end);
+
+						final String content = r.substring(end1 + ">".length(), i2);
+						p.setContent(content);
+
+						p.setValue(entry.getValue());
+
+						final String rx = p.generate();
+
+						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
+								.replace(p.getContent(), rx);
+					} else {
+						throw new IllegalArgumentException(SWITCH.getValue() + " 标签没有正确关闭");
+					}
+				} else {
+					throw new IllegalArgumentException(SWITCH.getValue() + " 标签没有正确关闭");
+				}
+
+				from += k.length();
+			}
+
+		}
+		return r;
 	}
 
 	private static String parseList(String r) {
@@ -138,6 +163,110 @@ public class ZTemplate {
 
 //		System.out.println("string = " + string);
 		return string;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SwitchPattern {
+		private String start;
+		private String content;
+		private String end;
+
+		private Object value;
+		public String generate() {
+			final String keyword = this.start.replace("<@switch[", "").replace("]>", "");
+			int from = 0;
+			final StringBuilder r = new StringBuilder();
+			while (true) {
+				final int i = this.content.indexOf("<case", from);
+				if (i < 0) {
+					break;
+				}
+
+				final int endI = this.content.indexOf(">", i);
+				final PV pv = new PV();
+				pv.setValue(this.getValue());
+				if (endI > i) {
+					final String substring = this.content.substring(i, endI + ">".length());
+
+					final String pV = substring.replace("<case", "").replace(">", "");
+					final String pvv = pV.trim();
+					pv.setExp(pvv);
+
+					final int indexOf = this.content.indexOf("<case", endI + ">".length());
+					if (indexOf > -1) {
+						final String value = this.content.substring(endI + ">".length(), indexOf);
+						pv.setContent(value);
+					} else {
+						final String value = this.content.substring(endI + ">".length(), this.content.length());
+						pv.setContent(value);
+					}
+				}
+
+				r.append(pv.g());
+
+				from += i + "<case".length();
+			}
+
+
+			return r.toString();
+		}
+
+		@Data
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class PV {
+
+			private Object value;
+			private Object exp;
+			private String content;
+
+			public String g() {
+				final StringBuilder builder = new StringBuilder();
+				if (this.value.getClass().getCanonicalName().equals(String.class.getCanonicalName())) {
+					final String v = String.valueOf(this.value);
+					if (v.equals(String.valueOf(this.exp))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+					if (Byte.valueOf(String.valueOf(this.value)).equals(Byte.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Short.class.getCanonicalName())) {
+					if (Short.valueOf(String.valueOf(this.value)).equals(Short.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+					if (Integer.valueOf(String.valueOf(this.value)).equals(Integer.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Long.class.getCanonicalName())) {
+					if (Long.valueOf(String.valueOf(this.value)).equals(Long.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Float.class.getCanonicalName())) {
+					if (Float.valueOf(String.valueOf(this.value)).equals(Float.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Double.class.getCanonicalName())) {
+					if (Double.valueOf(String.valueOf(this.value)).equals(Double.valueOf(String.valueOf(this.exp)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Character.class.getCanonicalName())) {
+					if (Character.valueOf(String.valueOf(this.value).charAt(0))
+							.equals(Character.valueOf(String.valueOf(this.exp).charAt(0)))) {
+						builder.append(this.content);
+					}
+				} else if (this.value.getClass().getCanonicalName().equals(Boolean.class.getCanonicalName()) && Boolean
+						.valueOf(String.valueOf(this.value)).equals(Boolean.valueOf(String.valueOf(this.exp)))) {
+					builder.append(this.content);
+				}
+
+				return builder.toString();
+			}
+
+		}
 	}
 
 	@Data
