@@ -37,7 +37,6 @@ public class ZMain {
 		ZObjectGeneratorStarter.start();
 
 		// 1 AOP
-		// FIXME 2023年6月19日 下午5:27:28 zhanghen: 加入一个类似 BeanPostProcessor 的类，可以用户自定义替换bean
 		// 来实现AOP自定义替换bean为生成的子类
 		final Map<String, ZClass> proxyZClassMap = ZAOPScaner.scanAndGenerateProxyClass();
 		final Set<Entry<String, ZClass>> es = proxyZClassMap.entrySet();
