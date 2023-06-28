@@ -15,8 +15,11 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
+import com.vo.conf.ZFrameworkProperties;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
+import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
@@ -34,6 +37,7 @@ import cn.hutool.core.util.ClassUtil;
  */
 public class ZAOPScaner {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
 	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = Maps.newConcurrentMap();
 
@@ -179,10 +183,10 @@ public class ZAOPScaner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		// FIXME 2023年6月17日 下午6:46:40 zhanghen: com 改为属性配置
-		// FIXME 2023年6月20日 上午12:22:27 zhanghen: 改为com.vo
-//		final Set<Class<?>> clsSet = ClassUtil.scanPackage("com.vo.test");
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage("com.vo");
+		final ZFrameworkProperties p = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance();
+		final String scanPackage = p.getScanPackage();
+		LOG.info("开始扫描类,scanPackage={}", scanPackage);
+		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
 		return clsSet;
 	}
 
