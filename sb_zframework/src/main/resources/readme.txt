@@ -54,4 +54,9 @@
 		    	如：<@list[list1] as a1>
 		    	   <@list[list1] as a2>
 		    	上面 list1 变量在一个html中用了两次，暂时不支持这么用
-		    	
+# 2023.6.28 已实现的功能		 
+	1. ZRequestMapping 注解，代替 ZGet、ZPost 等等 httpmethod的注解
+	2. ZRequestMapping 的mapping 值 支持配置是否正则表达式
+	3. StaticController 新增此接口类，内置了处理静态资源的接口 StaticController.staticResources
+
+			    	
