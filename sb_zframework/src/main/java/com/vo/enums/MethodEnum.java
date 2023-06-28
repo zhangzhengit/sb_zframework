@@ -18,7 +18,25 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum MethodEnum {
 
-	GET("GET"), POST("POST"),;
+	GET("GET"),
+
+	POST("POST"),
+
+	PUT("PUT"),
+
+	DELETE("DELETE"),
+
+	HEAD("HEAD"),
+
+	CONNECT("CONNECT"),
+
+	TRACE("TRACE"),
+
+	OPTIONS("OPTIONS"),
+
+	PATCH("PATCH")
+
+	;
 
 	private String method;
 

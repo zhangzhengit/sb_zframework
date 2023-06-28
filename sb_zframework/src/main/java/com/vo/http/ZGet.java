@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.codehaus.groovy.runtime.dgmimpl.arrays.BooleanArrayGetAtMetaMethod;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,5 +29,13 @@ public @interface ZGet {
 	 *
 	 */
 	String path();
+
+	/**
+	 * path 是否正则表达式，默认fasle
+	 *
+	 * @return
+	 *
+	 */
+	boolean isRegex() default false;
 
 }

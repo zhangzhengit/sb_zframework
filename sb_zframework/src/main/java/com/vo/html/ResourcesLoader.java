@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import com.google.common.collect.Maps;
 
@@ -19,7 +20,7 @@ import com.google.common.collect.Maps;
  */
 public class ResourcesLoader {
 
-	private final static Map<String, Object> CACHE_MAP = Maps.newConcurrentMap();
+	private final static Map<String, Object> CACHE_MAP = new WeakHashMap<>(2, 1F);
 
 	public static final String NEW_LINE = "\n\r";
 

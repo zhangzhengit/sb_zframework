@@ -20,4 +20,5 @@ import org.springframework.stereotype.Component;
 @Target({ ElementType.METHOD })
 public @interface ZPut {
 
+	String path();
 }
