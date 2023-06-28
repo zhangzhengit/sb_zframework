@@ -59,4 +59,15 @@
 	2. ZRequestMapping 的mapping 值 支持配置是否正则表达式
 	3. StaticController 新增此接口类，内置了处理静态资源的接口 StaticController.staticResources
 
+# 2023.6.29 已实现的功能		 
+	1. html模板的 switch标签,用法如下：
+		接口中设置
+			 model.set("statusAAA", 1);
+			 
+		html中 加入
+			<@switch[statusAAA]>
+				<case 1> 	状态111
+				<case 2> 	状态222
+				<case 3> 	状态333
+			</endswitch[statusAAA]>
 			    	
