@@ -12,6 +12,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
  * @date 2023年6月29日
  *
  */
+// FIXME 2023年6月29日 下午11:26:04 zhanghen: 是否支持配置项热更新？改为实时读取配置项？
 public class ZProperties {
 
 	public static final PropertiesConfiguration P;
