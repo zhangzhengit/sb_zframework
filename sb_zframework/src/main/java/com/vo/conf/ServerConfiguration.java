@@ -29,4 +29,7 @@ public class ServerConfiguration {
 	@ZNotNull
 	private String scanPackage;
 
+	@ZNotNull
+	private Integer concurrentQuantity;
+
 }
