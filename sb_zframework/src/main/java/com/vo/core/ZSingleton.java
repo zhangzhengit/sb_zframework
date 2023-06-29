@@ -14,12 +14,12 @@ import com.google.common.collect.Maps;
  */
 public class ZSingleton {
 
-	private static final ConcurrentMap<String, Object> singletonMap = Maps.newConcurrentMap();
+	private static final ConcurrentMap<String, Object> SINGLETON_MAP = Maps.newConcurrentMap();
 
 	public static Object getSingletonByClassName(final String clsName) {
 		final String key = clsName;
 		synchronized (key) {
-			final Object v = singletonMap.get(key);
+			final Object v = SINGLETON_MAP.get(key);
 			if (v != null) {
 				return v;
 			}
@@ -27,7 +27,7 @@ public class ZSingleton {
 			try {
 				final Class<?> cls = Class.forName(clsName);
 				final Object newInstance = cls.newInstance();
-				singletonMap.put(key, newInstance);
+				SINGLETON_MAP.put(key, newInstance);
 				return newInstance;
 			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
@@ -43,13 +43,13 @@ public class ZSingleton {
 
 		synchronized (key) {
 
-			final Object v = singletonMap.get(key);
+			final Object v = SINGLETON_MAP.get(key);
 			if (v != null) {
 				return v;
 			}
 			try {
 				final Object newInstance = cls.newInstance();
-				singletonMap.put(key, newInstance);
+				SINGLETON_MAP.put(key, newInstance);
 				return newInstance;
 			} catch (InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
