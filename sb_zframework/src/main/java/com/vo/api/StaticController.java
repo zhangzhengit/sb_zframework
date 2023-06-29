@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.api;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
