@@ -447,8 +447,6 @@ public class Task {
 		if (pathI > methodIndex) {
 			final String fullPath = s.substring(methodIndex  + 1, pathI);
 
-			// FIXME 2023年6月12日 下午4:49:34 zhanghen: 解析出path中的参数
-
 			final int wenI = fullPath.indexOf("?");
 			if (wenI > -1) {
 				line.setQueryString(fullPath.substring("?".length() + wenI - 1));
