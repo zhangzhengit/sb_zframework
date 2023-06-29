@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.checkerframework.checker.units.qual.C;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
@@ -31,7 +28,6 @@ import com.vo.core.ZSingleton;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -134,7 +130,7 @@ public class ZAOPScaner {
 	private static String getAnnoName(final Annotation a) {
 		final String assss = a.toString();
 
-		final StringBuilder nameBuidler = new StringBuilder();
+		final StringBuilder nameBuilder = new StringBuilder();
 		final char[] ch = assss.toCharArray();
 		if (ch[assss.length() - 1] == ')') {
 			for (int i = ch.length - 2; i > 0;) {
@@ -147,7 +143,7 @@ public class ZAOPScaner {
 							i = -1;
 							break;
 						}
-						nameBuidler.append(ch[k]);
+						nameBuilder.insert(0, ch[k]);
 						k--;
 					}
 				}
@@ -156,7 +152,7 @@ public class ZAOPScaner {
 		} else {
 			throw new IllegalArgumentException("注解声明错误: Annotation = " + a);
 		}
-		return nameBuidler.toString();
+		return nameBuilder.toString();
 	}
 
 	private static void gZMethod(final HashBasedTable<Class, Method, Class<?>> table, final Class cls,
@@ -299,7 +295,6 @@ public class ZAOPScaner {
 	 *
 	 */
 	public static String replaceLast(final String string, final String replace, final String target) {
-
 
 		final int i = string.lastIndexOf(replace);
 		if (i < 0) {
