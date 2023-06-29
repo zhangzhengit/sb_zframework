@@ -3,7 +3,10 @@ package com.vo.core;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
 import java.util.ArrayList;
+
+import org.codehaus.groovy.tools.shell.commands.HelpCommand;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
@@ -30,6 +33,8 @@ import reactor.core.publisher.SynchronousSink;
 @AllArgsConstructor
 public class HResponse {
 
+	public static final String SET_COOKIE = "Set-Cookie";
+
 	private final OutputStream outputStream;
 
 	private final ArrayList<ZHeader> headerList = Lists.newArrayList();
@@ -39,7 +44,7 @@ public class HResponse {
 	}
 
 	public void addCookie(final String name,final String value) {
-		this.addCookie(new ZCookie(name, value));
+		this.addCookie(new ZCookie(SET_COOKIE, name + "=" + value));
 	}
 
 	public void addHeader(final ZHeader zHeader) {
@@ -53,7 +58,8 @@ public class HResponse {
 
 	public  void write(final CR cr,final String httpStatus) {
 		final byte[] baERROR = ArrayUtil.addAll(
-				Task.OK_200.getBytes(),
+//				Task.HTTP_200.getBytes(),
+				httpStatus.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				ContentTypeEnum.JSON.getValue().getBytes(),
 				Task.NEW_LINE.getBytes(),
@@ -76,45 +82,28 @@ public class HResponse {
 
 	}
 
-	public void writeAndFlush() {
+	public void writeAndFlushAndClose() {
 		try {
-			this.outputStream.write(Task.OK_200.getBytes());
+			this.outputStream.write(Task.HTTP_200.getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 			this.outputStream.write(ContentTypeEnum.TEXT.getValue().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
-			// header
-			for (final ZHeader zHeader : this.headerList) {
-				final String s = zHeader.getName() + "=" + zHeader.getValue();
-				// FIXME 2023年6月26日 下午11:33:23 zhanghen: cookie和header不要用一个list放，区分不开了
-				this.outputStream.write(("Set-Cookie:" + s).getBytes());
-
+			for (int i = 0; i < this.headerList.size(); i++) {
+				final ZHeader zHeader = this.headerList.get(i);
+				this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
 				this.outputStream.write(Task.NEW_LINE.getBytes());
 			}
 
 			this.outputStream.write(Task.NEW_LINE.getBytes());
-			System.out.println("this.outputStream.write(Task.NEW_LINE.getBytes());");
-			this.flush();
 
+			this.flush();
 			this.outputStream.close();
 
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 
-		final byte[] baA = ArrayUtil.addAll(
-				Task.OK_200.getBytes(),
-				Task.NEW_LINE.getBytes(),
-//				contentTypeEnum.getValue().getBytes(),
-//				Task.NEW_LINE.getBytes(),
-//				("Content-Disposition:attachment;filename=" + new String(fileName.getBytes(Task.UTF_8), Task.UTF_8)).getBytes(),
-				Task.NEW_LINE.getBytes(),
-				Task.NEW_LINE.getBytes(),
-//				ba,
-				Task.NEW_LINE.getBytes()
-			);
-
-//		outputStream.write(null);
 	}
 	public void flush() {
 		try {
@@ -130,7 +119,7 @@ public class HResponse {
 			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
 
 			final byte[] baA = ArrayUtil.addAll(
-						Task.OK_200.getBytes(),
+						Task.HTTP_200.getBytes(),
 						Task.NEW_LINE.getBytes(),
 						contentTypeEnum.getValue().getBytes(),
 						Task.NEW_LINE.getBytes(),

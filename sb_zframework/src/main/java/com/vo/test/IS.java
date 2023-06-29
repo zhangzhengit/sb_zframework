@@ -2,7 +2,7 @@ package com.vo.test;
 
 import com.vo.anno.ZComponent;
 
-@ZComponent
+//@ZComponent
 public class IS {
 
 

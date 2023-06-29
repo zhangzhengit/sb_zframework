@@ -2,12 +2,8 @@ package com.vo.aop;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.security.KeyStore.PrivateKeyEntry;
 import java.util.List;
 
-import org.springframework.web.servlet.resource.ResourceUrlProviderExposingInterceptor;
-
-import io.netty.handler.codec.serialization.ObjectEncoder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +18,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-// FIXME 2023年6月18日 下午2:34:35 zhanghen:  用此类作为beofre和after方法参数
 public class AOPParameter {
 	private String methodName;
 	private Method method;

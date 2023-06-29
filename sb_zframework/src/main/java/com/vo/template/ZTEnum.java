@@ -39,6 +39,18 @@ public enum ZTEnum {
 
 	},
 
+	SWITCH("@switch[]") {
+		@Override
+		public String generateMathchKeyword(final String s) {
+			return "@switch\\[" + s + "\\]";
+		}
+
+		@Override
+		public String generateKeyword(final String s) {
+			return "@switch[" + s + "]";
+		}
+	}
+
 	;
 
 	private String value;

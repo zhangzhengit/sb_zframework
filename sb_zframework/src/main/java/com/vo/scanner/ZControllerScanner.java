@@ -104,7 +104,7 @@ public class ZControllerScanner {
 					final boolean[] isRA = requestMapping.isRegex();
 					if (!ArrayUtil.isEmpty(isRA) && isRA.length != rmArray.length) {
 						throw new IllegalArgumentException(
-								"接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRA个数 = " + isRA.length
+								"接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = " + isRA.length
 										+ " mapping个数 = " + rmArray.length);
 					}
 
@@ -183,8 +183,6 @@ public class ZControllerScanner {
 			if (StrUtil.isEmpty(s)) {
 				continue;
 			}
-
-//			 FIXME 2023年6月28日 下午9:22:40 zhanghen: 用正则判断 path规则 如： /user/{id}、/user 等
 
 			if (s.charAt(0) != '{' && s.charAt(s.length() - 1) != '}') {
 				continue;

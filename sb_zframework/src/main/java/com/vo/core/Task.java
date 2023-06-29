@@ -10,26 +10,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.configuration.PropertiesConfiguration.IOFactory;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Jedis;
-import org.springframework.data.repository.util.ReactiveWrappers.ReactiveLibrary;
-
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZRequestBody;
@@ -39,11 +32,9 @@ import com.vo.core.HRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.LineMap;
-import com.vo.http.ZConMap;
 //import com.vo.http.ZControllerMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
-import com.vo.http.ZRequestMapping;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.votool.common.CR;
@@ -51,9 +42,6 @@ import com.votool.common.CR;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.URLDecoder;
 import cn.hutool.core.util.StrUtil;
-import groovyjarjarantlr.FileLineFormatter;
-import io.protostuff.Message;
-import io.protostuff.StringSerializer.STRING;
 
 /**
  * 读取/响应的一个任务对象
@@ -85,7 +73,7 @@ public class Task {
 	public static final String HTTP_500 = "HTTP/1.1 " + HTTP_STATUS_500;
 	public static final String HTTP_404 = "HTTP/1.1 " + HTTP_STATUS_404;
 
-	public static final String OK_200 = "HTTP/1.1 200";
+	public static final String HTTP_200 = "HTTP/1.1 200";
 
 	public static final String NEW_LINE = "\r\n";
 
@@ -96,6 +84,7 @@ public class Task {
 	private final Socket socket;
 	private  InputStream inputStream;
 	private BufferedInputStream bufferedInputStream;
+
 
 	@SuppressWarnings("boxing")
 	public Task(final Socket socket) {
@@ -109,33 +98,23 @@ public class Task {
 
 		final HRequest request = this.handleRead();
 
-		// 读取结束，开始解析
+		// 开始解析
 		final RequestLine requestLine = Task.parseRequest(request);
 
-		// 匹配fullname
+		// 匹配path
 		final String path = requestLine.getPath();
-		final String fullName = Task.gFullName(requestLine, path);
-		final String methodString = requestLine.getMethodEnum().getMethod();
 
-		// 1
-//		final Method method = ZControllerMap.getMethodByFullName(methodString + "@" + fullName);
-
-		// 2 ZControllerMap2
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
-
-		System.out.println("ZControllerMap2-method = " + method);
 
 		// 查找对应的控制器来处理
 		if (method == null) {
 
 			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
 			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-			System.out.println("entrySet = " + entrySet);
 			for (final Entry<String, Method> entry : entrySet) {
 				final Method methodTarget = entry.getValue();
 				final String requestMapping = entry.getKey();
 				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
-					System.out.println("模糊匹配了path = " + requestMapping + "\t" + "reuqestPath = " + path);
 
 					final Object object = ZControllerMap.getObjectByMethod(methodTarget);
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
@@ -150,21 +129,19 @@ public class Task {
 				}
 			}
 
-			Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法不存在 [" + path+"]", CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), socket);
+			Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), socket);
 			return;
 		}
 
 		try {
 
-			final Object[] arraygP = this.generateParameters(method, request, requestLine, path);
-			// 1
-//			final Object zController = ZControllerMap.getZControllerByPath(methodString + "@" + requestLine.getPath());
-			// 2
+			final Object[] p = this.generateParameters(method, request, requestLine, path);
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			this.invokeAndResponse(method, arraygP, zController);
+			this.invokeAndResponse(method, p, zController);
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), socket);
+			final CR<Object> error = CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR);
+			Task.handleWrite500(DEFAULT_CONTENT_TYPE, error, socket);
 			e.printStackTrace();
 		} finally {
 			this.closeSocketAndStream();
@@ -243,7 +220,6 @@ public class Task {
 					+ " parametersArray.length = " + parametersArray.length);
 		}
 
-
 		int pI = 0;
 		for (final Parameter p : ps) {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
@@ -251,7 +227,7 @@ public class Task {
 				final String name = a.value();
 				final String headerValue = requestLine.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
-					Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法[" + path + "]的header[" + name + "]不存在", CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在"), this.socket);
+					Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在"), this.socket);
 					return null;
 				}
 				parametersArray[pI++] = headerValue;
@@ -277,7 +253,7 @@ public class Task {
 				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
 						.findAny();
 				if (!findAny.isPresent()) {
-					Task.handleWrite404(DEFAULT_CONTENT_TYPE, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在", CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在"), this.socket);
+					Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在"), this.socket);
 					return null;
 				}
 
@@ -347,7 +323,7 @@ public class Task {
 		}
 	}
 
-	static ConcurrentMap<Object, Object> cacheMap = Maps.newConcurrentMap();
+	static Map<Object, Object> cacheMap = new WeakHashMap<>(1024, 1F);
 
 	private static String gFullName(final RequestLine requestLine, final String path) {
 		String fullName = requestLine.getPath();
@@ -392,11 +368,9 @@ public class Task {
 			if (me != null) {
 				requestLine.setMethodEnum(me);
 			} else {
-
 				// FIXME 2023年6月28日 下午10:04:18 zhanghen: 返回500
 //				handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, "不支持的请求方法 method = " + methodS), so);
 				throw new IllegalArgumentException("不支持的请求方法 method = " + methodS);
-
 			}
 		}
 
@@ -453,28 +427,14 @@ public class Task {
 
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
-				final String[] a = l.split(":");
-//			System.out.println("a = " + Arrays.toString(a));
 				hm.put(key, value);
-//			hm.put(a[0],a[1]);
 			}
-
 		}
 
 		requestLine.setHeaderMap(hm);
-
-//		System.out.println("requestLine = " + requestLine);
-
-		final Map<String, String> hm2 = requestLine.getHeaderMap();
-//		System.out.println("hm.size = " + hm2.size());
-		final Set<Entry<String, String>> es = hm2.entrySet();
-		for (final Entry<String, String> entry : es) {
-//			System.out.println(entry);
-		}
 	}
 
 	private static void parseVersion(final HRequest.RequestLine requestLine, final String line) {
-//		System.out.println("line = " + line);
 		final int hI = line.lastIndexOf("HTTP/");
 		if (hI > -1) {
 			final String version = line.substring(hI);
@@ -487,8 +447,6 @@ public class Task {
 		if (pathI > methodIndex) {
 			final String fullPath = s.substring(methodIndex  + 1, pathI);
 
-			// FIXME 2023年6月12日 下午4:49:34 zhanghen: 解析出path中的参数
-
 			final int wenI = fullPath.indexOf("?");
 			if (wenI > -1) {
 				line.setQueryString(fullPath.substring("?".length() + wenI - 1));
@@ -498,15 +456,11 @@ public class Task {
 				final String simplePath = fullPath.substring(0,wenI);
 				line.setPath(simplePath);
 
-//				System.out.println("param = " + param);
 				final String[] paramArray = param.split(SP);
 				for (final String p : paramArray) {
 					final String[] p0 = p.split("=");
-//					System.out.println("name = " + p0[0] + "\t" + "value = " + p0[1]);
-
 					final HRequest.RequestParam requestParam  = new HRequest.RequestParam();
 					requestParam.setName(p0[0]);
-					// FIXME 2023年6月19日 下午9:41:03 zhanghen: 中文乱码？ ASCii 编码转换过来
 					if (p0.length >= 2) {
 						final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING : URLDecoder.decode(p0[1], UTF_8_CHARSET);
 						requestParam.setValue(v);
@@ -528,23 +482,25 @@ public class Task {
 	}
 
 	private HRequest handleRead() {
+
 		final HRequest request = new HRequest();
 
 		try {
 
-			final byte[] bs = new byte[DEFAULT_BUFFER_SIZE];
-			final List<Byte> list = new ArrayList<>(bs.length);
+			final int nk = READ_LENGTH;
+			final List<Byte> list = new ArrayList<>(nk);
 
 			while (true) {
+				final byte[] bs = new byte[nk];
 				final int read = this.bufferedInputStream.read(bs);
-				if (read > -1) {
-					for (int i = 0; i < read; i++) {
-						list.add(bs[i]);
-					}
-					if (read <= DEFAULT_BUFFER_SIZE) {
-						break;
-					}
-				} else {
+				if (read <= 0) {
+					break;
+				}
+
+				for (int i = 0; i < read; i++) {
+					list.add(bs[i]);
+				}
+				if (read <= nk) {
 					break;
 				}
 			}
@@ -594,7 +550,7 @@ public class Task {
 	}
 
 	private void write0(final ContentTypeEnum contentTypeEnum, final String content, final PrintWriter pw) {
-		final String c = OK_200 + NEW_LINE + contentTypeEnum.getValue() + NEW_LINE + SERVER + NEW_LINE + NEW_LINE + content + NEW_LINE;
+		final String c = HTTP_200 + NEW_LINE + contentTypeEnum.getValue() + NEW_LINE + SERVER + NEW_LINE + NEW_LINE + content + NEW_LINE;
 		pw.write(c);
 	}
 
@@ -620,11 +576,10 @@ public class Task {
 		}
 	}
 
-	private static void handleWrite404(final ContentTypeEnum contentTypeEnum, final String message, final CR cr, final Socket socket) {
+	private static void handleWrite404(final ContentTypeEnum contentTypeEnum, final CR cr, final Socket socket) {
 		try {
 
 			final String json = JSON.toJSONString(cr);
-//			final OutputStream outputStream = Task.this.socket.getOutputStream();
 			final OutputStream outputStream = socket.getOutputStream();
 
 			final PrintWriter pw = new PrintWriter(outputStream);

@@ -21,6 +21,9 @@ public class ZComponentMap {
 		}
 		zcMap.put(name, zComponentObject);
 	}
+	public synchronized static void put(final String name, final Object zComponentObject) {
+		zcMap.put(name, zComponentObject);
+	}
 
 	public static Object getByName(final String name) {
 		final Object v = zcMap.get(name);

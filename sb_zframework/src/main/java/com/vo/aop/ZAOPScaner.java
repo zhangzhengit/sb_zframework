@@ -1,6 +1,7 @@
 package com.vo.aop;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,8 +16,11 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
+import com.vo.conf.ZFrameworkProperties;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
+import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
@@ -34,6 +38,7 @@ import cn.hutool.core.util.ClassUtil;
  */
 public class ZAOPScaner {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
 	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = Maps.newConcurrentMap();
 
@@ -59,7 +64,7 @@ public class ZAOPScaner {
 		}
 	}
 
-	static Map<String, ZClass> scanAndGenerateProxyClass1() {
+ public	static Map<String, ZClass> scanAndGenerateProxyClass1() {
 
 		final Map<String, ZClass> map = Maps.newHashMap();
 		final Set<Class<?>> cs = scanPackage_COM();
@@ -82,6 +87,36 @@ public class ZAOPScaner {
 
 			}
 			proxyZClass.setMethodSet(zms);
+			final Field[] fs = cls.getDeclaredFields();
+
+			for (final Field f : fs) {
+				try {
+					f.setAccessible(true);
+					final ZField zf = new ZField();
+//					f.getType().getCanonicalName(), f.getName(), f.get(cls.newInstance())C
+
+					zf.setType(f.getType().getCanonicalName());
+					zf.setName(f.getName());
+					zf.setValue(f.get(cls.newInstance()));
+
+					final Annotation[] fas = f.getAnnotations();
+					if (fas != null) {
+						for (final Annotation a : fas) {
+							final String value = getAnnoName(a);
+
+//							StrUtil.rep
+							final String r2 = replaceLast(a.toString(), value, "\"" + value + "\"");
+//							final String replace = a.toString().replace(value, "\"" + value + "\"");
+							zf.addAnno(r2);
+						}
+					}
+
+					proxyZClass.addField(zf);
+					final String string = zf.toString();
+				} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
+					e.printStackTrace();
+				}
+			}
 
 			final String chiS = proxyZClass.toString();
 //			System.out.println("chiS = \n" + chiS);
@@ -90,6 +125,34 @@ public class ZAOPScaner {
 		}
 
 		return map;
+	}
+
+	private static String getAnnoName(final Annotation a) {
+		final String assss = a.toString();
+
+		final StringBuilder nameBuilder = new StringBuilder();
+		final char[] ch = assss.toCharArray();
+		if (ch[assss.length() - 1] == ')') {
+			for (int i = ch.length - 2; i > 0;) {
+				if (ch[i] == ' ') {
+					i--;
+				} else {
+					int k = i;
+					while (k > 0) {
+						if (ch[k] == ' ' || ch[k] == '=') {
+							i = -1;
+							break;
+						}
+						nameBuilder.insert(0, ch[k]);
+						k--;
+					}
+				}
+			}
+
+		} else {
+			throw new IllegalArgumentException("注解声明错误: Annotation = " + a);
+		}
+		return nameBuilder.toString();
 	}
 
 	private static void gZMethod(final HashBasedTable<Class, Method, Class<?>> table, final Class cls,
@@ -110,7 +173,7 @@ public class ZAOPScaner {
 
 			final ZField zField = new ZField(ZIAOP.class.getCanonicalName(), "ziaop_" + m.getName(),
 					"(" + ZIAOP.class.getCanonicalName() + ")" + ZSingleton.class.getCanonicalName()
-							+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")");
+							+ ".getSingletonByClassName(\"" + aopClass.getCanonicalName() + "\")",Lists.newArrayList());
 			proxyZClass.addField(zField);
 
 			copyZAOPMethod.setgReturn(false);
@@ -179,10 +242,10 @@ public class ZAOPScaner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		// FIXME 2023年6月17日 下午6:46:40 zhanghen: com 改为属性配置
-		// FIXME 2023年6月20日 上午12:22:27 zhanghen: 改为com.vo
-//		final Set<Class<?>> clsSet = ClassUtil.scanPackage("com.vo.test");
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage("com.vo");
+		final ZFrameworkProperties p = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance();
+		final String scanPackage = p.getScanPackage();
+		LOG.info("开始扫描类,scanPackage={}", scanPackage);
+		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
 		return clsSet;
 	}
 
@@ -190,7 +253,7 @@ public class ZAOPScaner {
 	 * @param cs
 	 * @return <类,方法，此类此方法的AOP类>
 	 */
-	private static HashBasedTable<Class, Method, Class<?>> extractedC(final Set<Class<?>> cs) {
+	public static HashBasedTable<Class, Method, Class<?>> extractedC(final Set<Class<?>> cs) {
 		final HashBasedTable<Class, Method, Class<?>> table = HashBasedTable.create();
 		for (final Class<?> c : cs) {
 			final Method[] ms = c.getDeclaredMethods();
@@ -221,5 +284,29 @@ public class ZAOPScaner {
 		return table;
 	}
 
+	/**
+	 * 把string中最后面的一个replace替换为target
+	 *
+	 *
+	 * @param string
+	 * @param replace
+	 * @param target
+	 * @return
+	 *
+	 */
+	public static String replaceLast(final String string, final String replace, final String target) {
 
+		final int i = string.lastIndexOf(replace);
+		if (i < 0) {
+			return string;
+		}
+
+		final String s1 = string.substring(0, i);
+		final String s2 = target;
+		final String s3 = string.substring(i + replace.length(), string.length());
+
+		final String r = s1 + s2 + s3;
+
+		return r;
+	}
 }
