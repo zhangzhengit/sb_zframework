@@ -3,12 +3,15 @@ package com.vo.scanner;
 import java.lang.reflect.Field;
 import java.util.Set;
 
+import javax.validation.constraints.Null;
+
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.core.ZLog2;
 import com.vo.http.ZConMap;
+import com.vo.http.ZConfigurationPropertiesMap;
 
 import cn.hutool.core.util.ClassUtil;
 
@@ -61,7 +64,8 @@ public class ZAutowiredScanner {
 
 					if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
 						final Object object = ZConMap.getByName(cls.getCanonicalName());
-						final Object value = ZComponentMap.getByName(f.getType().getCanonicalName());
+						final Object vT = ZComponentMap.getByName(f.getType().getCanonicalName());
+						final Object value = vT != null ? vT : ZConfigurationPropertiesMap.get(f.getType());
 
 						try {
 							f.setAccessible(true);

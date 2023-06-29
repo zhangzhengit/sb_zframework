@@ -15,6 +15,7 @@ import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZServer;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
+import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZValueScanner;
 
@@ -37,6 +38,9 @@ public class ZMain {
 		ZMain.LOG.info("zframework开始启动");
 		// 0 最先初始化 对象生成器
 		ZObjectGeneratorStarter.start();
+
+		// 1 读取配置，创建配置类
+		ZConfigurationPropertiesScanner.scanAndCreateObject();
 
 		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
 		scanZComponentAndCreate();
