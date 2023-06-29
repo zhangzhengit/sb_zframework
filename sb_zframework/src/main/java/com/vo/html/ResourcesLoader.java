@@ -84,7 +84,7 @@ public class ResourcesLoader {
 
 	private static byte[] readByteArray0(final InputStream inputStream) {
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-		final byte[] ba = new byte[1000 * 100];
+		final byte[] ba = new byte[1000 * 10];
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		while (true) {
 			try {
