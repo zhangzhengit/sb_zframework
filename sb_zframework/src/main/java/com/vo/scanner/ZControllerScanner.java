@@ -70,103 +70,113 @@ public class ZControllerScanner {
 
 				checkZHtml(method);
 
-				final Object newZController = getSingleton(cls);
+				final Object controllerObject = getSingleton(cls);
 
-
-				final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
-				if (requestMapping != null) {
-					final String[] rmArray = requestMapping.mapping();
-					if (ArrayUtil.isEmpty(rmArray)) {
+				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
+				if (requestMappingAnnotation != null) {
+					final String[] requestMappingArray = requestMappingAnnotation.mapping();
+					if (ArrayUtil.isEmpty(requestMappingArray)) {
 						throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
 					}
 
-					final HashSet<String> temp = Sets.newHashSet();
-					for (final String rm : rmArray) {
+					final Set<String> temp = Sets.newHashSet();
+					for (final String requestMapping : requestMappingArray) {
 
-						if (StrUtil.isEmpty(rm)) {
+						if (StrUtil.isEmpty(requestMapping)) {
 							throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
 						}
 
-						if (rm.charAt(0) != '/') {
-							throw new IllegalArgumentException(
-									"接口方法 " + method.getName() + " mapping值必须以/开始,method = " + method.getName());
-						}
+						checkRequestMapping(method, requestMapping);
 
-						// FIXME 2023年6月28日 下午10:26:17 zhanghen: TODO 校验 [///user] 的情况，必须以且只以一个/开头
-
-						final boolean add = temp.add(rm);
+						final boolean add = temp.add(requestMapping);
 						if (!add) {
 							throw new IllegalArgumentException(
-									"接口方法 " + method.getName() + " mapping值不能重复,mapping = " + Arrays.toString(rmArray));
+									"接口方法 " + method.getName() + " mapping值不能重复,mapping = " + Arrays.toString(requestMappingArray));
 						}
 					}
 
-					final boolean[] isRA = requestMapping.isRegex();
-					if (!ArrayUtil.isEmpty(isRA) && isRA.length != rmArray.length) {
+					final boolean[] isRegex = requestMappingAnnotation.isRegex();
+					if (!ArrayUtil.isEmpty(isRegex) && isRegex.length != requestMappingArray.length) {
 						throw new IllegalArgumentException(
-								"接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = " + isRA.length
-										+ " mapping个数 = " + rmArray.length);
+								"接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = " + isRegex.length
+										+ " mapping个数 = " + requestMappingArray.length);
 					}
 
-					for (int i = 0; i < rmArray.length; i++) {
-						final String mapping = rmArray[i];
-						final MethodEnum methodEnum = requestMapping.method();
-						ZControllerMap.put(methodEnum, mapping, method, newZController, isRA[i]);
+					for (int i = 0; i < requestMappingArray.length; i++) {
+						final String mapping = requestMappingArray[i];
+						final MethodEnum methodEnum = requestMappingAnnotation.method();
+						ZControllerMap.put(methodEnum, mapping, method, controllerObject, isRegex[i]);
 					}
 				}
 
 				final ZGet get = method.getAnnotation(ZGet.class);
 				if (get != null) {
 					checkPathVariable(get.path(), method);
-					ZControllerMap.put(MethodEnum.GET, get.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.GET.getMethod() + "@" + get.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.GET, get.path() , method, controllerObject, false);
 				}
 
 				final ZPost post = method.getAnnotation(ZPost.class);
 				if (post != null) {
-					ZControllerMap.put(MethodEnum.POST, post.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.POST.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.POST, post.path() , method, controllerObject, false);
 				}
 				final ZPut put = method.getAnnotation(ZPut.class);
 				if (put != null) {
-					ZControllerMap.put(MethodEnum.PUT, put.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.PUT.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.PUT, put.path() , method, controllerObject, false);
 				}
 				final ZDelete delete = method.getAnnotation(ZDelete.class);
 				if (delete != null) {
-					ZControllerMap.put(MethodEnum.DELETE, delete.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.DELETE.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.DELETE, delete.path() , method, controllerObject, false);
 				}
 				final ZHead head = method.getAnnotation(ZHead.class);
 				if (head != null) {
-					ZControllerMap.put(MethodEnum.HEAD, head.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.HEAD.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.HEAD, head.path() , method, controllerObject, false);
 				}
 				final ZConnect connect = method.getAnnotation(ZConnect.class);
 				if (connect != null) {
-					ZControllerMap.put(MethodEnum.CONNECT, connect.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.CONNECT.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.CONNECT, connect.path() , method, controllerObject, false);
 				}
 				final ZTrace trace = method.getAnnotation(ZTrace.class);
 				if (trace != null) {
-					ZControllerMap.put(MethodEnum.TRACE, trace.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.TRACE.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.TRACE, trace.path() , method, controllerObject, false);
 				}
 				final ZOptions options = method.getAnnotation(ZOptions.class);
 				if (options != null) {
-					ZControllerMap.put(MethodEnum.OPTIONS, options.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.OPTIONS.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.OPTIONS, options.path() , method, controllerObject, false);
 				}
 				final ZPatch patch = method.getAnnotation(ZPatch.class);
 				if (patch != null) {
-					ZControllerMap.put(MethodEnum.PATCH, patch.path() , method, newZController, false);
-//					ZControllerMap.putBean(MethodEnum.PATCH.getMethod() + "@" + post.path(), method, newZController);
+					ZControllerMap.put(MethodEnum.PATCH, patch.path() , method, controllerObject, false);
 				}
 			}
 
 		}
 
 		return zcSet;
+	}
+
+	/**
+	 * 校验requestMapping,必须以且只以一个/开头
+	 *
+	 * @param method
+	 * @param requestMapping
+	 *
+	 */
+	private static void checkRequestMapping(final Method method, final String requestMapping) {
+		if (requestMapping.charAt(0) != '/') {
+			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
+					+ method.getName() + " requestMapping = " + requestMapping);
+		}
+
+		if (requestMapping.length() <= 1) {
+			return;
+		}
+
+		final char charAt = requestMapping.charAt(1);
+		if (charAt == '/') {
+			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
+					+ method.getName() + " requestMapping = " + requestMapping);
+		}
+
 	}
 
 	private static void checkPathVariable(final String path, final Method method) {
