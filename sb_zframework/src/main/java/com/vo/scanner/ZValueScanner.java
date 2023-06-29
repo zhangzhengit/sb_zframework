@@ -5,17 +5,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.springframework.scheduling.commonj.ScheduledTimerListener;
 
 import com.google.common.collect.Lists;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.anno.ZValue;
-import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
-import com.vo.conf.ZFrameworkProperties;
 import com.vo.conf.ZProperties;
-import com.vo.core.ZSingleton;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -41,58 +37,22 @@ public class ZValueScanner {
 		if (clist.isEmpty()) {
 			return;
 		}
-//		final ZFrameworkProperties p = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance();
 
-		for (final Class cls : clist) {
-			final Object o2 = ZSingleton.getSingletonByClass(cls);
+		for (final Class<?> cls : clist) {
 			final Object byName = ZComponentMap.getByName(cls.getCanonicalName());
-			if(byName == null) {
+			if (byName == null) {
 				continue;
 			}
 
-//			final Field[] fs = cls.getDeclaredFields();
-			final Field[] fs = byName.getClass().getDeclaredFields();
-			// 2
 			final Field[] fields = ReflectUtil.getFields(byName.getClass());
 			for (final Field f2 : fields) {
 				final ZValue zv2 = f2.getAnnotation(ZValue.class);
-				if(zv2 == null) {
+				if (zv2 == null) {
 					continue;
 				}
 
 				setValue(f2, zv2, byName);
-
-				final int x2 =02;
 			}
-
-
-			// 1
-//			for (final Field f : fs) {
-//				final ZValue zv = f.getAnnotation(ZValue.class);
-//				if (zv != null) {
-//					System.out.println(
-//							"找到一个ZValue注解的字段，compent = " + cls.getCanonicalName() + "\t" + "field = " + f.getName());
-//					final Class<?> type = f.getType();
-//					System.out.println("f-type = " + type);
-//
-//
-//					setValue(f, zv, byName);
-//
-//					final Class<?> superclass = byName.getClass().getSuperclass();
-//					if(!superclass.getCanonicalName().equals(Object.class.getCanonicalName())) {
-//
-//						try {
-//							final Field sf = superclass.getDeclaredField(f.getName());
-//							final ZValue szv = sf.getAnnotation(ZValue.class);
-//							setValue(sf, szv, o2);
-//						} catch (NoSuchFieldException | SecurityException e) {
-//							e.printStackTrace();
-//						}
-//
-//					}
-//				}
-//
-//			}
 		}
 	}
 
