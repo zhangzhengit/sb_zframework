@@ -53,7 +53,7 @@ public class ZFrameworkDatasourcePropertiesLoader {
 				propertiesConfiguration.getInt("server.thread.count", Runtime.getRuntime().availableProcessors()));
 		final String scanPackage = propertiesConfiguration.getString("server.scan.package");
 		if (StrUtil.isEmpty(scanPackage)) {
-			throw new IllegalArgumentException("server.scan.package 不能配置为空");
+//			throw new IllegalArgumentException("server.scan.package 不能配置为空");
 		}
 		zDatasourceProperties.setScanPackage(scanPackage);
 		return zDatasourceProperties;
