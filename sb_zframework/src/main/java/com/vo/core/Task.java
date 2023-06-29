@@ -73,7 +73,7 @@ public class Task {
 	public static final String HTTP_500 = "HTTP/1.1 " + HTTP_STATUS_500;
 	public static final String HTTP_404 = "HTTP/1.1 " + HTTP_STATUS_404;
 
-	public static final String OK_200 = "HTTP/1.1 200";
+	public static final String HTTP_200 = "HTTP/1.1 200";
 
 	public static final String NEW_LINE = "\r\n";
 
@@ -550,7 +550,7 @@ public class Task {
 	}
 
 	private void write0(final ContentTypeEnum contentTypeEnum, final String content, final PrintWriter pw) {
-		final String c = OK_200 + NEW_LINE + contentTypeEnum.getValue() + NEW_LINE + SERVER + NEW_LINE + NEW_LINE + content + NEW_LINE;
+		final String c = HTTP_200 + NEW_LINE + contentTypeEnum.getValue() + NEW_LINE + SERVER + NEW_LINE + NEW_LINE + content + NEW_LINE;
 		pw.write(c);
 	}
 

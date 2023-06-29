@@ -45,7 +45,7 @@ public class StaticController {
 		final byte[] ba  = ResourcesLoader.loadByteArray(rName);
 
 		final byte[] baA = ArrayUtil.addAll(
-				Task.OK_200.getBytes(),
+				Task.HTTP_200.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				cte.getValue().getBytes(),
 				Task.NEW_LINE.getBytes(),
@@ -84,7 +84,7 @@ public class StaticController {
 		final byte[] ba = ResourcesLoader.loadByteArray("/image/favicon.ico");
 		final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(response.getOutputStream());
 
-		final byte[] baA = ArrayUtil.addAll(Task.OK_200.getBytes(), Task.NEW_LINE.getBytes(),
+		final byte[] baA = ArrayUtil.addAll(Task.HTTP_200.getBytes(), Task.NEW_LINE.getBytes(),
 				ContentTypeEnum.JPG.getValue().getBytes(), Task.NEW_LINE.getBytes(), Task.NEW_LINE.getBytes(), ba,
 				Task.NEW_LINE.getBytes());
 
