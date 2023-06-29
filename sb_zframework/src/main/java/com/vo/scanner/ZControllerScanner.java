@@ -184,8 +184,6 @@ public class ZControllerScanner {
 				continue;
 			}
 
-//			 FIXME 2023年6月28日 下午9:22:40 zhanghen: 用正则判断 path规则 如： /user/{id}、/user 等
-
 			if (s.charAt(0) != '{' && s.charAt(s.length() - 1) != '}') {
 				continue;
 			}
