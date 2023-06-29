@@ -16,6 +16,7 @@ import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.http.ZConfigurationPropertiesMap;
+import com.vo.validator.ZNotNull;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
@@ -68,7 +69,15 @@ public class ZConfigurationPropertiesScanner {
 		if (!p.containsKey(key)) {
 			final String convert = convert(key);
 			if (!p.containsKey(convert)) {
-				return;
+				final ZNotNull nn = field.getAnnotation(ZNotNull.class);
+				if (nn == null) {
+					return;
+				}
+				final String message = ZNotNull.MESSAGE;
+				final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+						+ object.getClass().getSimpleName() + "." + field.getName();
+				final String format = String.format(message, t);
+				throw new IllegalArgumentException(format);
 			}
 			keyAR.set(convert);
 		} else {
