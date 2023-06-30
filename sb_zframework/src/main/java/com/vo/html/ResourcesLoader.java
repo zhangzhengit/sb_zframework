@@ -39,6 +39,22 @@ public class ResourcesLoader {
 		return htmlContent;
 	}
 
+	/**
+	 * 加载静态资源，resourceName 不用自己拼接前缀目录了，此方法内自动拼接
+	 *
+	 * @param resourceName
+	 * @return
+	 *
+	 */
+	public static byte[] loadStaticResource(final String resourceName) {
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String staticPrefix = serverConfiguration.getStaticPrefix();
+		final String key = staticPrefix + resourceName;
+
+		final byte[] ba = loadByteArray(key);
+		return ba;
+	}
+
 	public static byte[] loadByteArray(final String name) {
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, name);

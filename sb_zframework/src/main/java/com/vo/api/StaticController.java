@@ -46,14 +46,17 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String staticPrefix = serverConfiguration.getStaticPrefix();
-		final byte[] ba  = ResourcesLoader.loadByteArray(staticPrefix + resourceName);
-
+		final byte[] ba = ResourcesLoader.loadStaticResource(resourceName);
 		response.writeOK200AndFlushAndClose(cte, ba);
-
 	}
 
+	/**
+	 * 通用的html匹配接口
+	 *
+	 * @param response
+	 * @param request
+	 *
+	 */
 	@ZRequestMapping(mapping = { "/.+\\.html$" }, isRegex = { true })
 	public void html(final HResponse response,final HRequest request) {
 
