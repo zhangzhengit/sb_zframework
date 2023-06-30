@@ -28,6 +28,8 @@ import cn.hutool.core.util.ReflectUtil;
  */
 public class ZValueScanner {
 
+	// FIXME 2023年6月30日 下午10:30:45 zhanghen: 支持 @ZValue 更多类型，不仅限于String
+
 	public static void scan(final String packageName) {
 		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZComponent.class);
 		final Set<Class<?>> zc2Set = ClassUtil.scanPackageByAnnotation(packageName, ZController.class);
