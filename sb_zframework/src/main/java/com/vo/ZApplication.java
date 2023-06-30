@@ -12,6 +12,8 @@ import com.vo.core.ZSingleton;
  * @date 2023年6月19日
  *
  */
+// FIXME 2023年7月1日 上午4:40:42 zhanghen: TODO :静态资源 加一个配置：指定的目录位置,不设死为 resources了
+
 public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
