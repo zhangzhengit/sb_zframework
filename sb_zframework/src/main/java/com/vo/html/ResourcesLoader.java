@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import com.google.common.collect.HashBasedTable;
+import com.vo.conf.ServerConfiguration;
+import com.vo.core.ZSingleton;
 
 /**
  * 从 resources 目录加载文件
@@ -21,6 +23,21 @@ public class ResourcesLoader {
 	public static final String NEW_LINE = "\n\r";
 
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
+
+	/**
+	 * 加载html页面内容，htmlName 不用自己拼接前缀目录了，此方法内自动拼接
+	 *
+	 * @param htmlName
+	 * @return
+	 */
+	public static String loadHtml(final String htmlName) {
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String htmlPrefix = serverConfiguration.getHtmlPrefix();
+		final String key = htmlPrefix + htmlName;
+
+		final String htmlContent = loadString(key);
+		return htmlContent;
+	}
 
 	public static byte[] loadByteArray(final String name) {
 

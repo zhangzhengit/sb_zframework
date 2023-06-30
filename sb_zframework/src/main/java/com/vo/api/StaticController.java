@@ -50,7 +50,7 @@ public class StaticController {
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
 		final byte[] ba  = ResourcesLoader.loadByteArray(staticPrefix + resourceName);
 
-		response.write200AndFlushAndClose(cte, ba);
+		response.writeOK200AndFlushAndClose(cte, ba);
 
 	}
 
@@ -72,11 +72,7 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String htmlPrefix = serverConfiguration.getHtmlPrefix();
-		final byte[] ba  = ResourcesLoader.loadByteArray(htmlPrefix + resourceName);
-
-		response.write200AndFlushAndClose(cte, ba);
-
+		final String html = ResourcesLoader.loadHtml(resourceName);
+		response.writeOK200AndFlushAndClose(cte, html);
 	}
 }

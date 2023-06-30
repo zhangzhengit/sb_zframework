@@ -3,23 +3,17 @@ package com.vo.core;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
 import java.util.ArrayList;
-
-import org.codehaus.groovy.tools.shell.commands.HelpCommand;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.vo.core.HRequest.ZCookie;
 import com.vo.core.HRequest.ZHeader;
 import com.votool.common.CR;
-import com.votool.redis.mq.TETS_MQ_1;
 
 import cn.hutool.core.util.ArrayUtil;
-import freemarker.core._DelayedGetMessageWithoutStackTop;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import reactor.core.publisher.SynchronousSink;
 
 /**
  *
@@ -88,14 +82,18 @@ public class HResponse {
 			bufferedOutputStream.flush();
 			bufferedOutputStream.close();
 
-			this.flush();
-			this.close();
+			this.flushAndClose();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void write200AndFlushAndClose(final ContentTypeEnum cte,final byte[] ba) {
+	public void writeOK200AndFlushAndClose(final ContentTypeEnum cte, final String string) {
+		final byte[] ba = string.getBytes();
+		this.writeOK200AndFlushAndClose(cte, ba);
+	}
+
+	public void writeOK200AndFlushAndClose(final ContentTypeEnum cte,final byte[] ba) {
 		final byte[] baA = ArrayUtil.addAll(
 				Task.HTTP_200.getBytes(),
 				Task.NEW_LINE.getBytes(),
@@ -112,14 +110,13 @@ public class HResponse {
 			bufferedOutputStream.flush();
 			bufferedOutputStream.close();
 
-			this.flush();
-			this.close();
+			this.flushAndClose();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public  void write(final CR<?> cr,final String httpStatus) {
+	public void write(final CR<?> cr, final String httpStatus) {
 		final byte[] baERROR = ArrayUtil.addAll(
 //				Task.HTTP_200.getBytes(),
 				httpStatus.getBytes(),
@@ -168,6 +165,12 @@ public class HResponse {
 		}
 
 	}
+
+	public void flushAndClose() {
+		this.flush();
+		this.close();
+	}
+
 	public void flush() {
 		try {
 			this.outputStream.flush();
