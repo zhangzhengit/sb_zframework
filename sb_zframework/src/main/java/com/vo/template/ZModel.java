@@ -5,7 +5,7 @@ import java.util.Map;
 import com.google.common.collect.Maps;
 
 /**
- * 用于设置值，传到html页面中，使用${key}来取值
+ * 用于传值到html模板标签中
  *
  * @author zhangzhen
  * @date 2023年6月27日
