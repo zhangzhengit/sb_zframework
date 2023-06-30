@@ -49,7 +49,7 @@ public class ZFrameworkDatasourcePropertiesLoader {
 
 	private static ZFrameworkProperties newP(final PropertiesConfiguration propertiesConfiguration) {
 		final ZFrameworkProperties zDatasourceProperties = new ZFrameworkProperties();
-		zDatasourceProperties.setServerPort(propertiesConfiguration.getInt("server.port", HRequest.HTTP_PORT_DEFAULT));
+		zDatasourceProperties.setServerPort(propertiesConfiguration.getInt("server.port", ZServer.DEFAULT_HTTP_PORT));
 		zDatasourceProperties.setThreadCount(
 				propertiesConfiguration.getInt("server.thread.count", Runtime.getRuntime().availableProcessors()));
 		final String threadNamePrefix = propertiesConfiguration.getString("server.thread.name.prefix");

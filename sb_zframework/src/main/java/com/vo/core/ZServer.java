@@ -6,15 +6,9 @@ package com.vo.core;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
 import com.vo.conf.ZFrameworkProperties;
-import com.vo.core.ZLog2;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
@@ -27,9 +21,12 @@ import com.votool.ze.ZES;
  */
 public class ZServer extends Thread {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+
 	public static final String DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX = "zframework-http-thread-";
 
-	private static final ZLog2 LOG = ZLog2.getInstance();
+	public static final int DEFAULT_HTTP_PORT = 80;
+
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
 	private final static ZE ZE = ZES.newZE(FRAMEWORK_PROPERTIES.getThreadCount(), FRAMEWORK_PROPERTIES.getThreadNamePrefix());

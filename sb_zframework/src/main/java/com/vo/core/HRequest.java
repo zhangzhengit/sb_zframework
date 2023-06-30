@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.vo.conf.ServerConfiguration;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.collection.CollUtil;
@@ -33,7 +34,7 @@ public class HRequest {
 
 	public static final String HOST = "Host";
 
-	public static final int HTTP_PORT_DEFAULT = 80;
+
 
 	// -------------------------------------------------------------------------------------------------
 	private List<String> lineList = Lists.newArrayList();
@@ -76,7 +77,7 @@ public class HRequest {
 			return Integer.parseInt(port);
 		}
 
-		return HTTP_PORT_DEFAULT;
+		return ZServer.DEFAULT_HTTP_PORT;
 	}
 
 	public String getRequestURL() {
