@@ -1,7 +1,7 @@
 package com.vo.core;
 
 /**
- *	用于暂存 ZRequestMapping 里的 正则表达式的参数
+ * 用于暂存 ZRequestMapping 里的 正则表达式的参数
  *
  * @author zhangzhen
  * @date 2023年6月28日
@@ -19,6 +19,7 @@ public class ZMappingRegex {
 		tl.remove();
 		return v;
 	}
+
 	public static Object get() {
 		return tl.get();
 	}

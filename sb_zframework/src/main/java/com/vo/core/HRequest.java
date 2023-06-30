@@ -40,13 +40,14 @@ public class HRequest {
 	private List<String> lineList = Lists.newArrayList();
 
 	private String body;
+	private RequestLine requestLine;
 
 	public void addLine(final String line) {
 		this.getLineList().add(line);
 	}
 
 	public String getMethod() {
-		final String method = Task.parseRequest(this).getMethodEnum().getMethod();
+		final String method = Task.parseRequest(this).getRequestLine().getMethodEnum().getMethod();
 		return method;
 	}
 
@@ -98,7 +99,7 @@ public class HRequest {
 	}
 
 	private RequestLine ppp() {
-		final RequestLine requestLine = Task.parseRequest(this);
+		final RequestLine requestLine = Task.parseRequest(this).getRequestLine();
 		return requestLine;
 	}
 

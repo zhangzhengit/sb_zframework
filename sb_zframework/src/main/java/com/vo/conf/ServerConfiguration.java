@@ -32,6 +32,7 @@ public class ServerConfiguration {
 	private String scanPackage;
 
 	@ZNotNull
+	@ZMin(min = 1)
 	private Integer concurrentQuantity;
 
 }

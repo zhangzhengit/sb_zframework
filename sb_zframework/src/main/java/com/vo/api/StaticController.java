@@ -46,7 +46,7 @@ public class StaticController {
 
 		final byte[] ba  = ResourcesLoader.loadByteArray(rName);
 
-		response.write200AndFlushAndClose(ba, cte);
+		response.write200AndFlushAndClose(cte, ba);
 
 	}
 }

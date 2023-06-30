@@ -33,6 +33,8 @@ import reactor.core.publisher.SynchronousSink;
 @AllArgsConstructor
 public class HResponse {
 
+	private static final String HTTP_1_1 = "HTTP/1.1 ";
+
 	public static final String SET_COOKIE = "Set-Cookie";
 
 	private final OutputStream outputStream;
@@ -56,10 +58,43 @@ public class HResponse {
 	}
 
 	public void write(final CR<?> cr, final Integer httpStatus) {
-		this.write(cr, "HTTP/1.1 " + httpStatus);
+		this.write(cr, HTTP_1_1 + httpStatus);
 	}
 
-	public void write200AndFlushAndClose(final byte[] ba,final ContentTypeEnum cte) {
+	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final CR cr) {
+		this.writeAndFlushAndClose(cte, httpStatus, JSON.toJSONString(cr));
+	}
+
+	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final String message) {
+		this.writeAndFlushAndClose(cte, httpStatus, message.getBytes());
+	}
+
+	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final byte[] ba) {
+
+		final byte[] baA = ArrayUtil.addAll(
+				(HTTP_1_1 + httpStatus).getBytes(),
+				Task.NEW_LINE.getBytes(),
+				cte.getValue().getBytes(),
+				Task.NEW_LINE.getBytes(),
+				Task.NEW_LINE.getBytes(),
+				ba,
+				Task.NEW_LINE.getBytes());
+
+		try {
+			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
+
+			bufferedOutputStream.write(baA);
+			bufferedOutputStream.flush();
+			bufferedOutputStream.close();
+
+			this.flush();
+			this.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void write200AndFlushAndClose(final ContentTypeEnum cte,final byte[] ba) {
 		final byte[] baA = ArrayUtil.addAll(
 				Task.HTTP_200.getBytes(),
 				Task.NEW_LINE.getBytes(),

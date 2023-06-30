@@ -82,12 +82,12 @@ public class Task {
 	public static final Charset UTF_8_CHARSET = Charset.forName(UTF_8);
 
 	private final Socket socket;
-	private  InputStream inputStream;
+	private InputStream inputStream;
 	private BufferedInputStream bufferedInputStream;
-
 
 	@SuppressWarnings("boxing")
 	public Task(final Socket socket) {
+		// 0 初始化
 		this.socket = socket;
 		try {
 			this.inputStream = this.socket.getInputStream();
@@ -96,12 +96,20 @@ public class Task {
 			e1.printStackTrace();
 		}
 
-		final HRequest request = this.handleRead();
+//		// 1 读取
+//		final HRequest request = this.read();
+//
+//		// 2 解析
+//		final RequestLine requestLine = this.parse(request).getRequestLine();
+//
+//		// 3 执行
+//		this.invoke(socket, request, requestLine);
 
-		// 开始解析
-		final RequestLine requestLine = Task.parseRequest(request);
+	}
 
+	public void invoke(final HRequest request) {
 		// 匹配path
+		final RequestLine requestLine = request.getRequestLine();
 		final String path = requestLine.getPath();
 
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
@@ -129,7 +137,7 @@ public class Task {
 				}
 			}
 
-			Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), socket);
+			Task.handleWrite404(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), this.socket);
 			return;
 		}
 
@@ -141,12 +149,26 @@ public class Task {
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			final CR<Object> error = CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR);
-			Task.handleWrite500(DEFAULT_CONTENT_TYPE, error, socket);
+			Task.handleWrite500(DEFAULT_CONTENT_TYPE, error, this.socket);
 			e.printStackTrace();
 		} finally {
 			this.closeSocketAndStream();
 		}
+	}
 
+	public HRequest parse(final HRequest request) {
+		return Task.parseRequest(request);
+	}
+
+	public HRequest readAndParse() {
+		final HRequest r1 = this.read();
+		final HRequest r2 = this.parse(r1);
+		return r2;
+	}
+
+	public HRequest read() {
+		final HRequest request = this.handleRead();
+		return request;
 	}
 
 	/**
@@ -337,23 +359,23 @@ public class Task {
 		return fullName;
 	}
 
-	public static RequestLine parseRequest(final HRequest request) {
+	public static HRequest parseRequest(final HRequest request) {
 		final Object v = CACHE_MAP.get(request);
 		if (v != null) {
-			return (RequestLine) v;
+			return (HRequest) v;
 		}
 
 		synchronized (request) {
-			final RequestLine v2 = parseRequest0(request);
+			final HRequest v2 = parseRequest0(request);
 			CACHE_MAP.put(request, v2);
 			return v2;
 		}
 	}
 
-	private static RequestLine parseRequest0(final HRequest request) {
+	private static HRequest parseRequest0(final HRequest request) {
 		final HRequest.RequestLine requestLine = new HRequest.RequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
-			return requestLine;
+			return request;
 		}
 
 		// 0 为 请求行
@@ -389,7 +411,11 @@ public class Task {
 		// parseBody
 		parseBody(request, requestLine);
 
-		return requestLine;
+
+		request.setRequestLine(requestLine);
+
+		return request;
+//		return requestLine;
 	}
 
 	private static void parseBody(final HRequest request, final HRequest.RequestLine requestLine) {

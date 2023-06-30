@@ -37,7 +37,7 @@ public class ZSingleton {
 		return null;
 	}
 
-	public static Object getSingletonByClass(final Class<?> cls) {
+	public static <T> T getSingletonByClass(final Class<T> cls) {
 
 		final String key = cls.getCanonicalName();
 
@@ -45,12 +45,12 @@ public class ZSingleton {
 
 			final Object v = SINGLETON_MAP.get(key);
 			if (v != null) {
-				return v;
+				return (T) v;
 			}
 			try {
 				final Object newInstance = cls.newInstance();
 				SINGLETON_MAP.put(key, newInstance);
-				return newInstance;
+				return (T) newInstance;
 			} catch (InstantiationException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
