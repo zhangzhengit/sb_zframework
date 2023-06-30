@@ -143,6 +143,11 @@ public class HRequest {
 		return c;
 	}
 
+	public String getHeader(final String name) {
+		final RequestLine requestLine = this.ppp();
+		final String header = requestLine.getHeaderMap().get(name);
+		return header;
+	}
 
 	public Object getParameter(final String name) {
 		final RequestLine requestLine = this.ppp();

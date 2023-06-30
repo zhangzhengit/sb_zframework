@@ -55,8 +55,35 @@ public class HResponse {
 		this.addHeader(new ZHeader(name, value));
 	}
 
+	public void write(final CR<?> cr, final Integer httpStatus) {
+		this.write(cr, "HTTP/1.1 " + httpStatus);
+	}
 
-	public  void write(final CR cr,final String httpStatus) {
+	public void write200AndFlushAndClose(final byte[] ba,final ContentTypeEnum cte) {
+		final byte[] baA = ArrayUtil.addAll(
+				Task.HTTP_200.getBytes(),
+				Task.NEW_LINE.getBytes(),
+				cte.getValue().getBytes(),
+				Task.NEW_LINE.getBytes(),
+				Task.NEW_LINE.getBytes(),
+				ba,
+				Task.NEW_LINE.getBytes());
+
+		try {
+			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
+
+			bufferedOutputStream.write(baA);
+			bufferedOutputStream.flush();
+			bufferedOutputStream.close();
+
+			this.flush();
+			this.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public  void write(final CR<?> cr,final String httpStatus) {
 		final byte[] baERROR = ArrayUtil.addAll(
 //				Task.HTTP_200.getBytes(),
 				httpStatus.getBytes(),
@@ -108,6 +135,14 @@ public class HResponse {
 	public void flush() {
 		try {
 			this.outputStream.flush();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void close() {
+		try {
+			this.outputStream.close();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

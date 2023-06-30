@@ -1,7 +1,5 @@
 package com.vo.core;
 
-import org.apache.commons.configuration.PropertiesConfiguration.IOFactory;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -41,6 +39,8 @@ public enum ContentTypeEnum {
 	JPG("Content-Type: image/jpg;", "image/jpg"),
 
 	JS("Content-Type: application/javascript;", "application/javascript"),
+
+	ICON("Content-Type: image/vnd.microsoft.icon;", "image/vnd.microsoft.ico"),
 
 	;
 
