@@ -3,6 +3,7 @@ package com.vo.conf;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
+import com.vo.validator.ZStartWith;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,12 +42,14 @@ public class ServerConfiguration {
 	 * 静态资源的目录前缀
 	 */
 	@ZNotNull
+	@ZStartWith(prefix = "/")
 	private String staticPrefix;
 
 	/**
 	 * html 文件所在目录前缀
 	 */
 	@ZNotNull
+	@ZStartWith(prefix = "/")
 	private String htmlPrefix;
 
 }

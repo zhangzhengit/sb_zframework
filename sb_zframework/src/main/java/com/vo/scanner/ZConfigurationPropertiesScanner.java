@@ -25,6 +25,7 @@ import com.vo.http.ZConfigurationPropertiesMap;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
+import com.vo.validator.ZStartWith;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
@@ -130,7 +131,7 @@ public class ZConfigurationPropertiesScanner {
 		// 赋值以后才可以校验
 		checkZMin(object, field);
 		checkZMax(object, field);
-
+		checkZStartWith(object, field);
 	}
 
 	private static String getStringValue(final PropertiesConfiguration p, final AtomicReference<String> keyAR) {
@@ -145,6 +146,49 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	@SuppressWarnings("boxing")
+	private static void checkZStartWith(final Object object, final Field field) {
+		final ZStartWith startWidh = field.getAnnotation(ZStartWith.class);
+		if (startWidh == null) {
+			return;
+		}
+
+
+		final Class<?> type = field.getType();
+		if(!type.getCanonicalName().equals(String.class.getCanonicalName())) {
+			throw new IllegalArgumentException("@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
+		}
+
+		field.setAccessible(true);
+		try {
+			final Object value = field.get(object);
+			if (value == null) {
+				throw new IllegalArgumentException(
+						"@" + ZStartWith.class.getSimpleName() + " 字段[" + field.getName() + "]不能为null");
+			}
+			final String v2 = String.valueOf(value);
+			if (v2.isEmpty()) {
+				throw new IllegalArgumentException(
+						"@" + ZStartWith.class.getSimpleName() + " 字段[" + field.getName() + "]不能为empty");
+			}
+
+			final String prefix = startWidh.prefix();
+			final boolean startsWith = v2.startsWith(prefix);
+			if (!startsWith) {
+
+				final String message = ZStartWith.MESSAGE;
+				final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+						+ object.getClass().getSimpleName() + "." + field.getName();
+
+				final String format = String.format(message, t, prefix);
+
+				throw new IllegalArgumentException(format);
+			}
+
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private static void checkZMax(final Object object, final Field field) {
 		final ZMax zMax = field.getAnnotation(ZMax.class);
 		if (zMax == null) {
