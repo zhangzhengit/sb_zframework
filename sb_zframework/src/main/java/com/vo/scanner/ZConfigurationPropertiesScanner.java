@@ -84,16 +84,12 @@ public class ZConfigurationPropertiesScanner {
 		keyAR.set(convert);
 		if (!p.containsKey(convert)) {
 			// 把[orderCount]转为[order.count]后，仍无对应的配置项，则看 是否有校验注解
-
 			checkZNotNull(object, field);
-
-			// FIXME 2023年6月30日 下午10:01:54 zhanghen: check @ZMin
 
 		} else {
 			setValueByType(object, field, p, type, keyAR);
 		}
 
-		// FIXME 2023年6月30日 下午9:52:22 zhanghen: TODO check @ZMin
 	}
 
 	private static void setValueByType(final Object object, final Field field, final PropertiesConfiguration p,
