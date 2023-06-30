@@ -11,6 +11,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
+import com.vo.core.ContentTypeEnum;
+import com.vo.core.Task;
 import com.vo.core.ZSingleton;
 
 /**
@@ -45,10 +47,12 @@ public class ResourcesLoader {
 	 * 把静态资源写入输出流，不放入缓存.
 	 *
 	 * @param resourceName
+	 * @param cte TODO
 	 * @param outputStream
 	 * @return 返回写入的字节数
 	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final OutputStream outputStream) {
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final ContentTypeEnum cte, final OutputStream outputStream) {
+
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
 		final String key = staticPrefix + resourceName;
@@ -56,8 +60,20 @@ public class ResourcesLoader {
 		final InputStream inputStream = checkInputStream(key);
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+		try {
+			outputStream.write(Task.HTTP_200.getBytes());
+			outputStream.write(Task.NEW_LINE.getBytes());
+			outputStream.write(cte.getValue().getBytes());
+			outputStream.write(Task.NEW_LINE.getBytes());
+			outputStream.write(Task.NEW_LINE.getBytes());
+		} catch (final IOException e1) {
+			e1.printStackTrace();
+		}
+
 		final AtomicLong write = writeToOutputStream(bufferedInputStream, outputStream);
 		try {
+//			outputStream.write(Task.NEW_LINE.getBytes());
 			outputStream.flush();
 			outputStream.close();
 

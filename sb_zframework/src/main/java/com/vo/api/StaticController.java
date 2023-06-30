@@ -44,7 +44,7 @@ public class StaticController {
 			return;
 		}
 
-		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, response.getOutputStream());
+		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response.getOutputStream());
 	}
 
 	/**
