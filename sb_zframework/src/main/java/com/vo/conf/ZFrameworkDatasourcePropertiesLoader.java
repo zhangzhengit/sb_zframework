@@ -8,6 +8,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import com.google.common.collect.Lists;
 import com.vo.core.HRequest;
 import com.vo.core.ZLog2;
+import com.vo.core.ZServer;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -51,6 +52,13 @@ public class ZFrameworkDatasourcePropertiesLoader {
 		zDatasourceProperties.setServerPort(propertiesConfiguration.getInt("server.port", HRequest.HTTP_PORT_DEFAULT));
 		zDatasourceProperties.setThreadCount(
 				propertiesConfiguration.getInt("server.thread.count", Runtime.getRuntime().availableProcessors()));
+		final String threadNamePrefix = propertiesConfiguration.getString("server.thread.name.prefix");
+		if (StrUtil.isEmpty(threadNamePrefix)) {
+			zDatasourceProperties.setThreadNamePrefix(ZServer.DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX);
+		} else {
+			zDatasourceProperties.setThreadNamePrefix(threadNamePrefix);
+		}
+
 		final String scanPackage = propertiesConfiguration.getString("server.scan.package");
 		if (StrUtil.isEmpty(scanPackage)) {
 //			throw new IllegalArgumentException("server.scan.package 不能配置为空");

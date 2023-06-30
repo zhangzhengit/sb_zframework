@@ -18,5 +18,7 @@ public class ZFrameworkProperties {
 
 	private Integer serverPort;
 	private Integer threadCount;
+	private String threadNamePrefix;
 	private String scanPackage;
+
 }

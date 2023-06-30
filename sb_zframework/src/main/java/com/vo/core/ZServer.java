@@ -27,10 +27,12 @@ import com.votool.ze.ZES;
  */
 public class ZServer extends Thread {
 
+	public static final String DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX = "zframework-http-thread-";
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
-	private final static ZE ZE = ZES.newZE(FRAMEWORK_PROPERTIES.getThreadCount(), "sb_zframework_http-thread-");
+	private final static ZE ZE = ZES.newZE(FRAMEWORK_PROPERTIES.getThreadCount(), FRAMEWORK_PROPERTIES.getThreadNamePrefix());
 
 	@Override
 	public void run() {

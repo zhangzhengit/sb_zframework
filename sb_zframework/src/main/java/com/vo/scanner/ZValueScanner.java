@@ -1,6 +1,8 @@
 package com.vo.scanner;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
 
@@ -58,18 +60,23 @@ public class ZValueScanner {
 
 	private static void setValue(final Field field, final ZValue zValue, final Object object) {
 
-		final String key = zValue.name();
-		final Class<?> type = field.getType();
 		final PropertiesConfiguration p = ZProperties.getInstance();
+		final String key = zValue.name();
+		if (!p.containsKey(key)) {
+			return;
+		}
+
+		final Class<?> type = field.getType();
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			try {
-				final String value = p.getString(key);
+				final String v1 = p.getString(key);
+				final String v2 = new String(v1.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),Charset.defaultCharset().displayName());
+
 				field.setAccessible(true);
-				field.set(object, value);
-				System.out.println("field赋值成功，field = " + field.getName()  + "\t" + "value = " + value
-						+ "\t" + " object = " + object
-						);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
+				field.set(object, v2);
+				System.out.println(
+						"field赋值成功，field = " + field.getName() + "\t" + "value = " + v2 + "\t" + " object = " + object);
+			} catch (IllegalArgumentException | IllegalAccessException | UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
