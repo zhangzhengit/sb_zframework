@@ -44,4 +44,6 @@ public @interface ZRequestMapping {
 	 */
 	MethodEnum method() default MethodEnum.GET;
 
+	int qps() default 520;
+
 }

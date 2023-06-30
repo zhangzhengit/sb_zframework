@@ -10,15 +10,9 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.catalina.Server;
-import org.apache.catalina.webresources.CachedResource;
-import org.checkerframework.checker.units.qual.m;
-
-import com.google.common.collect.Maps;
 import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
 import com.vo.conf.ZFrameworkProperties;
-import com.vo.core.HRequest.RequestLine;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 import com.votool.ze.ZE;
@@ -34,6 +28,8 @@ import com.votool.ze.ZES;
 public class ZServer extends Thread {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	private static final String Z_SERVER_QPS = "ZServer_QPS";
 
 	public static final String DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX = "zframework-http-thread-";
 
@@ -61,17 +57,15 @@ public class ZServer extends Thread {
 				final Socket socket = serverSocket.accept();
 //				System.out.println("new-socket = " + socket);
 				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-				final boolean allow = Counter.allow(serverConfiguration.getConcurrentQuantity());
+				final boolean allow = Counter.allow(Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
 				if (!allow) {
-
-					System.out.println("qps 超了,time = " + LocalDateTime.now() + "\t" + "qps = "
-							+ serverConfiguration.getConcurrentQuantity());
 
 					final HResponse response = new HResponse(socket.getOutputStream());
 					response.writeAndFlushAndClose(ContentTypeEnum.JSON, HttpStatus.HTTP_403.getCode(),
-							CR.error(HttpStatus.HTTP_403.getCode(), "超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
+							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
 
 					socket.close();
+
 				} else {
 					ZServer.ZE.executeInQueue(() -> {
 						final Task task = new Task(socket);
@@ -103,20 +97,31 @@ public class ZServer extends Thread {
 	 */
 	public static class Counter {
 
-		private static final Map<Long, Long> map = new ConcurrentHashMap<>(4, 1F);
+		private static final Map<String, Long> map = new ConcurrentHashMap<>(4, 1F);
 
-		public static boolean allow(final long qps) {
-			final long currentTimeMillis = System.currentTimeMillis();
-			final long seconds = currentTimeMillis / 1000L;
+		public static boolean allow(final String keyword, final long qps) {
 
-			final Long v = map.get(seconds);
-			if (v == null) {
-				map.clear();
+			if (qps <= 0) {
+				return false;
 			}
-			final long count = v == null ? 1 : v + 1;
-			map.put(seconds, count);
 
-			return count <= qps;
+			final long seconds = System.currentTimeMillis() / 1000L;
+
+			final String key = keyword + "@" + seconds;
+
+			synchronized (keyword) {
+
+				final Long v = map.get(key);
+				if (v == null) {
+					map.put(key, 1L);
+					return true;
+				}
+
+				final long newCount = v + 1L;
+				map.put(key, newCount);
+
+				return newCount <= qps;
+			}
 		}
 
 	}

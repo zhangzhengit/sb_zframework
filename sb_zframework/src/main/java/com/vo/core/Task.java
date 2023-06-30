@@ -31,6 +31,7 @@ import com.vo.core.HRequest.RequestLine;
 import com.vo.core.HRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.html.ResourcesLoader;
+import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 //import com.vo.http.ZControllerMap;
 import com.vo.http.ZControllerMap;
@@ -208,6 +209,25 @@ public class Task {
 
 	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController)
 			throws IllegalAccessException, InvocationTargetException {
+
+
+		final String controllerName = zController.getClass().getCanonicalName();
+		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
+
+		final boolean allow = ZServer.Counter.allow(controllerName + method.getName(), qps);
+		if (!allow) {
+
+			try {
+				final HResponse response = new HResponse(this.socket.getOutputStream());
+				response.writeAndFlushAndClose(ContentTypeEnum.JSON, HttpStatus.HTTP_403.getCode(),
+						CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"));
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+
+			return;
+		}
+
 		if (VOID.equals(method.getReturnType().getCanonicalName())) {
 			method.invoke(zController, arraygP);
 			return;
