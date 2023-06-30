@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
+import com.vo.conf.ServerConfiguration;
 import com.vo.core.HRequest.RequestLine;
 import com.vo.core.HRequest.RequestParam;
 import com.vo.enums.MethodEnum;
@@ -239,7 +240,9 @@ public class Task {
 			final String ss = String.valueOf(r);
 			final String htmlName = ss.charAt(0) == '/' ? ss : '/' + ss;
 			try {
-				final String htmlContent = ResourcesLoader.loadString(htmlName);
+
+				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+				final String htmlContent = ResourcesLoader.loadString(serverConfiguration.getHtmlPrefix() + htmlName);
 
 				final String html = ZTemplate.generate(htmlContent);
 				this.handleWrite(ContentTypeEnum.HTML, html);

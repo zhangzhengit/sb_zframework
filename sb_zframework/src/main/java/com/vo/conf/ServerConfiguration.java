@@ -37,4 +37,16 @@ public class ServerConfiguration {
 //	@ZMin(min = 520)
 	private Integer concurrentQuantity;
 
+	/**
+	 * 静态资源的目录前缀
+	 */
+	@ZNotNull
+	private String staticPrefix;
+
+	/**
+	 * html 文件所在目录前缀
+	 */
+	@ZNotNull
+	private String htmlPrefix;
+
 }
