@@ -89,6 +89,8 @@ public class ZConfigurationPropertiesScanner {
 
 			// FIXME 2023年6月30日 下午10:01:54 zhanghen: check @ZMin
 
+		} else {
+			setValueByType(object, field, p, type, keyAR);
 		}
 
 		// FIXME 2023年6月30日 下午9:52:22 zhanghen: TODO check @ZMin
