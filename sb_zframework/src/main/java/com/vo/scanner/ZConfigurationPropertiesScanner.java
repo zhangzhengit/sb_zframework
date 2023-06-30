@@ -24,6 +24,7 @@ import com.vo.core.ZSingleton;
 import com.vo.http.ZConfigurationPropertiesMap;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
+import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 import com.vo.validator.ZStartWith;
 
@@ -85,9 +86,9 @@ public class ZConfigurationPropertiesScanner {
 		final String convert = convert(key);
 		keyAR.set(convert);
 		if (!p.containsKey(convert)) {
-			// 把[orderCount]转为[order.count]后，仍无对应的配置项，则看 是否有校验注解
+			// 把[orderCount]转为[order.count]后，仍无对应的配置项，
+			// 则看 是否有ZNotNull,有则抛异常
 			checkZNotNull(object, field);
-
 		} else {
 			setValueByType(object, field, p, type, keyAR);
 		}
@@ -131,6 +132,7 @@ public class ZConfigurationPropertiesScanner {
 		// 赋值以后才可以校验
 		checkZMin(object, field);
 		checkZMax(object, field);
+		checkZNotEmpty(object, field);
 		checkZStartWith(object, field);
 	}
 
@@ -326,6 +328,39 @@ public class ZConfigurationPropertiesScanner {
 				+ object.getClass().getSimpleName() + "." + field.getName();
 		final String format = String.format(message, t, min, minFiledValue);
 		throw new IllegalArgumentException(format);
+	}
+
+	private static void checkZNotEmpty(final Object object, final Field field) {
+		final ZNotEmtpy nn = field.getAnnotation(ZNotEmtpy.class);
+		if (nn == null) {
+			return;
+		}
+
+		field.setAccessible(true);
+		try {
+			final Object value = field.get(object);
+			if (value == null) {
+				// 用 @ZNotNull的提示信息
+				final String message = ZNotNull.MESSAGE;
+				final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+						+ object.getClass().getSimpleName() + "." + field.getName();
+				final String format = String.format(message, t);
+				throw new IllegalArgumentException(format);
+			}
+
+			final String v2 = String.valueOf(value);
+			if (v2.isEmpty()) {
+				final String message = ZNotEmtpy.MESSAGE;
+				final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+						+ object.getClass().getSimpleName() + "." + field.getName();
+				final String format = String.format(message, t);
+				throw new IllegalArgumentException(format);
+			}
+
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	private static void checkZNotNull(final Object object, final Field field) {
