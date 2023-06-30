@@ -1,9 +1,15 @@
 package com.vo.scanner;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -16,6 +22,7 @@ import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.http.ZConfigurationPropertiesMap;
+import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
 
 import cn.hutool.core.util.ClassUtil;
@@ -66,26 +73,35 @@ public class ZConfigurationPropertiesScanner {
 		final Class<?> type = field.getType();
 
 		final AtomicReference<String> keyAR = new AtomicReference<>();
-		if (!p.containsKey(key)) {
-			final String convert = convert(key);
-			if (!p.containsKey(convert)) {
-				final ZNotNull nn = field.getAnnotation(ZNotNull.class);
-				if (nn == null) {
-					return;
-				}
-				final String message = ZNotNull.MESSAGE;
-				final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
-						+ object.getClass().getSimpleName() + "." + field.getName();
-				final String format = String.format(message, t);
-				throw new IllegalArgumentException(format);
-			}
-			keyAR.set(convert);
-		} else {
+		if (p.containsKey(key)) {
 			keyAR.set(key);
+			setValueByType(object, field, p, type, keyAR);
+			return;
 		}
 
+		// 无 java 字段直接对应的 配置项,则 把[orderCount]转为[order.count]再试
+		final String convert = convert(key);
+		keyAR.set(convert);
+		if (!p.containsKey(convert)) {
+			// 把[orderCount]转为[order.count]后，仍无对应的配置项，则看 是否有校验注解
+
+			checkZNotNull(object, field);
+
+			// FIXME 2023年6月30日 下午10:01:54 zhanghen: check @ZMin
+
+		}
+
+		// FIXME 2023年6月30日 下午9:52:22 zhanghen: TODO check @ZMin
+	}
+
+	private static void setValueByType(final Object object, final Field field, final PropertiesConfiguration p,
+			final Class<?> type, final AtomicReference<String> keyAR) {
+
+		final String v1 = getStringValue(p, keyAR);
+
+
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			setValue(object, field, p.getString(keyAR.get()));
+			setValue(object, field, v1);
 		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			setValue(object, field, p.getByte(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
@@ -99,10 +115,117 @@ public class ZConfigurationPropertiesScanner {
 		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
 			setValue(object, field, p.getDouble(keyAR.get()));
 		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
-			setValue(object, field, p.getString(keyAR.get()).charAt(0));
+			setValue(object, field, v1.charAt(0));
 		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
 			setValue(object, field, p.getBoolean(keyAR.get()));
+		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
+			setValue(object, field, p.getBigInteger(keyAR.get()));
+		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
+			setValue(object, field, p.getBigDecimal(keyAR.get()));
+		} else if (type.getCanonicalName().equals(AtomicInteger.class.getCanonicalName())) {
+			setValue(object, field, new AtomicInteger(p.getInt(keyAR.get())));
+		} else if (type.getCanonicalName().equals(AtomicLong.class.getCanonicalName())) {
+			setValue(object, field, new AtomicLong(p.getInt(keyAR.get())));
 		}
+
+		// 赋值以后才可以校验
+		checkZMin(object, field);
+
+	}
+
+	private static String getStringValue(final PropertiesConfiguration p, final AtomicReference<String> keyAR) {
+		String v1 = null;
+		try {
+			v1 = new String(p.getString(keyAR.get()).getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+					Charset.defaultCharset().displayName());
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		return v1;
+	}
+
+	@SuppressWarnings("boxing")
+	private static void checkZMin(final Object object, final Field field) {
+		final ZMin zMin = field.getAnnotation(ZMin.class);
+		if (zMin == null) {
+			return;
+		}
+
+		final double min = zMin.min();
+
+		try {
+			field.setAccessible(true);
+			final Object minFiledValue = field.get(object);
+			final String canonicalName = minFiledValue.getClass().getCanonicalName();
+			if (canonicalName.equals(Byte.class.getCanonicalName())) {
+				if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
+				if (Short.valueOf(String.valueOf(minFiledValue)) < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
+				if (Integer.valueOf(String.valueOf(minFiledValue)) < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
+				if (Long.valueOf(String.valueOf(minFiledValue)) < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
+				if (Float.valueOf(String.valueOf(minFiledValue)) < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(Double.class.getCanonicalName())
+					&& (Double.valueOf(String.valueOf(minFiledValue)) < min)) {
+				throwZMinMessage(object, field, min, minFiledValue);
+			} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
+				final BigInteger bi = (BigInteger) minFiledValue;
+				if (bi.doubleValue() < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
+				final BigDecimal bd = (BigDecimal) minFiledValue;
+				if (bd.doubleValue() < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
+				final AtomicInteger ai = (AtomicInteger) minFiledValue;
+				if (ai.doubleValue() < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
+				final AtomicLong al = (AtomicLong) minFiledValue;
+				if (al.doubleValue() < min) {
+					throwZMinMessage(object, field, min, minFiledValue);
+				}
+			}
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private static void throwZMinMessage(final Object object, final Field field, final double min, final Object minFiledValue) {
+		final String message = ZMin.MESSAGE;
+		final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+				+ object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t, min, minFiledValue);
+		throw new IllegalArgumentException(format);
+	}
+
+	private static void checkZNotNull(final Object object, final Field field) {
+		final ZNotNull nn = field.getAnnotation(ZNotNull.class);
+		if (nn == null) {
+			return;
+		}
+
+		final String message = ZNotNull.MESSAGE;
+		final String t = "@" + ZConfigurationProperties.class.getSimpleName() + " 对象 "
+				+ object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t);
+		throw new IllegalArgumentException(format);
 	}
 
 	private static void setValue(final Object object, final Field field, final Object value) {

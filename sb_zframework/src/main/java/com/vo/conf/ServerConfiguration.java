@@ -1,6 +1,7 @@
 package com.vo.conf;
 
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 public class ServerConfiguration {
 
 	@ZNotNull
+	@ZMin(min = 1)
 	private Integer port;
 
 	@ZNotNull
