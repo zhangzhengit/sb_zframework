@@ -6,6 +6,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
@@ -18,8 +20,8 @@ import com.vo.core.ZSingleton;
  * @date 2023年6月24日
  *
  */
-// FIXME 2023年6月29日 上午12:14:41 zhanghen:TODO 不要一次性全加载完，新增方法：一边读取一遍写入response
 public class ResourcesLoader {
+
 	public static final String NEW_LINE = "\n\r";
 
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
@@ -40,6 +42,56 @@ public class ResourcesLoader {
 	}
 
 	/**
+	 * 把静态资源写入输出流，不放入缓存.
+	 *
+	 * @param resourceName
+	 * @param outputStream
+	 * @return 返回写入的字节数
+	 */
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final OutputStream outputStream) {
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String staticPrefix = serverConfiguration.getStaticPrefix();
+		final String key = staticPrefix + resourceName;
+
+		final InputStream inputStream = checkInputStream(key);
+
+		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+		final AtomicLong write = writeToOutputStream(bufferedInputStream, outputStream);
+		try {
+			outputStream.flush();
+			outputStream.close();
+
+			bufferedInputStream.close();
+			inputStream.close();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		return write.get();
+	}
+
+	private static AtomicLong writeToOutputStream(final BufferedInputStream bufferedInputStream,
+			final OutputStream outputStream) {
+		final byte[] ba = new byte[1000 * 10];
+		final AtomicLong write = new AtomicLong(0);
+		while (true) {
+			try {
+				final int read = bufferedInputStream.read(ba);
+				if (read <= -1) {
+					break;
+				}
+
+				write.set(write.get() + read);
+				outputStream.write(ba, 0, read);
+				outputStream.flush();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return write;
+	}
+
+	/**
 	 * 加载静态资源，resourceName 不用自己拼接前缀目录了，此方法内自动拼接
 	 *
 	 * @param resourceName
@@ -55,18 +107,24 @@ public class ResourcesLoader {
 		return ba;
 	}
 
-	public static byte[] loadByteArray(final String name) {
+	/**
+	 *
+	 * @param resourceName
+	 * @return
+	 *
+	 */
+	public static byte[] loadByteArray(final String resourceName) {
 
-		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, name);
+		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
 		if (v != null) {
 			return (byte[]) v;
 		}
 
-		synchronized (name) {
-			final InputStream in = checkInputStream(name);
+		synchronized (resourceName) {
+			final InputStream in = checkInputStream(resourceName);
 			final byte[] ba2 = readByteArray0(in);
 
-			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, name, ba2);
+			CACHE_TABLE.put(ResourcesTypeEnum.BINARY, resourceName, ba2);
 			return ba2;
 		}
 	}

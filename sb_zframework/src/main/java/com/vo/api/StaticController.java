@@ -1,13 +1,11 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
-import com.vo.conf.ServerConfiguration;
 import com.vo.core.ContentTypeEnum;
 import com.vo.core.HRequest;
 import com.vo.core.HResponse;
 import com.vo.core.Task;
 import com.vo.core.ZMappingRegex;
-import com.vo.core.ZSingleton;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZRequestMapping;
@@ -46,8 +44,7 @@ public class StaticController {
 			return;
 		}
 
-		final byte[] ba = ResourcesLoader.loadStaticResource(resourceName);
-		response.writeOK200AndFlushAndClose(cte, ba);
+		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, response.getOutputStream());
 	}
 
 	/**
