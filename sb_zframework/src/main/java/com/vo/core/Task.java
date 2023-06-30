@@ -63,7 +63,7 @@ public class Task {
 	private static final int DEFAULT_BUFFER_SIZE = 8192;
 
 	private static final int READ_LENGTH = DEFAULT_BUFFER_SIZE / 2;
-	public static final ContentTypeEnum DEFAULT_CONTENT_TYPE = ContentTypeEnum.JSON;
+	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
 
 	public static final String EMPTY_STRING = "";
 
@@ -220,7 +220,7 @@ public class Task {
 
 			try {
 				final HResponse response = new HResponse(this.socket.getOutputStream());
-				response.writeAndFlushAndClose(ContentTypeEnum.JSON, HttpStatus.HTTP_403.getCode(),
+				response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
 						CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"));
 			} catch (final IOException e) {
 				e.printStackTrace();
@@ -245,7 +245,7 @@ public class Task {
 				final String htmlContent = ResourcesLoader.loadString(serverConfiguration.getHtmlPrefix() + htmlName);
 
 				final String html = ZTemplate.generate(htmlContent);
-				this.handleWrite(ContentTypeEnum.HTML, html);
+				this.handleWrite(HeaderEnum.HTML, html);
 			} catch (final Exception e) {
 				Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), this.socket);
 				e.printStackTrace();
@@ -448,8 +448,8 @@ public class Task {
 			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
 
 				final String contentType = requestLine.getHeaderMap().get(HRequest.CONTENT_TYPE);
-				if (contentType.equalsIgnoreCase(ContentTypeEnum.JSON.getType())
-						|| contentType.toLowerCase().contains(ContentTypeEnum.JSON.getType().toLowerCase())) {
+				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
+						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
 
 					final StringBuilder json = new StringBuilder();
 					for (int k = i + 1; k < x.size(); k++) {
@@ -579,7 +579,7 @@ public class Task {
 
 	}
 
-	private void handleWrite(final ContentTypeEnum contentTypeEnum, final String response) {
+	private void handleWrite(final HeaderEnum contentTypeEnum, final String response) {
 		try {
 			final String content = response;
 
@@ -598,12 +598,12 @@ public class Task {
 
 	}
 
-	private void write0(final ContentTypeEnum contentTypeEnum, final String content, final PrintWriter pw) {
+	private void write0(final HeaderEnum contentTypeEnum, final String content, final PrintWriter pw) {
 		final String c = HTTP_200 + NEW_LINE + contentTypeEnum.getValue() + NEW_LINE + SERVER + NEW_LINE + NEW_LINE + content + NEW_LINE;
 		pw.write(c);
 	}
 
-	private static void handleWrite500(final ContentTypeEnum contentTypeEnum, final CR cr, final Socket socket) {
+	private static void handleWrite500(final HeaderEnum contentTypeEnum, final CR cr, final Socket socket) {
 		try {
 			final String json = JSON.toJSONString(cr);
 
@@ -625,7 +625,7 @@ public class Task {
 		}
 	}
 
-	private static void handleWrite404(final ContentTypeEnum contentTypeEnum, final CR cr, final Socket socket) {
+	private static void handleWrite404(final HeaderEnum contentTypeEnum, final CR cr, final Socket socket) {
 		try {
 
 			final String json = JSON.toJSONString(cr);

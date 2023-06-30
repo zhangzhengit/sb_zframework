@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- *
+ * 响应头
  *
  * @author zhangzhen
  * @date 2023年6月24日
@@ -12,7 +12,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum ContentTypeEnum {
+public enum HeaderEnum {
 
 	TEXT("Content-Type: text/plain;charset=UTF-8", "text/plain"),
 
@@ -42,18 +42,20 @@ public enum ContentTypeEnum {
 
 	ICON("Content-Type: image/vnd.microsoft.icon;", "image/vnd.microsoft.ico"),
 
+	GZIP("Content-Encoding: gzip", ""),
+
 	;
 
-	public static ContentTypeEnum gType(final String fileNameSuffix) {
+	public static HeaderEnum gType(final String fileNameSuffix) {
 		if (fileNameSuffix.endsWith("js")) {
 			return JS;
 		}
 		if (fileNameSuffix.endsWith("doc") || fileNameSuffix.endsWith("docx")) {
-			return ContentTypeEnum.WORD;
+			return HeaderEnum.WORD;
 		}
 
-		final ContentTypeEnum[] vs = values();
-		for (final ContentTypeEnum ee : vs) {
+		final HeaderEnum[] vs = values();
+		for (final HeaderEnum ee : vs) {
 			if (ee.getType().endsWith(fileNameSuffix)) {
 				return ee;
 			}

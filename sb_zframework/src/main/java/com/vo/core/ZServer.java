@@ -61,7 +61,7 @@ public class ZServer extends Thread {
 				if (!allow) {
 
 					final HResponse response = new HResponse(socket.getOutputStream());
-					response.writeAndFlushAndClose(ContentTypeEnum.JSON, HttpStatus.HTTP_403.getCode(),
+					response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
 							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
 
 					socket.close();

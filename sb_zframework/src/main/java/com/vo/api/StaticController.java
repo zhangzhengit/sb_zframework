@@ -1,10 +1,11 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
-import com.vo.core.ContentTypeEnum;
+import com.vo.core.HeaderEnum;
 import com.vo.core.HRequest;
 import com.vo.core.HResponse;
 import com.vo.core.Task;
+import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
@@ -37,7 +38,7 @@ public class StaticController {
 			return;
 		}
 
-		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
+		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
 			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
 					HttpStatus.HTTP_500.getCode());
@@ -65,7 +66,7 @@ public class StaticController {
 			return;
 		}
 
-		final ContentTypeEnum cte = ContentTypeEnum.gType(resourceName.substring(i + 1));
+		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
 			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
 					HttpStatus.HTTP_500.getCode());
@@ -73,6 +74,7 @@ public class StaticController {
 		}
 
 		final String html = ResourcesLoader.loadHtml(resourceName);
-		response.writeOK200AndFlushAndClose(cte, html);
+		final byte[] ba = ZGzip.compress(html);
+		response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
 	}
 }

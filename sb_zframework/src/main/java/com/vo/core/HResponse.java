@@ -4,6 +4,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
@@ -56,15 +57,15 @@ public class HResponse {
 		this.write(cr, HTTP_1_1 + httpStatus);
 	}
 
-	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final CR cr) {
+	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final CR cr) {
 		this.writeAndFlushAndClose(cte, httpStatus, JSON.toJSONString(cr));
 	}
 
-	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final String message) {
+	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final String message) {
 		this.writeAndFlushAndClose(cte, httpStatus, message.getBytes());
 	}
 
-	public void writeAndFlushAndClose(final ContentTypeEnum cte,final int httpStatus, final byte[] ba) {
+	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final byte[] ba) {
 
 		final byte[] baA = ArrayUtil.addAll(
 				(HTTP_1_1 + httpStatus).getBytes(),
@@ -88,17 +89,19 @@ public class HResponse {
 		}
 	}
 
-	public void writeOK200AndFlushAndClose(final ContentTypeEnum cte, final String string) {
+	public void writeOK200AndFlushAndClose(final String string, final HeaderEnum... headerArray) {
 		final byte[] ba = string.getBytes();
-		this.writeOK200AndFlushAndClose(cte, ba);
+		this.writeOK200AndFlushAndClose(ba, headerArray);
 	}
 
-	public void writeOK200AndFlushAndClose(final ContentTypeEnum cte,final byte[] ba) {
+	public void writeOK200AndFlushAndClose(final byte[] ba,final HeaderEnum... headerArray) {
+
+		final String header = Lists.newArrayList(headerArray).stream().map(c -> c.getValue() + Task.NEW_LINE).collect(Collectors.joining());
+
 		final byte[] baA = ArrayUtil.addAll(
 				Task.HTTP_200.getBytes(),
 				Task.NEW_LINE.getBytes(),
-				cte.getValue().getBytes(),
-				Task.NEW_LINE.getBytes(),
+				header.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				ba,
 				Task.NEW_LINE.getBytes());
@@ -121,7 +124,7 @@ public class HResponse {
 //				Task.HTTP_200.getBytes(),
 				httpStatus.getBytes(),
 				Task.NEW_LINE.getBytes(),
-				ContentTypeEnum.JSON.getValue().getBytes(),
+				HeaderEnum.JSON.getValue().getBytes(),
 				Task.NEW_LINE.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				JSON.toJSONString(cr).getBytes(),
@@ -146,7 +149,7 @@ public class HResponse {
 		try {
 			this.outputStream.write(Task.HTTP_200.getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
-			this.outputStream.write(ContentTypeEnum.TEXT.getValue().getBytes());
+			this.outputStream.write(HeaderEnum.TEXT.getValue().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			for (int i = 0; i < this.headerList.size(); i++) {
@@ -187,7 +190,7 @@ public class HResponse {
 		}
 	}
 
-	public void writeAndFlushAndClose(final String fileName, final byte[] ba, final ContentTypeEnum contentTypeEnum) {
+	public void writeAndFlushAndClose(final String fileName, final byte[] ba, final HeaderEnum contentTypeEnum) {
 		try {
 
 			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);

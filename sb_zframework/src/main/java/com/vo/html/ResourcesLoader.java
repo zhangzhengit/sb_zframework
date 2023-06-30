@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
-import com.vo.core.ContentTypeEnum;
+import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZSingleton;
 
@@ -51,7 +51,7 @@ public class ResourcesLoader {
 	 * @param outputStream
 	 * @return 返回写入的字节数
 	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final ContentTypeEnum cte, final OutputStream outputStream) {
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final OutputStream outputStream) {
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
