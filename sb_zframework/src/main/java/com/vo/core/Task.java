@@ -52,6 +52,7 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月12日
  *
  */
+// FIXME 2023年7月1日 下午2:59:13 zhanghen: 判断 Connection 支持长连接
 public class Task {
 
 	private static final String UTF_8 = "UTF-8";
