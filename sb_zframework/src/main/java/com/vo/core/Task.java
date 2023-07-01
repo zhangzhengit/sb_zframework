@@ -87,7 +87,6 @@ public class Task {
 	private InputStream inputStream;
 	private BufferedInputStream bufferedInputStream;
 
-	@SuppressWarnings("boxing")
 	public Task(final Socket socket) {
 		// 0 初始化
 		this.socket = socket;
@@ -97,15 +96,6 @@ public class Task {
 		} catch (final IOException e1) {
 			e1.printStackTrace();
 		}
-
-//		// 1 读取
-//		final HRequest request = this.read();
-//
-//		// 2 解析
-//		final RequestLine requestLine = this.parse(request).getRequestLine();
-//
-//		// 3 执行
-//		this.invoke(socket, request, requestLine);
 
 	}
 
