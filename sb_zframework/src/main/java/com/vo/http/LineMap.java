@@ -4,8 +4,8 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.Maps;
-import com.vo.core.HRequest;
-import com.vo.core.HRequest.RequestLine;
+import com.vo.core.ZRequest;
+import com.vo.core.ZRequest.RequestLine;
 
 
 /**
@@ -21,9 +21,9 @@ public class LineMap {
 	/**
 	 * <path,RequestLine>
 	 */
-	static ConcurrentMap<String, HRequest.RequestLine> zcMap = Maps.newConcurrentMap();
+	static ConcurrentMap<String, ZRequest.RequestLine> zcMap = Maps.newConcurrentMap();
 
-	public static void put(final String path, final HRequest.RequestLine line) {
+	public static void put(final String path, final ZRequest.RequestLine line) {
 		zcMap.put(path, line);
 	}
 

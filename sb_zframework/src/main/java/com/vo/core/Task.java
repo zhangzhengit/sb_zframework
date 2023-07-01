@@ -28,8 +28,8 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
 import com.vo.conf.ServerConfiguration;
-import com.vo.core.HRequest.RequestLine;
-import com.vo.core.HRequest.RequestParam;
+import com.vo.core.ZRequest.RequestLine;
+import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
@@ -108,7 +108,7 @@ public class Task {
 
 	}
 
-	public void invoke(final HRequest request) {
+	public void invoke(final ZRequest request) {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		final String path = requestLine.getPath();
@@ -157,18 +157,18 @@ public class Task {
 		}
 	}
 
-	public HRequest parse(final HRequest request) {
+	public ZRequest parse(final ZRequest request) {
 		return Task.parseRequest(request);
 	}
 
-	public HRequest readAndParse() {
-		final HRequest r1 = this.read();
-		final HRequest r2 = this.parse(r1);
+	public ZRequest readAndParse() {
+		final ZRequest r1 = this.read();
+		final ZRequest r2 = this.parse(r1);
 		return r2;
 	}
 
-	public HRequest read() {
-		final HRequest request = this.handleRead();
+	public ZRequest read() {
+		final ZRequest request = this.handleRead();
 		return request;
 	}
 
@@ -207,7 +207,7 @@ public class Task {
 		}
 	}
 
-	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final HRequest request)
+	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 
@@ -218,7 +218,7 @@ public class Task {
 		if (!allow) {
 
 			try {
-				final HResponse response = new HResponse(this.socket.getOutputStream());
+				final ZResponse response = new ZResponse(this.socket.getOutputStream());
 				response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
 						CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"));
 			} catch (final IOException e) {
@@ -247,7 +247,7 @@ public class Task {
 
 				if (request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
-					final HResponse response = new HResponse(this.getOS());
+					final ZResponse response = new ZResponse(this.getOS());
 					response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
 				} else {
 					this.handleWrite(html, HeaderEnum.HTML);
@@ -262,7 +262,7 @@ public class Task {
 			// XXX 开启gzip后postman需要取消掉 Accept-Encoding 才可以解析响应？
 			if (request.isSupportGZIP()) {
 				final byte[] compress = ZGzip.compress(json);
-				final HResponse response = new HResponse(this.getOS());
+				final ZResponse response = new ZResponse(this.getOS());
 				response.writeOK200AndFlushAndClose(compress, DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);
 			} else {
 				this.handleWrite(json, DEFAULT_CONTENT_TYPE);
@@ -270,7 +270,7 @@ public class Task {
 		}
 	}
 
-	private Object[] generateParameters(final Method method, final Object[] parametersArray, final HRequest request,
+	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
 			final RequestLine requestLine, final String path) {
 
 		final Parameter[] ps = method.getParameters();
@@ -290,10 +290,10 @@ public class Task {
 					return null;
 				}
 				parametersArray[pI++] = headerValue;
-			} else if (p.getType().getCanonicalName().equals(HRequest.class.getCanonicalName())) {
+			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
-			} else if (p.getType().getCanonicalName().equals(HResponse.class.getCanonicalName())) {
-				final HResponse hResponse = new HResponse(this.getOS());
+			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
+				final ZResponse hResponse = new ZResponse(this.getOS());
 				parametersArray[pI++] = hResponse;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
@@ -340,7 +340,7 @@ public class Task {
 		return parametersArray;
 	}
 
-	private Object[] generateParameters(final Method method, final HRequest request, final RequestLine requestLine, final String path) {
+	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine, final String path) {
 		final Object[] parametersArray = new Object[method.getParameters().length];
 
 		return this.generateParameters(method, parametersArray, request, requestLine, path);
@@ -397,21 +397,21 @@ public class Task {
 		return fullName;
 	}
 
-	public static HRequest parseRequest(final HRequest request) {
+	public static ZRequest parseRequest(final ZRequest request) {
 		final Object v = CACHE_MAP.get(request);
 		if (v != null) {
-			return (HRequest) v;
+			return (ZRequest) v;
 		}
 
 		synchronized (request) {
-			final HRequest v2 = parseRequest0(request);
+			final ZRequest v2 = parseRequest0(request);
 			CACHE_MAP.put(request, v2);
 			return v2;
 		}
 	}
 
-	private static HRequest parseRequest0(final HRequest request) {
-		final HRequest.RequestLine requestLine = new HRequest.RequestLine();
+	private static ZRequest parseRequest0(final ZRequest request) {
+		final ZRequest.RequestLine requestLine = new ZRequest.RequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
 			return request;
 		}
@@ -456,13 +456,13 @@ public class Task {
 //		return requestLine;
 	}
 
-	private static void parseBody(final HRequest request, final HRequest.RequestLine requestLine) {
+	private static void parseBody(final ZRequest request, final ZRequest.RequestLine requestLine) {
 		final List<String> x = request.getLineList();
 		for (int i = 1; i < x.size(); i++) {
 			final String l2 = x.get(i);
 			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
 
-				final String contentType = requestLine.getHeaderMap().get(HRequest.CONTENT_TYPE);
+				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
 				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
 						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
 
@@ -478,7 +478,7 @@ public class Task {
 		}
 	}
 
-	private static void paserHeader(final HRequest request, final HRequest.RequestLine requestLine) {
+	private static void paserHeader(final ZRequest request, final ZRequest.RequestLine requestLine) {
 		final List<String> x = request.getLineList();
 		final HashMap<String, String> hm = new HashMap<>(16, 1F);
 		for (int i = 1; i < x.size(); i++) {
@@ -498,7 +498,7 @@ public class Task {
 		requestLine.setHeaderMap(hm);
 	}
 
-	private static void parseVersion(final HRequest.RequestLine requestLine, final String line) {
+	private static void parseVersion(final ZRequest.RequestLine requestLine, final String line) {
 		final int hI = line.lastIndexOf("HTTP/");
 		if (hI > -1) {
 			final String version = line.substring(hI);
@@ -506,7 +506,7 @@ public class Task {
 		}
 	}
 
-	private static void parsePath(final String s, final HRequest.RequestLine line, final int methodIndex) {
+	private static void parsePath(final String s, final ZRequest.RequestLine line, final int methodIndex) {
 		final int pathI = s.indexOf(" ", methodIndex + 1);
 		if (pathI > methodIndex) {
 			final String fullPath = s.substring(methodIndex  + 1, pathI);
@@ -523,7 +523,7 @@ public class Task {
 				final String[] paramArray = param.split(SP);
 				for (final String p : paramArray) {
 					final String[] p0 = p.split("=");
-					final HRequest.RequestParam requestParam  = new HRequest.RequestParam();
+					final ZRequest.RequestParam requestParam  = new ZRequest.RequestParam();
 					requestParam.setName(p0[0]);
 					if (p0.length >= 2) {
 						final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING : URLDecoder.decode(p0[1], UTF_8_CHARSET);
@@ -545,9 +545,9 @@ public class Task {
 		}
 	}
 
-	private HRequest handleRead() {
+	private ZRequest handleRead() {
 
-		final HRequest request = new HRequest();
+		final ZRequest request = new ZRequest();
 
 		try {
 

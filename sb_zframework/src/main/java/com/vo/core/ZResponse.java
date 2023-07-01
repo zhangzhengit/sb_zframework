@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
-import com.vo.core.HRequest.ZCookie;
-import com.vo.core.HRequest.ZHeader;
+import com.vo.core.ZRequest.ZCookie;
+import com.vo.core.ZRequest.ZHeader;
 import com.votool.common.CR;
 
 import cn.hutool.core.util.ArrayUtil;
@@ -26,7 +26,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class HResponse {
+public class ZResponse {
 
 	private static final String HTTP_1_1 = "HTTP/1.1 ";
 

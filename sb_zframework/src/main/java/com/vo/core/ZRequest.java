@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
-import com.vo.conf.ServerConfiguration;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.collection.CollUtil;
@@ -15,7 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- *	表示http 的请求头
+ * 表示http 的请求信息
  *
  * @author zhangzhen
  * @date 2023年6月12日
@@ -24,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class HRequest {
+public class ZRequest {
 
 	private static final String GZIP = "gzip";
 	private static final String ACCEPT_ENCODING = "Accept-Encoding";

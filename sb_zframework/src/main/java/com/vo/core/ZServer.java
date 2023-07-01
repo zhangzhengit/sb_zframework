@@ -60,7 +60,7 @@ public class ZServer extends Thread {
 				final boolean allow = Counter.allow(Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
 				if (!allow) {
 
-					final HResponse response = new HResponse(socket.getOutputStream());
+					final ZResponse response = new ZResponse(socket.getOutputStream());
 					response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
 							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
 
@@ -69,7 +69,7 @@ public class ZServer extends Thread {
 				} else {
 					ZServer.ZE.executeInQueue(() -> {
 						final Task task = new Task(socket);
-						final HRequest request = task.readAndParse();
+						final ZRequest request = task.readAndParse();
 						task.invoke(request);
 					});
 				}

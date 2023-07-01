@@ -2,8 +2,8 @@ package com.vo.api;
 
 import com.vo.anno.ZController;
 import com.vo.conf.ServerConfiguration;
-import com.vo.core.HRequest;
-import com.vo.core.HResponse;
+import com.vo.core.ZRequest;
+import com.vo.core.ZResponse;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZGzip;
@@ -28,7 +28,7 @@ public class StaticController {
 	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true })
 
-	public void staticResources(final HResponse response,final HRequest request) {
+	public void staticResources(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
 
@@ -49,7 +49,7 @@ public class StaticController {
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
-	public void css(final HResponse response,final HRequest request) {
+	public void css(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
 
@@ -88,7 +88,7 @@ public class StaticController {
 	 *
 	 */
 	@ZRequestMapping(mapping = { "/.+\\.html$" }, isRegex = { true })
-	public void html(final HResponse response,final HRequest request) {
+	public void html(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
 

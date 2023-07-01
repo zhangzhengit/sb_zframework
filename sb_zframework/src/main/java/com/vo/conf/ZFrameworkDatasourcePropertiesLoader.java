@@ -6,7 +6,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Lists;
-import com.vo.core.HRequest;
+import com.vo.core.ZRequest;
 import com.vo.core.ZLog2;
 import com.vo.core.ZServer;
 
