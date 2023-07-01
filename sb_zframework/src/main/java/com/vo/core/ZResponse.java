@@ -8,8 +8,8 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
-import com.vo.core.ZRequest.ZCookie;
 import com.vo.core.ZRequest.ZHeader;
+import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
 import cn.hutool.core.util.ArrayUtil;
