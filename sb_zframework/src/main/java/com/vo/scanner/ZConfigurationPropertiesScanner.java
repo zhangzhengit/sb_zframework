@@ -424,10 +424,12 @@ public class ZConfigurationPropertiesScanner {
 	private static String convert(final String fieldName) {
 		final StringBuilder builder = new StringBuilder(fieldName);
 		final char[] ca = fieldName.toCharArray();
-		for(int i= 0;i<ca.length;i++) {
+		final AtomicInteger replaceCount = new AtomicInteger(0);
+		for (int i = 0; i < ca.length; i++) {
 			final char c = ca[i];
-			if(daxie.contains(c)) {
-				builder.replace(i, i + 1, "." + Character.toLowerCase(c));
+			if (daxie.contains(c)) {
+				final int andIncrement = replaceCount.getAndIncrement();
+				builder.replace(i + andIncrement, i + andIncrement + 1, "." + Character.toLowerCase(c));
 			}
 		}
 		return builder.toString();
