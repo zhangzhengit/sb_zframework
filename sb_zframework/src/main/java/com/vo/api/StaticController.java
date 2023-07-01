@@ -1,12 +1,14 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
-import com.vo.core.HeaderEnum;
+import com.vo.conf.ServerConfiguration;
 import com.vo.core.HRequest;
 import com.vo.core.HResponse;
+import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
+import com.vo.core.ZSingleton;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZRequestMapping;
@@ -23,10 +25,8 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
-	@ZRequestMapping(mapping = {
-			"/favicon\\.ico", "/.+\\.js$", "/.+\\.css$", "/.+\\.jpg$", "/.+\\.mp3$",
-			"/.+\\.mp4$", "/.+\\.pdf$", "/.+\\.gif$", "/.+\\.doc$" },
-			isRegex = {true,  true, true, true, true, true, true, true, true })
+	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
+			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true })
 
 	public void staticResources(final HResponse response,final HRequest request) {
 
@@ -46,6 +46,32 @@ public class StaticController {
 		}
 
 		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response.getOutputStream());
+	}
+
+	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
+	public void css(final HResponse response,final HRequest request) {
+
+		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
+
+		final int i = resourceName.indexOf(".");
+		if (i <= -1) {
+			response.write(CR.error(Task.HTTP_STATUS_500, "不支持无后缀的文件"), Task.HTTP_500);
+			return;
+		}
+
+		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
+		if (cte == null) {
+			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
+					HttpStatus.HTTP_500.getCode());
+			return;
+		}
+
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String staticPrefix = serverConfiguration.getStaticPrefix();
+
+		final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+		final byte[] ba = ZGzip.compress(string);
+		response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
 	}
 
 	/**
