@@ -71,6 +71,7 @@ public class ServerConfiguration {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
+	// FIXME 2023年7月2日 上午1:31:33 zhanghen: gzipMinLength这个值用上
 	private Integer gzipMinLength;
 
 
