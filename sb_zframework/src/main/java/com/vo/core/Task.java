@@ -71,7 +71,7 @@ public class Task {
 
 	private static final ConcurrentMap<Object, Object> CACHE_MAP = Maps.newConcurrentMap();
 
-	public static final String SERVER = "Server:sb_zframework";
+	public static final String SERVER = "Server:zframework";
 	public static final String HTTP_500 = "HTTP/1.1 " + HTTP_STATUS_500;
 	public static final String HTTP_404 = "HTTP/1.1 " + HTTP_STATUS_404;
 
