@@ -58,7 +58,7 @@ public class ServerConfiguration {
 	 * 是否开启gzip压缩
 	 */
 	@ZNotNull
-	private Boolean gzip;
+	private Boolean gzipEnable;
 
 	/**
 	 * 开启gzip的content-type
@@ -72,6 +72,18 @@ public class ServerConfiguration {
 	@ZNotNull
 	@ZMin(min = 1)
 	private Integer gzipMinLength;
+
+
+	public boolean gzipContains(final String contentType) {
+		final String[] a = this.getGzipContentType();
+		for (final String string : a) {
+			if (string.equals(contentType)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	public String[] getGzipContentType() {
 		final String[] a = this.gzipTypes.split(",");

@@ -236,7 +236,9 @@ public class Task {
 
 				final String html = ZTemplate.generate(htmlContent);
 
-				if (request.isSupportGZIP()) {
+				if (serverConfiguration.getGzipEnable()
+						&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
+						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
 					final ZResponse response = new ZResponse(this.getOS());
 					response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
@@ -250,7 +252,8 @@ public class Task {
 			}
 		} else {
 			final String json = JSON.toJSONString(r);
-			if (request.isSupportGZIP()) {
+			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			if (request.isSupportGZIP() && serverConfiguration.getGzipEnable()) {
 				final byte[] compress = ZGzip.compress(json);
 				final ZResponse response = new ZResponse(this.getOS());
 				response.writeOK200AndFlushAndClose(compress, DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);

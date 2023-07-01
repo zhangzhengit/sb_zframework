@@ -69,7 +69,9 @@ public class StaticController {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
 
-		if (request.isSupportGZIP()) {
+		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
+		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
+		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
 			final byte[] ba = ZGzip.compress(string);
 			response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
@@ -105,8 +107,12 @@ public class StaticController {
 			return;
 		}
 
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
+		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.HTML.getType());
 		final String html = ResourcesLoader.loadHtml(resourceName);
-		if (request.isSupportGZIP()) {
+
+		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);
 			response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
 		} else {
