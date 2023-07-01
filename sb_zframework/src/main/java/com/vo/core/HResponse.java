@@ -26,7 +26,6 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-// FIXME 2023年7月1日 上午4:06:12 zhanghen: TODO ：已有的返回CR的接口，cr中错误码与http status区分开
 public class HResponse {
 
 	private static final String HTTP_1_1 = "HTTP/1.1 ";
