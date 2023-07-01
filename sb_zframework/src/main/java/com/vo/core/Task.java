@@ -253,7 +253,10 @@ public class Task {
 		} else {
 			final String json = JSON.toJSONString(r);
 			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-			if (request.isSupportGZIP() && serverConfiguration.getGzipEnable()) {
+			if ( serverConfiguration.getGzipEnable()
+					&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
+					&& request.isSupportGZIP()
+					) {
 				final byte[] compress = ZGzip.compress(json);
 				final ZResponse response = new ZResponse(this.getOS());
 				response.writeOK200AndFlushAndClose(compress, DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);
