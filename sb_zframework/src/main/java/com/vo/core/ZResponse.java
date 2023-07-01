@@ -37,11 +37,11 @@ public class ZResponse {
 	private final ArrayList<ZHeader> headerList = Lists.newArrayList();
 
 	public void addCookie(final ZCookie zCookie) {
-		this.addHeader(new ZHeader(zCookie.getName(), zCookie.getValue()));
+		this.addCookie(zCookie.getName(), zCookie.toString());
 	}
 
 	public void addCookie(final String name,final String value) {
-		this.addCookie(new ZCookie(SET_COOKIE, name + "=" + value));
+		this.addHeader(new ZHeader(SET_COOKIE, name + "=" + value));
 	}
 
 	public void addHeader(final ZHeader zHeader) {

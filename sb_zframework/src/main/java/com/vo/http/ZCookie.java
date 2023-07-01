@@ -1,5 +1,10 @@
 package com.vo.http;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.StringJoiner;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,11 +17,11 @@ import lombok.NoArgsConstructor;
  *
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class ZCookie {
-	// FIXME 2023年7月2日 上午1:37:50 zhanghen:ZCookie 加入更多属性：如下
 
+	private final List<Node> nodeList = new ArrayList<>(8);
+	// FIXME 2023年7月2日 上午1:37:50 zhanghen:ZCookie 加入更多属性：如下
 //	Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
 //	在上述示例中，Cookie响应头包含了以下属性：
 //
@@ -31,4 +36,79 @@ public class ZCookie {
 
 	private String name;
 	private String value;
+
+	public ZCookie sameSiteEnum(final SameSiteEnum sameSiteEnum) {
+		this.nodeList.add(new Node("SameSite", sameSiteEnum.getValue()));
+		return this;
+	}
+
+	public ZCookie httpOnly(final Boolean httpOnly) {
+		if (Boolean.TRUE.equals(httpOnly)) {
+			this.nodeList.add(new Node("HttpOnly", null));
+		}
+		return this;
+	}
+
+	public ZCookie secure(final Boolean secure) {
+		if (Boolean.TRUE.equals(secure)) {
+			this.nodeList.add(new Node("Secure", null));
+		}
+		return this;
+	}
+
+	public ZCookie path(final String path) {
+		this.nodeList.add(new Node("Path", path));
+		return this;
+	}
+
+	public ZCookie domain(final String domain) {
+		this.nodeList.add(new Node("Domain", domain));
+		return this;
+	}
+
+	public ZCookie maxAge(final Long maxAge) {
+		this.nodeList.add(new Node("Max-Age", maxAge));
+		return this;
+	}
+
+	public ZCookie expires(final Date date) {
+		this.nodeList.add(new Node("Expires", date));
+		return this;
+	}
+
+	public ZCookie(final String name, final String value) {
+		this.name = name;
+		this.value = value;
+	}
+
+	@Override
+	public String toString() {
+//		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
+//		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
+
+		final StringJoiner joiner = new StringJoiner("");
+		// 不取name
+		joiner.add(this.getValue()).add(";");
+		for (final Node node : this.nodeList) {
+			joiner.add(node.getName());
+			if (node.getValue() == null) {
+				joiner.add(";");
+			} else {
+				joiner.add("=").add(String.valueOf(node.getValue())).add(";");
+			}
+		}
+
+		return joiner.toString();
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class Node{
+		private String name;
+		private Object value;
+	}
+
+
+
 }
