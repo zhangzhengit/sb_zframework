@@ -259,7 +259,6 @@ public class Task {
 			}
 		} else {
 			final String json = JSON.toJSONString(r);
-			// XXX 开启gzip后postman需要取消掉 Accept-Encoding 才可以解析响应？
 			if (request.isSupportGZIP()) {
 				final byte[] compress = ZGzip.compress(json);
 				final ZResponse response = new ZResponse(this.getOS());

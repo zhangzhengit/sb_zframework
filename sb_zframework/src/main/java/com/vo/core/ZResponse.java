@@ -95,12 +95,15 @@ public class ZResponse {
 
 	public void writeOK200AndFlushAndClose(final byte[] ba,final HeaderEnum... headerArray) {
 
+		final String h = ZRequest.CONTENT_LENGTH + ":" + ba.length;
 		final String header = Lists.newArrayList(headerArray).stream().map(c -> c.getValue() + Task.NEW_LINE).collect(Collectors.joining());
 
 		final byte[] baA = ArrayUtil.addAll(
 				Task.HTTP_200.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				header.getBytes(),
+				h.getBytes(),
+				Task.NEW_LINE.getBytes(),
 				Task.NEW_LINE.getBytes(),
 				ba,
 				Task.NEW_LINE.getBytes());
