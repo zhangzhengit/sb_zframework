@@ -2,6 +2,8 @@ package com.vo.scanner;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
@@ -27,8 +29,6 @@ import cn.hutool.core.util.ReflectUtil;
  *
  */
 public class ZValueScanner {
-
-	// FIXME 2023年6月30日 下午10:30:45 zhanghen: 支持 @ZValue 更多类型，不仅限于String
 
 	public static void scan(final String packageName) {
 		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZComponent.class);
@@ -72,15 +72,48 @@ public class ZValueScanner {
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
 			try {
 				final String v1 = p.getString(key);
-				final String v2 = new String(v1.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),Charset.defaultCharset().displayName());
-
-				field.setAccessible(true);
-				field.set(object, v2);
-				System.out.println(
-						"field赋值成功，field = " + field.getName() + "\t" + "value = " + v2 + "\t" + " object = " + object);
-			} catch (IllegalArgumentException | IllegalAccessException | UnsupportedEncodingException e) {
-				e.printStackTrace();
+				final String v2 = new String(v1.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+						Charset.defaultCharset().displayName());
+				setValue(field, object, v2);
+			} catch (final UnsupportedEncodingException e1) {
+				e1.printStackTrace();
 			}
+
+		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			setValue(field, object, p.getByte(key));
+		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+			setValue(field, object, p.getShort(key));
+		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			setValue(field, object, p.getInt(key));
+		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+			setValue(field, object, p.getLong(key));
+		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
+			setValue(field, object, p.getBigInteger(key));
+		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
+			setValue(field, object, p.getBigDecimal(key));
+		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			setValue(field, object, p.getBoolean(key));
+		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+			setValue(field, object, p.getDouble(key));
+		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+			setValue(field, object, p.getFloat(key));
+		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+			setValue(field, object, p.getString(key).charAt(0));
+		} else {
+			// FIXME 2023年7月1日 上午9:19:27 zhanghen: 继续考虑支持什么类型
+			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
+					+ field.getType().getSimpleName() + " 暂不支持");
+		}
+	}
+
+	private static void setValue(final Field field, final Object object, final Object value) {
+		try {
+			field.setAccessible(true);
+			field.set(object, value);
+			System.out.println(
+					"field赋值成功，field = " + field.getName() + "\t" + "value = " + value + "\t" + " object = " + object);
+		} catch (IllegalArgumentException | IllegalAccessException  e) {
+			e.printStackTrace();
 		}
 	}
 }
