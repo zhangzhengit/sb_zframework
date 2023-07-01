@@ -245,14 +245,21 @@ public class Task {
 				final String htmlContent = ResourcesLoader.loadString(serverConfiguration.getHtmlPrefix() + htmlName);
 
 				final String html = ZTemplate.generate(htmlContent);
-				this.handleWrite(HeaderEnum.HTML, html);
+
+				// 2压缩后的byte[]
+				final byte[] compress = ZGzip.compress(html);
+				final HResponse response = new HResponse(this.getOS());
+				response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
+
+				// 1 未压缩的文本
+//				this.handleWrite(html, HeaderEnum.HTML);
 			} catch (final Exception e) {
 				Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), this.socket);
 				e.printStackTrace();
 			}
 		} else {
 			final String response = JSON.toJSONString(r);
-			this.handleWrite(DEFAULT_CONTENT_TYPE, response);
+			this.handleWrite(response, DEFAULT_CONTENT_TYPE);
 		}
 	}
 
@@ -579,7 +586,7 @@ public class Task {
 
 	}
 
-	private void handleWrite(final HeaderEnum contentTypeEnum, final String response) {
+	private void handleWrite(final String response, final HeaderEnum contentTypeEnum) {
 		try {
 			final String content = response;
 
