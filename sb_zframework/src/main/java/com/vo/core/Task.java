@@ -52,7 +52,6 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月12日
  *
  */
-@SuppressWarnings("ucd")
 public class Task {
 
 	private static final String UTF_8 = "UTF-8";
@@ -481,15 +480,15 @@ public class Task {
 
 	private static void paserHeader(final HRequest request, final HRequest.RequestLine requestLine) {
 		final List<String> x = request.getLineList();
-		final HashMap<String, String> hm = Maps.newHashMap();
+		final HashMap<String, String> hm = new HashMap<>(16, 1F);
 		for (int i = 1; i < x.size(); i++) {
 			final String l = x.get(i);
 			if (EMPTY_STRING.equals(l)) {
 				continue;
 			}
+
 			final int k = l.indexOf(":");
 			if (k > -1) {
-
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
 				hm.put(key, value);
