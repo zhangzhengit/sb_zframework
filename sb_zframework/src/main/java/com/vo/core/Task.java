@@ -130,7 +130,7 @@ public class Task {
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
 					try {
 						ZMappingRegex.set(java.net.URLDecoder.decode(path, UTF_8));
-						this.invokeAndResponse(methodTarget, arraygP, object);
+						this.invokeAndResponse(methodTarget, arraygP, object, request);
 						return;
 					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
 						e.printStackTrace();
@@ -147,7 +147,7 @@ public class Task {
 
 			final Object[] p = this.generateParameters(method, request, requestLine, path);
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			this.invokeAndResponse(method, p, zController);
+			this.invokeAndResponse(method, p, zController, request);
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			final CR<Object> error = CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR);
@@ -208,7 +208,7 @@ public class Task {
 		}
 	}
 
-	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController)
+	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final HRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 
@@ -246,20 +246,28 @@ public class Task {
 
 				final String html = ZTemplate.generate(htmlContent);
 
-				// 2压缩后的byte[]
-				final byte[] compress = ZGzip.compress(html);
-				final HResponse response = new HResponse(this.getOS());
-				response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
+				if (request.isSupportGZIP()) {
+					final byte[] compress = ZGzip.compress(html);
+					final HResponse response = new HResponse(this.getOS());
+					response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
+				} else {
+					this.handleWrite(html, HeaderEnum.HTML);
+				}
 
-				// 1 未压缩的文本
-//				this.handleWrite(html, HeaderEnum.HTML);
 			} catch (final Exception e) {
 				Task.handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, INTERNAL_SERVER_ERROR), this.socket);
 				e.printStackTrace();
 			}
 		} else {
-			final String response = JSON.toJSONString(r);
-			this.handleWrite(response, DEFAULT_CONTENT_TYPE);
+			final String json = JSON.toJSONString(r);
+			// XXX 开启gzip后postman需要取消掉 Accept-Encoding 才可以解析响应？
+			if (request.isSupportGZIP()) {
+				final byte[] compress = ZGzip.compress(json);
+				final HResponse response = new HResponse(this.getOS());
+				response.writeOK200AndFlushAndClose(compress, DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);
+			} else {
+				this.handleWrite(json, DEFAULT_CONTENT_TYPE);
+			}
 		}
 	}
 
@@ -286,12 +294,8 @@ public class Task {
 			} else if (p.getType().getCanonicalName().equals(HRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
 			} else if (p.getType().getCanonicalName().equals(HResponse.class.getCanonicalName())) {
-				try {
-					final HResponse hResponse = new HResponse(this.getOS());
-					parametersArray[pI++] = hResponse;
-				} catch (final IOException e) {
-					e.printStackTrace();
-				}
+				final HResponse hResponse = new HResponse(this.getOS());
+				parametersArray[pI++] = hResponse;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
 				parametersArray[pI++] = model;
@@ -343,7 +347,7 @@ public class Task {
 		return this.generateParameters(method, parametersArray, request, requestLine, path);
 	}
 
-	private OutputStream getOS() throws IOException {
+	private OutputStream getOS(){
 
 		final Object key = this;
 
@@ -353,7 +357,12 @@ public class Task {
 		}
 
 		synchronized (key) {
-			final OutputStream os2 = this.socket.getOutputStream();
+			OutputStream os2 = null;
+			try {
+				os2 = this.socket.getOutputStream();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
 			cacheMap.put(key, os2);
 			return os2;
 		}

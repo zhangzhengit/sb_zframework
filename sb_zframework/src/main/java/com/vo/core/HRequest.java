@@ -26,6 +26,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class HRequest {
 
+	private static final String GZIP = "gzip";
+	private static final String ACCEPT_ENCODING = "Accept-Encoding";
+
 	public static final String COOKIE = "Cookie";
 
 	public static final String CONTENT_LENGTH = "Content-Length";
@@ -44,6 +47,22 @@ public class HRequest {
 
 	public void addLine(final String line) {
 		this.getLineList().add(line);
+	}
+
+	public boolean isSupportGZIP() {
+		final String a = this.getHeader(ACCEPT_ENCODING);
+		if (StrUtil.isEmpty(a)) {
+			return false;
+		}
+
+		final String[] array = a.split(",");
+		for (final String a2 : array) {
+			if (GZIP.equalsIgnoreCase(a2)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public String getMethod() {
