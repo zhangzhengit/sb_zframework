@@ -240,7 +240,7 @@ public class Task {
 						&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
 						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
-					final ZResponse response = new ZResponse(this.getOS());
+					final ZResponse response = new ZResponse(this.getOutputStream());
 					response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
 				} else {
 					this.handleWrite(html, HeaderEnum.HTML);
@@ -258,7 +258,7 @@ public class Task {
 					&& request.isSupportGZIP()
 					) {
 				final byte[] compress = ZGzip.compress(json);
-				final ZResponse response = new ZResponse(this.getOS());
+				final ZResponse response = new ZResponse(this.getOutputStream());
 				response.writeOK200AndFlushAndClose(compress, DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);
 			} else {
 				this.handleWrite(json, DEFAULT_CONTENT_TYPE);
@@ -289,7 +289,7 @@ public class Task {
 			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
 			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
-				final ZResponse hResponse = new ZResponse(this.getOS());
+				final ZResponse hResponse = new ZResponse(this.getOutputStream());
 				parametersArray[pI++] = hResponse;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
@@ -342,7 +342,7 @@ public class Task {
 		return this.generateParameters(method, parametersArray, request, requestLine, path);
 	}
 
-	private OutputStream getOS(){
+	private OutputStream getOutputStream(){
 
 		final Object key = this;
 
@@ -594,7 +594,7 @@ public class Task {
 		try {
 			final String content = response;
 
-			final OutputStream outputStream = this.getOS();
+			final OutputStream outputStream = this.getOutputStream();
 
 			final PrintWriter pw = new PrintWriter(outputStream);
 			this.write0(contentTypeEnum, content, pw);
