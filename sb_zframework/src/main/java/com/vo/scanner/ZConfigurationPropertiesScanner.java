@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -137,14 +138,20 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static String getStringValue(final PropertiesConfiguration p, final AtomicReference<String> keyAR) {
-		String v1 = null;
+		final StringJoiner joiner = new StringJoiner(",");
 		try {
-			v1 = new String(p.getString(keyAR.get()).getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
-					Charset.defaultCharset().displayName());
+			final String[] stringArray = p.getStringArray(keyAR.get());
+			for (final String s : stringArray) {
+				final String s2 = new String(s.trim()
+						.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+						Charset.defaultCharset().displayName());
+				joiner.add(s2);
+			}
 		} catch (final UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
-		return v1;
+
+		return joiner.toString();
 	}
 
 	@SuppressWarnings("boxing")

@@ -54,4 +54,28 @@ public class ServerConfiguration {
 	@ZStartWith(prefix = "/")
 	private String htmlPrefix;
 
+	/**
+	 * 是否开启gzip压缩
+	 */
+	@ZNotNull
+	private Boolean gzip;
+
+	/**
+	 * 开启gzip的content-type
+	 */
+	@ZNotNull
+	private String gzipTypes;
+
+	/**
+	 * 大于多少KB才启用gzip压缩
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	private Integer gzipMinLength;
+
+	public String[] getGzipContentType() {
+		final String[] a = this.gzipTypes.split(",");
+		return a;
+	}
+
 }
