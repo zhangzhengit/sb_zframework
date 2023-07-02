@@ -27,6 +27,21 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	private Integer port;
 
+	/**
+	 * 是否开启SSL
+	 */
+	@ZNotNull
+	private Boolean sslEnable;
+
+	@ZNotNull
+	private String sslKeyStore;
+
+	@ZNotNull
+	private String sslPassword;
+
+	@ZNotNull
+	private String sslType;
+
 	@ZNotNull
 	private Integer threadCount;
 

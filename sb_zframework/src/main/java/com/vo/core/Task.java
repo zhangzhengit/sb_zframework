@@ -103,6 +103,10 @@ public class Task {
 	public void invoke(final ZRequest request) {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
+		if (CollUtil.isEmpty(request.getLineList())) {
+			return;
+		}
+
 		final String path = requestLine.getPath();
 
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
@@ -590,46 +594,47 @@ public class Task {
 
 		final ZRequest request = new ZRequest();
 
-		try {
+		final int nk = Task.READ_LENGTH;
+		final List<Byte> list = new ArrayList<>(nk);
 
-			final int nk = Task.READ_LENGTH;
-			final List<Byte> list = new ArrayList<>(nk);
-
-			while (true) {
-				final byte[] bs = new byte[nk];
-				final int read = this.bufferedInputStream.read(bs);
-				if (read <= 0) {
-					break;
-				}
-
-				for (int i = 0; i < read; i++) {
-					list.add(bs[i]);
-				}
-				if (read <= nk) {
-					break;
-				}
+		while (true) {
+			final byte[] bs = new byte[nk];
+			int read = -4;
+			try {
+				read = this.bufferedInputStream.read(bs);
+			} catch (final IOException e) {
+//				e.printStackTrace();
+				break;
+			}
+			if (read <= 0) {
+				break;
 			}
 
-			final byte[] bsR = new byte[list.size()];
-			for (int x = 0; x < list.size(); x++) {
-				bsR[x] = list.get(x);
+			for (int i = 0; i < read; i++) {
+				list.add(bs[i]);
 			}
-
-			final String r = new String(bsR);
-
-			final boolean contains = r.contains(Task.NEW_LINE);
-			if (contains) {
-				final String[] aa = r.split(Task.NEW_LINE);
-				for (final String string : aa) {
-					request.addLine(string);
-				}
+			if (read <= nk) {
+				break;
 			}
+		}
+
+		final byte[] bsR = new byte[list.size()];
+		for (int x = 0; x < list.size(); x++) {
+			bsR[x] = list.get(x);
+		}
+
+		final String r = new String(bsR);
+
+		final boolean contains = r.contains(Task.NEW_LINE);
+		if (contains) {
+			final String[] aa = r.split(Task.NEW_LINE);
+			for (final String string : aa) {
+				request.addLine(string);
+			}
+		}
 
 //			bufferedInputStream.close();
 //			inputStream.close();
-		} catch (final IOException | IllegalArgumentException e) {
-			e.printStackTrace();
-		}
 
 		return request;
 
