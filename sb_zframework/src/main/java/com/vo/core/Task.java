@@ -216,7 +216,7 @@ public class Task {
 				final ZResponse response = new ZResponse(this.socket.getOutputStream());
 				response.contentType(HeaderEnum.JSON.getType())
 						.httpStatus(HttpStatus.HTTP_403.getCode())
-						.body(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"))
+						.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")))
 						.writeAndFlushAndClose();
 
 			} catch (final IOException e) {

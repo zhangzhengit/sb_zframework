@@ -21,6 +21,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
 import com.vo.conf.ZFrameworkProperties;
@@ -109,7 +110,7 @@ public class ZServer extends Thread {
 
 					response.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()))
+							.body(JSON.toJSONString(CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity())))
 							.writeAndFlushAndClose();
 
 					socket.close();
