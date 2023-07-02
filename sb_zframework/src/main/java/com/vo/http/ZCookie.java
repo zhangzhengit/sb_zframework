@@ -81,8 +81,7 @@ public class ZCookie {
 		this.value = value;
 	}
 
-	@Override
-	public String toString() {
+	public String toCookieString() {
 //		Set-Cookie: sessionId=abc123; Expires=Sat, 01 Jan 2022 00:00:00 GMT; Max-Age=3600;
 //		Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Strict
 

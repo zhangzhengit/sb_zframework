@@ -1,14 +1,23 @@
 package com.vo.core;
 
+import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.tomcat.util.collections.CaseInsensitiveKeyMap;
 
 import com.google.common.collect.Lists;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.vo.enums.MethodEnum;
 import com.vo.http.ZCookie;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,8 +35,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ZRequest {
 
-	private static final String GZIP = "gzip";
-	private static final String ACCEPT_ENCODING = "Accept-Encoding";
+	public static final String Z_SESSION_ID = "ZSESSIONID";
+
+	public static final String GZIP = "gzip";
+	public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
 	public static final String COOKIE = "Cookie";
 
@@ -37,6 +48,7 @@ public class ZRequest {
 
 	public static final String HOST = "Host";
 
+	private static final AtomicLong GZSESSIONID = new AtomicLong(1L);
 
 
 	// -------------------------------------------------------------------------------------------------
@@ -50,14 +62,14 @@ public class ZRequest {
 	}
 
 	public boolean isSupportGZIP() {
-		final String a = this.getHeader(ACCEPT_ENCODING);
+		final String a = this.getHeader(ZRequest.ACCEPT_ENCODING);
 		if (StrUtil.isEmpty(a)) {
 			return false;
 		}
 
 		final String[] array = a.split(",");
 		for (final String a2 : array) {
-			if (GZIP.equalsIgnoreCase(a2)) {
+			if (ZRequest.GZIP.equalsIgnoreCase(a2)) {
 				return true;
 			}
 		}
@@ -76,7 +88,7 @@ public class ZRequest {
 
     public String getServerName() {
     	final RequestLine requestLine = this.ppp();
-    	final String host = requestLine.getHeaderMap().get(HOST);
+    	final String host = requestLine.getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -89,7 +101,7 @@ public class ZRequest {
 	public int getServerPort() {
 
 		final RequestLine requestLine = this.ppp();
-		final String host = requestLine.getHeaderMap().get(HOST);
+		final String host = requestLine.getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -124,25 +136,70 @@ public class ZRequest {
 
 	public String getContentType() {
 		final RequestLine requestLine = this.ppp();
-		final String ct = requestLine.getHeaderMap().get(CONTENT_TYPE);
+		final String ct = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
 		return ct;
 	}
-	public void getSession() {
 
 
+	private static String gSessionID() {
+		final Hasher putString = Hashing.sha256().newHasher().putString(
+				ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
+				Charset.defaultCharset());
+
+		final HashCode hash = putString.hash();
+		final String string2 = hash.toString();
+		return string2;
+	}
+
+	public ZSession getSession() {
+		return this.getSession(true);
+	}
+
+	/**
+	 * 获取Session，如需写入到Cookie，需要自己处理 ZResponse.cookie.write................
+	 *
+	 * @param create
+	 * @return
+	 */
+	public synchronized ZSession getSession(final boolean create) {
+		final ZCookie[] cs = this.getCookies();
+
+		if (ArrayUtil.isNotEmpty(cs)) {
+			for (final ZCookie zc : cs) {
+				if (ZRequest.Z_SESSION_ID.equals(zc.getName())) {
+					final ZSession session = ZSessionMap.getByZSessionId(zc.getValue());
+					return session;
+				}
+			}
+		}
+
+		if (!create) {
+			return null;
+		}
+
+		final String zSessionID = ZRequest.gSessionID();
+		final ZSession session = new ZSession(zSessionID, new Date());
+		ZSessionMap.put(session);
+
+		// FIXME 2023年7月2日 上午6:39:15 zhanghen: 发送到response
+//		final ZResponse response = ZContext.getZResponseAndRemove();
+//		response.addCookie(ZCookie);
+//		response.writeAndFlushAndClose();
+
+		return session;
 	}
 
 	public int getContentLength() {
 		final RequestLine requestLine = this.ppp();
-		final String s = requestLine.getHeaderMap().get(CONTENT_LENGTH);
+		final String s = requestLine.getHeaderMap().get(ZRequest.CONTENT_LENGTH);
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie[] getCookies() {
 
 		final RequestLine requestLine = this.ppp();
-		final String cookisString = requestLine.getHeaderMap().get(COOKIE);
-		if(StrUtil.isEmpty(cookisString)) {
+		final String cookisString = requestLine.getHeaderMap().get(ZRequest.COOKIE);
+		if (StrUtil.isEmpty(cookisString)) {
 			return null;
 		}
 

@@ -18,6 +18,8 @@ import com.votool.common.CR;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
+import ch.qos.logback.classic.net.SyslogAppender;
+
 /**
  *
  *
@@ -37,7 +39,7 @@ public class ZServer extends Thread {
 
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
-	private final static ZE ZE = ZES.newZE(FRAMEWORK_PROPERTIES.getThreadCount(), FRAMEWORK_PROPERTIES.getThreadNamePrefix());
+	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(), ZServer.FRAMEWORK_PROPERTIES.getThreadNamePrefix());
 
 	@Override
 	public void run() {
@@ -47,22 +49,31 @@ public class ZServer extends Thread {
 
 	private void start0() {
 
+
 		ServerSocket serverSocket = null;
 		try {
 
-			ZServer.LOG.trace("zserver开始启动,serverPort={}",FRAMEWORK_PROPERTIES.getServerPort());
-			serverSocket = new ServerSocket(FRAMEWORK_PROPERTIES.getServerPort());
-			ZServer.LOG.trace("zserver启动成功，等待连接,serverPort={}",FRAMEWORK_PROPERTIES.getServerPort());
+			ZServer.LOG.trace("zserver开始启动,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
+			serverSocket = new ServerSocket(ZServer.FRAMEWORK_PROPERTIES.getServerPort());
+			ZServer.LOG.trace("zserver启动成功，等待连接,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
 			while (true) {
 				final Socket socket = serverSocket.accept();
 //				System.out.println("new-socket = " + socket);
 				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-				final boolean allow = Counter.allow(Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
+				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
-					response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
-							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
+
+					// 2
+					response.contentType(HeaderEnum.JSON.getType())
+							.httpStatus(HttpStatus.HTTP_403.getCode())
+							.body(CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()))
+							.writeAndFlushAndClose();
+
+					// 1
+//					response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
+//							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
 
 					socket.close();
 
@@ -111,14 +122,14 @@ public class ZServer extends Thread {
 
 			synchronized (keyword) {
 
-				final Long v = map.get(key);
+				final Long v = Counter.map.get(key);
 				if (v == null) {
-					map.put(key, 1L);
+					Counter.map.put(key, 1L);
 					return true;
 				}
 
 				final long newCount = v + 1L;
-				map.put(key, newCount);
+				Counter.map.put(key, newCount);
 
 				return newCount <= qps;
 			}

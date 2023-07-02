@@ -1,20 +1,23 @@
 package com.vo.core;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.vo.core.ZRequest.ZHeader;
+import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
-import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
 /**
  *
@@ -32,126 +35,102 @@ public class ZResponse {
 
 	public static final String SET_COOKIE = "Set-Cookie";
 
+	@Getter
+	private final AtomicBoolean write = new AtomicBoolean(false);
+	private final AtomicBoolean closed  = new AtomicBoolean(false);
+	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
+
+	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
+	private final AtomicReference<String> contentType = new AtomicReference<>();
+
 	private final OutputStream outputStream;
 
 	private final ArrayList<ZHeader> headerList = Lists.newArrayList();
+	private final ArrayList<Byte> bodyList = Lists.newArrayList();
 
-	public void addCookie(final ZCookie zCookie) {
-		this.addCookie(zCookie.getName(), zCookie.toString());
+	public synchronized ZResponse contentType(final String contentType) {
+		// FIXME 2023年7月2日 下午12:05:19 zhanghen: 校验参数是否正确
+		if (!this.setContentType.get()) {
+			this.contentType.set(ZRequest.CONTENT_TYPE + ":" + contentType);
+		}
+
+		this.setContentType.set(true);
+
+		return this;
 	}
 
-	public void addCookie(final String name,final String value) {
-		this.addHeader(new ZHeader(SET_COOKIE, name + "=" + value));
+	public ZResponse cookie(final ZCookie zCookie) {
+		this.cookie(zCookie.getName(), zCookie.toCookieString());
+		return this;
 	}
 
-	public void addHeader(final ZHeader zHeader) {
+	public ZResponse httpStatus(final Integer httpStatus) {
+		this.httpStatus.set(httpStatus);
+		return this;
+	}
+
+	public ZResponse cookie(final String name,final String value) {
+		this.header(new ZHeader(ZResponse.SET_COOKIE, name + "=" + value));
+		return this;
+	}
+
+	public ZResponse header(final ZHeader zHeader) {
 		this.headerList.add(zHeader);
+		return this;
 	}
 
-	public void addHeader(final String name,final String value) {
-		this.addHeader(new ZHeader(name, value));
-	}
-
-	public void write(final CR<?> cr, final Integer httpStatus) {
-		this.write(cr, HTTP_1_1 + httpStatus);
-	}
-
-	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final CR cr) {
-		this.writeAndFlushAndClose(cte, httpStatus, JSON.toJSONString(cr));
-	}
-
-	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final String message) {
-		this.writeAndFlushAndClose(cte, httpStatus, message.getBytes());
-	}
-
-	public void writeAndFlushAndClose(final HeaderEnum cte,final int httpStatus, final byte[] ba) {
-
-		final byte[] baA = ArrayUtil.addAll(
-				(HTTP_1_1 + httpStatus).getBytes(),
-				Task.NEW_LINE.getBytes(),
-				cte.getValue().getBytes(),
-				Task.NEW_LINE.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				ba,
-				Task.NEW_LINE.getBytes());
-
-		try {
-			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
-
-			bufferedOutputStream.write(baA);
-			bufferedOutputStream.flush();
-			bufferedOutputStream.close();
-
-			this.flushAndClose();
-		} catch (final IOException e) {
-			e.printStackTrace();
+	public ZResponse header(final String name,final String value) {
+		if (ZRequest.CONTENT_TYPE.equals(name)) {
+			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + " 使用 setContentType 方法来设置");
 		}
+		this.header(new ZHeader(name, value));
+
+		return this;
 	}
 
-	public void writeOK200AndFlushAndClose(final String string, final HeaderEnum... headerArray) {
-		final byte[] ba = string.getBytes();
-		this.writeOK200AndFlushAndClose(ba, headerArray);
-	}
-
-	public void writeOK200AndFlushAndClose(final byte[] ba,final HeaderEnum... headerArray) {
-
-		final String h = ZRequest.CONTENT_LENGTH + ":" + ba.length;
-		final String header = Lists.newArrayList(headerArray).stream().map(c -> c.getValue() + Task.NEW_LINE).collect(Collectors.joining());
-
-		final byte[] baA = ArrayUtil.addAll(
-				Task.HTTP_200.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				header.getBytes(),
-				h.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				ba,
-				Task.NEW_LINE.getBytes());
-
-		try {
-			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
-
-			bufferedOutputStream.write(baA);
-			bufferedOutputStream.flush();
-			bufferedOutputStream.close();
-
-			this.flushAndClose();
-		} catch (final IOException e) {
-			e.printStackTrace();
+	public ZResponse body(final byte[] body) {
+		for (final byte b : body) {
+			this.bodyList.add(b);
 		}
+		return this;
 	}
 
-	public void write(final CR<?> cr, final String httpStatus) {
-		final byte[] baERROR = ArrayUtil.addAll(
-//				Task.HTTP_200.getBytes(),
-				httpStatus.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				HeaderEnum.JSON.getValue().getBytes(),
-				Task.NEW_LINE.getBytes(),
-				Task.NEW_LINE.getBytes(),
-				JSON.toJSONString(cr).getBytes(),
-				Task.NEW_LINE.getBytes());
+	public ZResponse body(final Object body) {
+		return this.body(String.valueOf(body));
+	}
+
+	public ZResponse body(final String body) {
+		return this.body(body.getBytes());
+	}
+
+	/**
+	 * 根据 contentType、 header、body 写入响应结果，只写一次。
+	 *
+	 */
+	public synchronized void writeAndFlushAndClose() {
 
 		try {
-			this.outputStream.write(baERROR);
-			this.flush();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				this.outputStream.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
+			if (this.write.get()) {
+				return;
 			}
-		}
+			if (this.closed.get()) {
+				return;
+			}
+			if (StrUtil.isEmpty(this.contentType.get())) {
+				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
+			}
 
-	}
-
-	public void writeAndFlushAndClose() {
-		try {
-			this.outputStream.write(Task.HTTP_200.getBytes());
+			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
-			this.outputStream.write(HeaderEnum.TEXT.getValue().getBytes());
+
+			// header-Content-Length
+			if (CollUtil.isNotEmpty(this.bodyList)) {
+				final int contentLenght = this.bodyList.size();
+				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
+				this.outputStream.write(Task.NEW_LINE.getBytes());
+			}
+
+			this.outputStream.write(this.contentType.get().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			for (int i = 0; i < this.headerList.size(); i++) {
@@ -159,14 +138,26 @@ public class ZResponse {
 				this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
 				this.outputStream.write(Task.NEW_LINE.getBytes());
 			}
+			this.outputStream.write(Task.NEW_LINE.getBytes());
+
+			// body
+			if (CollUtil.isNotEmpty(this.bodyList)) {
+				final byte[] ba = new byte[this.bodyList.size()];
+				for (int b = 0; b < this.bodyList.size(); b++) {
+					ba[b] = this.bodyList.get(b);
+				}
+				this.outputStream.write(ba);
+			} else {
+				this.outputStream.write(JSON.toJSONString(CR.ok()).getBytes());
+			}
 
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
-			this.flush();
-			this.outputStream.close();
-
 		} catch (final IOException e) {
 			e.printStackTrace();
+		} finally {
+			this.write.set(true);
+			this.flushAndClose();
 		}
 
 	}
@@ -184,37 +175,15 @@ public class ZResponse {
 		}
 	}
 
-	public void close() {
+	public synchronized void close() {
 		try {
 			this.outputStream.close();
+			this.closed.set(true);
 		} catch (final IOException e) {
 			e.printStackTrace();
+		} finally {
+			this.closed.set(true);
 		}
 	}
 
-	public void writeAndFlushAndClose(final String fileName, final byte[] ba, final HeaderEnum contentTypeEnum) {
-		try {
-
-			final BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(this.outputStream);
-
-			final byte[] baA = ArrayUtil.addAll(
-						Task.HTTP_200.getBytes(),
-						Task.NEW_LINE.getBytes(),
-						contentTypeEnum.getValue().getBytes(),
-						Task.NEW_LINE.getBytes(),
-						("Content-Disposition:attachment;filename=" + new String(fileName.getBytes(Task.UTF_8_CHARSET), Task.UTF_8_CHARSET)).getBytes(),
-						Task.NEW_LINE.getBytes(),
-						Task.NEW_LINE.getBytes(),
-						ba,
-						Task.NEW_LINE.getBytes()
-					);
-
-			bufferedOutputStream.write(baA);
-			bufferedOutputStream.flush();
-			bufferedOutputStream.close();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-	}
 }

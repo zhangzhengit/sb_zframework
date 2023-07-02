@@ -2,12 +2,11 @@ package com.vo.api;
 
 import com.vo.anno.ZController;
 import com.vo.conf.ServerConfiguration;
-import com.vo.core.ZRequest;
-import com.vo.core.ZResponse;
 import com.vo.core.HeaderEnum;
-import com.vo.core.Task;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
+import com.vo.core.ZRequest;
+import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
@@ -25,6 +24,8 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
+	public static final String CONTENT_ENCODING = "Content-Encoding";
+
 	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
 			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true })
 
@@ -34,14 +35,23 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.write(CR.error(Task.HTTP_STATUS_500, "不支持无后缀的文件"), Task.HTTP_500);
+
+			response
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.body(CR.error("不支持无后缀的文件"))
+				.writeAndFlushAndClose();
+
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
-					HttpStatus.HTTP_500.getCode());
+
+			response
+					.httpStatus(HttpStatus.HTTP_500.getCode())
+					.body(CR.error(HttpStatus.HTTP_500.getMessage()))
+					.writeAndFlushAndClose();
+
 			return;
 		}
 
@@ -55,14 +65,22 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.write(CR.error(Task.HTTP_STATUS_500, "不支持无后缀的文件"), Task.HTTP_500);
+
+			response
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.body(CR.error("不支持无后缀的文件"))
+				.writeAndFlushAndClose();
+
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
-					HttpStatus.HTTP_500.getCode());
+			response
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
+				.writeAndFlushAndClose();
+
 			return;
 		}
 
@@ -74,10 +92,18 @@ public class StaticController {
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
 			final byte[] ba = ZGzip.compress(string);
-			response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
+
+			response.contentType(cte.getType())
+					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
+				    .body(ba)
+				    .writeAndFlushAndClose();
+
 		} else {
 			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
-			response.writeOK200AndFlushAndClose(string, cte);
+
+			response.contentType(cte.getType())
+				    .body(string)
+				    .writeAndFlushAndClose();
 		}
 
 	}
@@ -96,14 +122,21 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response.write(CR.error(Task.HTTP_STATUS_500, "不支持无后缀的文件"), Task.HTTP_500);
+			response
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.body(CR.error("不支持无后缀的文件"))
+				.writeAndFlushAndClose();
+
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response.write(CR.error(HttpStatus.HTTP_500.getCode(), HttpStatus.HTTP_500.getMessage()),
-					HttpStatus.HTTP_500.getCode());
+
+			response
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
+				.writeAndFlushAndClose();
 			return;
 		}
 
@@ -114,9 +147,14 @@ public class StaticController {
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);
-			response.writeOK200AndFlushAndClose(ba, cte, HeaderEnum.GZIP);
+			response.contentType(cte.getType())
+					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
+				    .body(ba)
+				    .writeAndFlushAndClose();
 		} else {
-			response.writeOK200AndFlushAndClose(html, cte);
+			response.contentType(cte.getType())
+				    .body(html)
+				    .writeAndFlushAndClose();
 		}
 	}
 }
