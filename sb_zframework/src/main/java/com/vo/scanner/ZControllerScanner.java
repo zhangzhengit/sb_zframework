@@ -7,14 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
+import com.vo.core.Task;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
+import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.enums.BeanModeEnum;
 import com.vo.enums.MethodEnum;
@@ -52,15 +55,15 @@ public class ZControllerScanner {
 			ZPut.class, ZDelete.class, ZTrace.class, ZOptions.class, ZHead.class, ZConnect.class, ZPatch.class);
 
 	public static Set<Class<?>> scanAndCreateObject(final String packageName) {
-		LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
+		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZController.class);
-		LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
+		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
 		for (final Class<?> cls : zcSet) {
 
 			final Object newZController1 = ZObjectGeneratorStarter.generate(cls);
 
-			LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
+			ZControllerScanner.LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
 					newZController1);
 			ZConMap.putBean(cls.getCanonicalName(), newZController1);
 
@@ -68,16 +71,18 @@ public class ZControllerScanner {
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
 
-				checkZHtml(method);
+				ZControllerScanner.checkZHtml(method);
 
-				final Object controllerObject = getSingleton(cls);
+				checkNoVoidWithZResponse(method);
+
+				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
 				// 接口上是否有 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
 				if (requestMappingAnnotation != null) {
 					final String[] requestMappingArray = requestMappingAnnotation.mapping();
 
-					checkMapping(method, requestMappingAnnotation, requestMappingArray);
+					ZControllerScanner.checkMapping(method, requestMappingAnnotation, requestMappingArray);
 
 					final boolean[] isRegex = requestMappingAnnotation.isRegex();
 					for (int i = 0; i < requestMappingArray.length; i++) {
@@ -89,7 +94,7 @@ public class ZControllerScanner {
 
 				final ZGet get = method.getAnnotation(ZGet.class);
 				if (get != null) {
-					checkPathVariable(get.path(), method);
+					ZControllerScanner.checkPathVariable(get.path(), method);
 					ZControllerMap.put(MethodEnum.GET, get.path() , method, controllerObject, false);
 				}
 
@@ -132,6 +137,20 @@ public class ZControllerScanner {
 		return zcSet;
 	}
 
+	private static void checkNoVoidWithZResponse(final Method method) {
+		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+			final Parameter[] ps = method.getParameters();
+			final Optional<Parameter> ro = Lists.newArrayList(ps).stream()
+					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
+					.findAny();
+			if (ro.isPresent()) {
+				throw new IllegalArgumentException(
+						"接口方法 " + method.getName() + " 带返回值不允许使用 " + ZResponse.class.getSimpleName() + " 参数，去掉 "
+								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为 void");
+			}
+		}
+	}
+
 	private static void checkMapping(final Method method, final ZRequestMapping requestMappingAnnotation,
 			final String[] requestMappingArray) {
 
@@ -147,7 +166,7 @@ public class ZControllerScanner {
 				throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
 			}
 
-			checkRequestMapping(method, requestMapping);
+			ZControllerScanner.checkRequestMapping(method, requestMapping);
 
 			final boolean add = temp.add(requestMapping);
 			if (!add) {
@@ -268,7 +287,7 @@ public class ZControllerScanner {
 	}
 
 	private static void checkZHtml(final Method method) {
-		if (isHttpMethod(method) && method.isAnnotationPresent(ZHtml.class)) {
+		if (ZControllerScanner.isHttpMethod(method) && method.isAnnotationPresent(ZHtml.class)) {
 			final Class<?> rCls = method.getReturnType();
 			final boolean isS = rCls.getCanonicalName().equals(String.class.getCanonicalName());
 			if (!isS) {
@@ -279,7 +298,7 @@ public class ZControllerScanner {
 	}
 
 	private static boolean isHttpMethod(final Method method) {
-		for (final Class<? extends Annotation> c : HTTP_METHOD_SET) {
+		for (final Class<? extends Annotation> c : ZControllerScanner.HTTP_METHOD_SET) {
 			if (method.isAnnotationPresent(c)) {
 				return true;
 			}
