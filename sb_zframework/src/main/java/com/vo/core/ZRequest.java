@@ -232,6 +232,16 @@ public class ZRequest {
 		return c;
 	}
 
+	public ZCookie getZSESSIONID() {
+		final ZCookie[] cookies = this.getCookies();
+		for (final ZCookie zCookie : cookies) {
+			if(ZRequest.Z_SESSION_ID.equals(zCookie.getName())) {
+				return zCookie;
+			}
+		}
+		return null;
+	}
+
 	public String getHeader(final String name) {
 		final RequestLine requestLine = this.ppp();
 		final String header = requestLine.getHeaderMap().get(name);
