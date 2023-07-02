@@ -145,7 +145,6 @@ public class Task {
 			Task.handleWrite500(Task.DEFAULT_CONTENT_TYPE, error, this.socket);
 			e.printStackTrace();
 		} finally {
-			// FIXME 2023年7月2日 下午12:18:09 zhanghen: 暂时不关闭
 			this.closeSocketAndStream();
 		}
 	}
