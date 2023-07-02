@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
@@ -212,15 +211,11 @@ public class Task {
 		if (!allow) {
 			try {
 				final ZResponse response = new ZResponse(this.socket.getOutputStream());
-				// 2
 				response.contentType(HeaderEnum.JSON.getType())
 						.httpStatus(HttpStatus.HTTP_403.getCode())
 						.body(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"))
 						.writeAndFlushAndClose();
 
-				// 1
-//				response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
-//						CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试"));
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
@@ -228,7 +223,6 @@ public class Task {
 			return;
 		}
 
-		// FIXME 2023年7月2日 上午6:31:21 zhanghen: ZContext 放入ZReqeust和ZResponse
 		this.setZRequestAndZResponse(arraygP, request);
 
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
@@ -237,7 +231,7 @@ public class Task {
 //			System.out.println("ZContext-response = " + response);
 //			final AtomicBoolean write = response.getWrite();
 //			if (!write.get()) {
-////				response.writeAndFlushAndClose();
+//				response.writeAndFlushAndClose();
 //			}
 			return;
 		}
