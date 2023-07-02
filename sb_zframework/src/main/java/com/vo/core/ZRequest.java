@@ -166,7 +166,20 @@ public class ZRequest {
 			for (final ZCookie zc : cs) {
 				if (ZRequest.Z_SESSION_ID.equals(zc.getName())) {
 					final ZSession session = ZSessionMap.getByZSessionId(zc.getValue());
-					return session;
+
+					if (session != null) {
+						return session;
+					}
+
+					// session == null 可能是服务器重启了等
+					if (!create) {
+						return null;
+					}
+
+					final ZSession newSession = this.newSession();
+					ZSessionMap.put(newSession);
+
+					return newSession;
 				}
 			}
 		}
@@ -175,8 +188,7 @@ public class ZRequest {
 			return null;
 		}
 
-		final String zSessionID = ZRequest.gSessionID();
-		final ZSession session = new ZSession(zSessionID, new Date());
+		final ZSession session = this.newSession();
 		ZSessionMap.put(session);
 
 		// FIXME 2023年7月2日 上午6:39:15 zhanghen: 发送到response
@@ -184,6 +196,12 @@ public class ZRequest {
 //		response.addCookie(ZCookie);
 //		response.writeAndFlushAndClose();
 
+		return session;
+	}
+
+	private ZSession newSession() {
+		final String zSessionID = ZRequest.gSessionID();
+		final ZSession session = new ZSession(zSessionID, new Date());
 		return session;
 	}
 
