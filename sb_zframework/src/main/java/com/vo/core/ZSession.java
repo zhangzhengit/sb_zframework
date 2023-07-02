@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  *
@@ -74,8 +73,8 @@ public class ZSession {
     }
 
     public void invalidate() {
+    	ZSessionMap.remove(this.getId());
     	this.invalidate.set(true);
-    	// FIXME 2023年7月2日 上午5:59:22 zhanghen: 从ZSessionMap中删除本对象
     }
 
 	private void checkInvalidate() {

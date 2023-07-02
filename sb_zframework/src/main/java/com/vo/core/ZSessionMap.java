@@ -15,6 +15,10 @@ public class ZSessionMap {
 
 	private final static Map<String, ZSession> SESSION_MAP = new HashMap<>(4, 1F);
 
+	public static void remove(final String zSessionId) {
+		SESSION_MAP.remove(zSessionId);
+	}
+
 	public static ZSession getByZSessionId(final String zSessionId) {
 		return ZSessionMap.SESSION_MAP.get(zSessionId);
 	}
