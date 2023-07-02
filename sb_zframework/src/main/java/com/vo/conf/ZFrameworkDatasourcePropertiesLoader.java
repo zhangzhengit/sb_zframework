@@ -6,7 +6,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Lists;
-import com.vo.core.ZRequest;
 import com.vo.core.ZLog2;
 import com.vo.core.ZServer;
 
@@ -22,6 +21,8 @@ import cn.hutool.core.util.StrUtil;
 public class ZFrameworkDatasourcePropertiesLoader {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	public static final String PROPERTIES_NAME = "zframework.properties";
 
 	public static final String PROPERTIES = "zframework.properties";
 
@@ -72,19 +73,18 @@ public class ZFrameworkDatasourcePropertiesLoader {
 		try {
 			return new PropertiesConfiguration(PROPERTIES);
 		} catch (final ConfigurationException e) {
-			e.printStackTrace();
 			try {
 				return new PropertiesConfiguration(PROPERTIES_2);
 			} catch (final ConfigurationException e1) {
-				e1.printStackTrace();
 				try {
 					return new PropertiesConfiguration(PROPERTIES_3);
 				} catch (final ConfigurationException e2) {
-					e2.printStackTrace();
 					try {
 						return new PropertiesConfiguration(PROPERTIES_4);
 					} catch (final ConfigurationException e3) {
 						e3.printStackTrace();
+						LOG.error("找不到配置文件 [{}", PROPERTIES_NAME);
+						System.exit(0);
 					}
 				}
 			}
