@@ -234,11 +234,16 @@ public class ZRequest {
 
 	public ZCookie getZSESSIONID() {
 		final ZCookie[] cookies = this.getCookies();
+		if (ArrayUtil.isEmpty(cookies)) {
+			return null;
+		}
+
 		for (final ZCookie zCookie : cookies) {
 			if(ZRequest.Z_SESSION_ID.equals(zCookie.getName())) {
 				return zCookie;
 			}
 		}
+
 		return null;
 	}
 
