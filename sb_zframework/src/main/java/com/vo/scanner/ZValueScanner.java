@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 
@@ -16,6 +17,7 @@ import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.anno.ZValue;
 import com.vo.conf.ZProperties;
+import com.vo.http.ZConMap;
 
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -43,21 +45,41 @@ public class ZValueScanner {
 		}
 
 		for (final Class<?> cls : clist) {
-			final Object byName = ZComponentMap.getByName(cls.getCanonicalName());
-			if (byName == null) {
+			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
+			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
+
+			final Object object = c1 == null ? c2 : c1;
+			if (object == null) {
 				continue;
 			}
 
-			final Field[] fields = ReflectUtil.getFields(byName.getClass());
+			final Field[] fields = ReflectUtil.getFields(object.getClass());
 			for (final Field f2 : fields) {
 				final ZValue zv2 = f2.getAnnotation(ZValue.class);
 				if (zv2 == null) {
 					continue;
 				}
 
-				setValue(f2, zv2, byName);
+				setValue(f2, zv2, object);
 			}
 		}
+	}
+
+	private static String getStringValue(final PropertiesConfiguration p, final String key) {
+		final StringJoiner joiner = new StringJoiner(",");
+		try {
+			final String[] stringArray = p.getStringArray(key);
+			for (final String s : stringArray) {
+				final String s2 = new String(s.trim()
+						.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
+						Charset.defaultCharset().displayName());
+				joiner.add(s2);
+			}
+		} catch (final UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
+		return joiner.toString();
 	}
 
 	private static void setValue(final Field field, final ZValue zValue, final Object object) {
@@ -70,15 +92,8 @@ public class ZValueScanner {
 
 		final Class<?> type = field.getType();
 		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			try {
-				final String v1 = p.getString(key);
-				final String v2 = new String(v1.getBytes(ZProperties.PROPERTIESCONFIGURATION_ENCODING.get()),
-						Charset.defaultCharset().displayName());
-				setValue(field, object, v2);
-			} catch (final UnsupportedEncodingException e1) {
-				e1.printStackTrace();
-			}
-
+			final String v1 = getStringValue(p, key);
+			setValue(field, object, v1);
 		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			setValue(field, object, p.getByte(key));
 		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
