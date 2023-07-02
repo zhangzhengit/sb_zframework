@@ -6,7 +6,6 @@ package com.vo.core;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,8 +16,6 @@ import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
-
-import ch.qos.logback.classic.net.SyslogAppender;
 
 /**
  *
@@ -58,22 +55,17 @@ public class ZServer extends Thread {
 			ZServer.LOG.trace("zserver启动成功，等待连接,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
 			while (true) {
 				final Socket socket = serverSocket.accept();
-//				System.out.println("new-socket = " + socket);
 				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
 
-					// 2
 					response.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
 							.body(CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()))
 							.writeAndFlushAndClose();
 
-					// 1
-//					response.writeAndFlushAndClose(HeaderEnum.JSON, HttpStatus.HTTP_403.getCode(),
-//							CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()));
 
 					socket.close();
 
