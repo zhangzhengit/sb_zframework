@@ -46,6 +46,7 @@ import com.votool.ze.ZES;
  * @date 2023年6月12日
  *
  */
+// FIXME 2023年7月3日 下午7:46:30 zhanghen: TODO： 支持ssl nioserver，现在ssl开启后会忽略nioEnable
 public class ZServer extends Thread {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
