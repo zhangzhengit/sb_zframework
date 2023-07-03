@@ -55,7 +55,7 @@ public class ZFrameworkDatasourcePropertiesLoader {
 				propertiesConfiguration.getInt("server.thread.count", Runtime.getRuntime().availableProcessors()));
 		final String threadNamePrefix = propertiesConfiguration.getString("server.thread.name.prefix");
 		if (StrUtil.isEmpty(threadNamePrefix)) {
-			zDatasourceProperties.setThreadNamePrefix(ZServer.DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX);
+			zDatasourceProperties.setThreadNamePrefix(ZServer.DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
 		} else {
 			zDatasourceProperties.setThreadNamePrefix(threadNamePrefix);
 		}

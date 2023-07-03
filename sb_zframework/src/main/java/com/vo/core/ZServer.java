@@ -62,9 +62,11 @@ public class ZServer extends Thread {
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
 	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(),
-			ZSingleton.getSingletonByClass(ServerConfiguration.class).getNioEnable()
-					? DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX
-					: DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX);
+//			ZSingleton.getSingletonByClass(ServerConfiguration.class).getNioEnable()
+//					?
+							DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX
+//					: DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX
+					);
 
 	@Override
 	public void run() {
@@ -74,11 +76,13 @@ public class ZServer extends Thread {
 			this.startSSLServer();
 		} else {
 			LOG.info("启动Server,port={}", serverConfiguration.getPort());
-			if (serverConfiguration.getNioEnable()) {
-				this.startNIOServer();
-			} else {
-				this.startServer();
-			}
+			this.startNIOServer();
+
+//			if (serverConfiguration.getNioEnable()) {
+//				this.startNIOServer();
+//			} else {
+//				this.startServer();
+//			}
 		}
 	}
 
