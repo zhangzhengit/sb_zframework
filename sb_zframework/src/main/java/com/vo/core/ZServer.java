@@ -5,14 +5,23 @@ package com.vo.core;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -59,7 +68,11 @@ public class ZServer extends Thread {
 			this.startSSLServer();
 		} else {
 			LOG.info("启动Server,port={}", serverConfiguration.getPort());
-			this.startServer();
+			if (serverConfiguration.getNioEnable()) {
+				this.startNIOServer();
+			} else {
+				this.startServer();
+			}
 		}
 	}
 
@@ -130,8 +143,160 @@ public class ZServer extends Thread {
 		}
 	}
 
-	private void startServer() {
+	private static final int BUFFER_SIZE = 1024 * 50;
 
+	private Selector selector;
+
+	public void startNIOServer() {
+		ZServer.LOG.trace("zNIOServer开始启动,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
+
+		try {
+			this.selector = Selector.open();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		ServerSocketChannel serverSocketChannel = null;
+		try {
+			serverSocketChannel = ServerSocketChannel.open();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			serverSocketChannel
+					.bind(new InetSocketAddress(ZSingleton.getSingletonByClass(ServerConfiguration.class).getPort()));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			serverSocketChannel.configureBlocking(false);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
+		} catch (final ClosedChannelException e) {
+			e.printStackTrace();
+		}
+
+		ZServer.LOG.trace("zNIOServer启动成功，等待连接,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
+
+		while (true) {
+			try {
+				this.selector.select();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+
+			final Iterator<SelectionKey> keyIterator = this.selector.selectedKeys().iterator();
+			while (keyIterator.hasNext()) {
+				final SelectionKey key = keyIterator.next();
+				keyIterator.remove();
+				final boolean valid = key.isValid();
+
+				if (!valid) {
+					System.out.println("key is valid");
+					continue;
+				}
+
+				if (key.isAcceptable()) {
+					try {
+						this.handleAccept(key);
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				} else if (key.isReadable()) {
+					this.handleRead(key);
+				}
+			}
+		}
+	}
+
+	private void handleAccept(final SelectionKey key) throws IOException {
+		final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
+		final SocketChannel socketChannel = serverSocketChannel.accept();
+		socketChannel.configureBlocking(false);
+		socketChannel.register(this.selector, SelectionKey.OP_READ);
+	}
+
+	private  void handleRead(final SelectionKey key) {
+		final SocketChannel socketChannel = (SocketChannel) key.channel();
+		final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		final boolean open = socketChannel.isOpen();
+		if (!open) {
+			return;
+		}
+		int bytesRead = 0;
+		try {
+			bytesRead = socketChannel.read(buffer);
+		} catch (final IOException e) {
+//			e.printStackTrace();
+			return;
+		}
+
+		if (bytesRead == -1) {
+			try {
+				key.cancel();
+				socketChannel.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+			return;
+		}
+
+		if (bytesRead > 0) {
+			buffer.flip();
+			final byte[] requestData = new byte[buffer.remaining()];
+			buffer.get(requestData);
+
+			final String request = new String(requestData, StandardCharsets.UTF_8);
+//			System.out.println("Received request:\n" + request);
+
+			key.cancel();
+			if (socketChannel.isOpen()) {
+//				this.handleRequest(socketChannel, request, key);
+
+				ZE.executeInQueue(() -> {
+					final TaskNIO taskNIO = new TaskNIO(socketChannel, request);
+					final ZRequest requestX = TaskNIO.handleRead(request);
+					final ZRequest request2 = Task.parseRequest(requestX);
+					taskNIO.invoke(request2);
+				});
+
+//				this.ze.executeInQueue(() -> this.handleRequest(socketChannel, request, key));
+//				this.threadPool.submit(() -> this.handleRequest(socketChannel, request, key));
+			}
+		}
+	}
+
+	private void handleRequest(final SocketChannel socketChannel, final String request, final SelectionKey key) {
+		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "NonBlockingHttpServer.handleRequest()");
+		try {
+			Thread.sleep(1);
+		} catch (final InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		// 在这里处理请求并生成响应
+		final String response =
+					  "HTTP/1.1 200 OK\r\n"
+					+ "Content-Type: text/plain\r\n"
+					+ "Content-Length: 12\r\n"
+					+ "\r\n"
+					+ "Hello World!";
+
+		try {
+			final ByteBuffer buffer = ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8));
+			socketChannel.write(buffer);
+			socketChannel.close();
+		} catch (final IOException e) {
+//	            e.printStackTrace();
+			return;
+		}
+	}
+
+	private void startServer() {
 
 		ServerSocket serverSocket = null;
 		try {

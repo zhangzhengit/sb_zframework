@@ -27,6 +27,9 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	private Integer port;
 
+	@ZNotNull
+	private Boolean nioEnable;
+
 	/**
 	 * 是否开启SSL
 	 */
@@ -52,7 +55,7 @@ public class ServerConfiguration {
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
 	@ZMin(min = 1)
-	@ZMax(max = 520 * 100)
+	@ZMax(max = 52000000)
 	private Integer concurrentQuantity;
 
 	/**

@@ -7,12 +7,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
+import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 
 /**
@@ -48,11 +51,12 @@ public class ResourcesLoader {
 	 * 把静态资源写入输出流，不放入缓存.
 	 *
 	 * @param resourceName
-	 * @param cte TODO
+	 * @param cte
 	 * @param outputStream
+	 * @param response
 	 * @return 返回写入的字节数
 	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final OutputStream outputStream) {
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final OutputStream outputStream, final ZResponse response) {
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
@@ -61,6 +65,40 @@ public class ResourcesLoader {
 		final InputStream inputStream = checkInputStream(key);
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+		if (response.getSocketChannel() != null) {
+
+			final AtomicLong write1 = new AtomicLong(0L);
+			final byte[] ba = new byte[1000 * 10];
+			final AtomicLong write = new AtomicLong(0);
+			final List<Byte> list = new ArrayList<>();
+			while (true) {
+				try {
+					final int read = bufferedInputStream.read(ba);
+					if (read <= -1) {
+						break;
+					}
+
+					write.set(write.get() + read);
+					for (int i = 0; i < read; i++) {
+						list.add(ba[i]);
+					}
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
+			}
+			final byte[] baR = new byte[list.size()];
+			for (int i = 0; i < list.size(); i++) {
+				baR[i] = list.get(i);
+			}
+
+			response.contentType(cte.getType()).body(baR).writeAndFlushAndClose();
+
+			write1.set(baR.length);
+
+			return write1.get();
+		}
+
 
 		try {
 			outputStream.write(Task.HTTP_200.getBytes());
@@ -228,7 +266,7 @@ public class ResourcesLoader {
 		return inputStream;
 	}
 
-	public static enum ResourcesTypeEnum{
+	public enum ResourcesTypeEnum{
 
 		BINARY,STRING;
 	}

@@ -56,8 +56,8 @@ import cn.hutool.core.util.StrUtil;
 // FIXME 2023年7月1日 下午2:59:13 zhanghen: 判断 Connection 支持长连接
 public class Task {
 
-	private static final String UTF_8 = "UTF-8";
-	private static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+	public static final String UTF_8 = "UTF-8";
+	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final int HTTP_STATUS_404 = 404;
 	public static final int HTTP_STATUS_500 = 500;
 
@@ -154,6 +154,10 @@ public class Task {
 	}
 
 	public ZRequest parse(final ZRequest request) {
+		return Task.parseRequest(request);
+	}
+
+	public static ZRequest parse1(final ZRequest request) {
 		return Task.parseRequest(request);
 	}
 
@@ -256,15 +260,12 @@ public class Task {
 						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
 					final ZResponse response = new ZResponse(this.getOutputStream());
-					// 2
 					response
 						.contentType(HeaderEnum.HTML.getType())
 						.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 						.body(compress)
 						.writeAndFlushAndClose();
 
-					// 1
-//					response.writeOK200AndFlushAndClose(compress, HeaderEnum.HTML, HeaderEnum.GZIP);
 				} else {
 					this.handleWrite(html, HeaderEnum.HTML);
 				}
@@ -283,15 +284,12 @@ public class Task {
 				final byte[] compress = ZGzip.compress(json);
 				final ZResponse response = new ZResponse(this.getOutputStream());
 
-				// 2
 				response
 					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 					.body(compress)
 					.writeAndFlushAndClose();
 
-				// 1
-//				response.writeOK200AndFlushAndClose(compress, Task.DEFAULT_CONTENT_TYPE, HeaderEnum.GZIP);
 			} else {
 				this.handleWrite(json, Task.DEFAULT_CONTENT_TYPE);
 			}
@@ -640,6 +638,20 @@ public class Task {
 
 	}
 
+	public static ZRequest handleRead(final String requestString) {
+		final ZRequest request = new ZRequest();
+
+		final boolean contains = requestString.contains(Task.NEW_LINE);
+		if (contains) {
+			final String[] aa = requestString.split(Task.NEW_LINE);
+			for (final String string : aa) {
+				request.addLine(string);
+			}
+		}
+
+		return request;
+	}
+
 	private void handleWrite(final String response, final HeaderEnum contentTypeEnum) {
 		try {
 			final String content = response;
@@ -693,8 +705,15 @@ public class Task {
 			final OutputStream outputStream = socket.getOutputStream();
 
 			final PrintWriter pw = new PrintWriter(outputStream);
-			final String s = Task.HTTP_404 + Task.NEW_LINE + contentTypeEnum.getValue() + Task.NEW_LINE + Task.SERVER + Task.NEW_LINE + Task.NEW_LINE
-					+ json + Task.NEW_LINE;
+			final String s = Task.HTTP_404 +
+							 Task.NEW_LINE +
+							 contentTypeEnum.getValue() +
+							 Task.NEW_LINE +
+							 Task.SERVER +
+							 Task.NEW_LINE +
+							 Task.NEW_LINE +
+							 json +
+							 Task.NEW_LINE;
 			pw.write(s);
 
 			pw.flush();

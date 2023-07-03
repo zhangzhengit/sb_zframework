@@ -53,7 +53,7 @@ public class ZGzip {
 		try {
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
 			final GZIPOutputStream gzip = new GZIPOutputStream(out);
-			gzip.write(string.getBytes());
+			gzip.write(string.getBytes(Charset.defaultCharset().displayName()));
 			gzip.finish();
 
 			out.close();
