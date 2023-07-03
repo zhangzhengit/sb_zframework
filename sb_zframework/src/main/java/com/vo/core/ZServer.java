@@ -53,13 +53,17 @@ public class ZServer extends Thread {
 
 	private static final String Z_SERVER_QPS = "ZServer_QPS";
 
+	public static final String DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX = "zframework-nio-http-thread-";
 	public static final String DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX = "zframework-http-thread-";
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
-	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(), ZServer.FRAMEWORK_PROPERTIES.getThreadNamePrefix());
+	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(),
+			ZSingleton.getSingletonByClass(ServerConfiguration.class).getNioEnable()
+					? DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX
+					: DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX);
 
 	@Override
 	public void run() {
