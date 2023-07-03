@@ -125,30 +125,31 @@ public class ZResponse {
 	public synchronized void writeAndFlushAndClose() {
 
 		if (this.outputStream != null) {
-			this.writeOS();
+			this.writeOutputStream();
 		} else if (this.socketChannel != null) {
-			final String s = this.responseString();
+			this.writeSocketChannel();
+		} else {
+			throw new IllegalArgumentException(
+					ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
+		}
+	}
 
+	private void writeSocketChannel() {
+		try {
+			final ByteBuffer buffer = this.fillByteBuffer();
+			this.socketChannel.write(buffer);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		} finally {
 			try {
-//				final ByteBuffer buffer = ByteBuffer.wrap(s.getBytes());
-//				final ByteBuffer buffer = ByteBuffer.wrap(s.getBytes("ISO-8859-1"));
-				final ByteBuffer buffer = this.fillByteBuffer();
-				final byte[] array = buffer.array();
-//				final ByteBuffer buffer = ByteBuffer.wrap(s.getBytes(Charset.defaultCharset().displayName()));
-				this.socketChannel.write(buffer);
+				this.socketChannel.close();
 			} catch (final IOException e) {
 				e.printStackTrace();
-			} finally {
-				try {
-					this.socketChannel.close();
-				} catch (final IOException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 	}
 
-	private void writeOS() {
+	private void writeOutputStream() {
 		try {
 			if (this.write.get()) {
 				return;

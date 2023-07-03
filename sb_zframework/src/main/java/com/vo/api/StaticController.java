@@ -55,7 +55,7 @@ public class StaticController {
 			return;
 		}
 
-		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response.getOutputStream(), response);
+		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })

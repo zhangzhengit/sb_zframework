@@ -15,6 +15,7 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
+import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 
@@ -52,11 +53,11 @@ public class ResourcesLoader {
 	 *
 	 * @param resourceName
 	 * @param cte
-	 * @param outputStream
 	 * @param response
+	 * @param outputStream
 	 * @return 返回写入的字节数
 	 */
-	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final OutputStream outputStream, final ZResponse response) {
+	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final ZResponse response) {
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
@@ -66,45 +67,63 @@ public class ResourcesLoader {
 
 		final BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
 
-		if (response.getSocketChannel() != null) {
-
-			final AtomicLong write1 = new AtomicLong(0L);
-			final byte[] ba = new byte[1000 * 10];
-			final AtomicLong write = new AtomicLong(0);
-			final List<Byte> list = new ArrayList<>();
-			while (true) {
-				try {
-					final int read = bufferedInputStream.read(ba);
-					if (read <= -1) {
-						break;
-					}
-
-					write.set(write.get() + read);
-					for (int i = 0; i < read; i++) {
-						list.add(ba[i]);
-					}
-				} catch (final IOException e) {
-					e.printStackTrace();
-				}
-			}
-			final byte[] baR = new byte[list.size()];
-			for (int i = 0; i < list.size(); i++) {
-				baR[i] = list.get(i);
-			}
-
-			response.contentType(cte.getType()).body(baR).writeAndFlushAndClose();
-
-			write1.set(baR.length);
-
-			return write1.get();
+		if (response.getOutputStream() != null) {
+			final AtomicLong write = writeOutputStream(cte, response.getOutputStream(), inputStream, bufferedInputStream);
+			return write.get();
 		}
 
+		if (response.getSocketChannel() != null) {
+			return writeSocketChannel(cte, response, bufferedInputStream);
+		}
 
+		throw new IllegalArgumentException(ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
+
+	}
+
+	private static long writeSocketChannel(final HeaderEnum cte, final ZResponse response,
+			final BufferedInputStream bufferedInputStream) {
+		final AtomicLong write1 = new AtomicLong(0L);
+		final byte[] ba = new byte[1000 * 10];
+		final AtomicLong write = new AtomicLong(0);
+		final List<Byte> list = new ArrayList<>();
+		while (true) {
+			try {
+				final int read = bufferedInputStream.read(ba);
+				if (read <= -1) {
+					break;
+				}
+
+				write.set(write.get() + read);
+				for (int i = 0; i < read; i++) {
+					list.add(ba[i]);
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		final byte[] baR = new byte[list.size()];
+		for (int i = 0; i < list.size(); i++) {
+			baR[i] = list.get(i);
+		}
+
+		response.contentType(cte.getType())
+				.header(ZRequest.CONTENT_LENGTH,String.valueOf(baR.length))
+				.body(baR)
+				.writeAndFlushAndClose();
+
+		write1.set(baR.length);
+
+		return write1.get();
+	}
+
+	private static AtomicLong writeOutputStream(final HeaderEnum cte, final OutputStream outputStream,
+			final InputStream inputStream, final BufferedInputStream bufferedInputStream) {
 		try {
 			outputStream.write(Task.HTTP_200.getBytes());
 			outputStream.write(Task.NEW_LINE.getBytes());
 			outputStream.write(cte.getValue().getBytes());
 			outputStream.write(Task.NEW_LINE.getBytes());
+			// FIXME 2023年7月3日 下午7:38:24 zhanghen: TODO 加入content-length
 			outputStream.write(Task.NEW_LINE.getBytes());
 		} catch (final IOException e1) {
 			e1.printStackTrace();
@@ -121,8 +140,7 @@ public class ResourcesLoader {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
-
-		return write.get();
+		return write;
 	}
 
 	private static AtomicLong writeToOutputStream(final BufferedInputStream bufferedInputStream,
