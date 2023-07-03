@@ -155,6 +155,7 @@ public class ZResponse {
 
 		} catch (final IOException e) {
 			e.printStackTrace();
+			this.flushAndClose();
 		} finally {
 			this.write.set(true);
 			this.flushAndClose();
