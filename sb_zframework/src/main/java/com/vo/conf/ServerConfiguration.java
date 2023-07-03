@@ -51,7 +51,7 @@ public class ServerConfiguration {
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
-	@ZMin(min = 520)
+	@ZMin(min = 1)
 	@ZMax(max = 520 * 100)
 	private Integer concurrentQuantity;
 
