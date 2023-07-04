@@ -58,9 +58,9 @@ public class Task {
 	private static final int READ_LENGTH = DEFAULT_BUFFER_SIZE / 2;
 	public static final String SP = "&";
 	public static final String EMPTY_STRING = "";
-	public static final String UTF_8 = "UTF-8";
+	public static final String UTF_8 = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
-	public static final Charset UTF_8_CHARSET = Charset.forName(UTF_8);
+	public static final Charset UTF_8_CHARSET = Charset.defaultCharset();
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
 	public static final int HTTP_STATUS_404 = 404;
@@ -472,7 +472,6 @@ public class Task {
 		// version
 		parseVersion(requestLine, line);
 
-
 		LineMap.put(requestLine.getFullpath(), requestLine);
 
 		// paserHeader
@@ -498,7 +497,8 @@ public class Task {
 				final Set<RequestParam> paramSet = Sets.newHashSet();
 				final String param = fullPath.substring("?".length() + wenI);
 				final String simplePath = fullPath.substring(0,wenI);
-				line.setPath(simplePath);
+
+				line.setPath(URLDecoder.decode(simplePath, UTF_8_CHARSET));
 
 				final String[] paramArray = param.split(SP);
 				for (final String p : paramArray) {
@@ -517,9 +517,8 @@ public class Task {
 
 				line.setParamSet(paramSet);
 
-
 			} else {
-				line.setPath(fullPath);
+				line.setPath(URLDecoder.decode(fullPath, UTF_8_CHARSET));
 			}
 			line.setFullpath(fullPath);
 		}
