@@ -26,6 +26,7 @@ import com.vo.enums.CollectionEnum;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -220,9 +221,9 @@ public class NioLongConnectionServer {
 					}
 
 					final String connection = request.getHeader(CONNECTION);
-
-					if (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
-							|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase())) {
+					if (StrUtil.isNotEmpty(connection)
+							&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue()) || connection
+									.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
 						socketChannelMap.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
 					} else {
 						try {
