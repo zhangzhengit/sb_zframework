@@ -34,7 +34,6 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月24日
  *
  */
-// FIXME 2023年7月1日 上午9:08:39 zhanghen: 静态资源支持和zf.properties一样，支持在jar包外的目录加载
 public class ResourcesLoader {
 
 	public static final String NEW_LINE = "\n\r";
