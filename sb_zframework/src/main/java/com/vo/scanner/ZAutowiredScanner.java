@@ -45,7 +45,9 @@ public class ZAutowiredScanner {
 			}
 
 			if (o2 == null) {
-				throw new IllegalArgumentException("扫描的注解类型不支持:[" + targetClass.getCanonicalName() + "]");
+//				throw new IllegalArgumentException("扫描的注解类型不支持:[" + targetClass.getCanonicalName() + "]");
+				LOG.warn("无[{}]的对象,continue", cls.getCanonicalName());
+				continue;
 			}
 
 			final Field[] fs = o2.getClass().getDeclaredFields();

@@ -96,8 +96,6 @@ public class StaticController {
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
-//			final byte[] ba1 = ResourcesLoader.loadStaticResource(staticPrefix + resourceName);
-//			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
 
 			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
 			final byte[] ba = ZGzip.compress(string);

@@ -67,6 +67,13 @@ public class ServerConfiguration {
 	private Integer concurrentQuantity;
 
 	/**
+	 * 是否启用内置的 StaticController,
+	 * 注意：如果设为false不启用，则需要手动添加Controller处理 StaticController 类里的
+	 * 静态资源
+	 */
+	@ZNotNull
+	private Boolean staticControllerEnable;
+	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
 	 */
 	@ZNotNull
