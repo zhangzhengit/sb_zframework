@@ -52,8 +52,6 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		}
 
-		System.out.println("Server started on port " + serverConfiguration.getPort());
-
 		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", serverConfiguration.getPort());
 
 		while (true) {
