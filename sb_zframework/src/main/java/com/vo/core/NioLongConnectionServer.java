@@ -168,11 +168,11 @@ public class NioLongConnectionServer {
 		} catch (final ClosedChannelException e) {
 			e.printStackTrace();
 		}
-		try {
-			System.out.println("新连接： " + socketChannel.getRemoteAddress());
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+////			System.out.println("新连接： " + socketChannel.getRemoteAddress());
+//		} catch (final IOException e) {
+//			e.printStackTrace();
+//		}
 
 	}
 
@@ -194,7 +194,7 @@ public class NioLongConnectionServer {
 			try {
 				socketChannel.close();
 				key.cancel();
-				System.out.println("bytesRead == -1 | socketChannel.close();");
+//				System.out.println("bytesRead == -1 | socketChannel.close();");
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
@@ -227,7 +227,7 @@ public class NioLongConnectionServer {
 						socketChannelMap.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
 					} else {
 						try {
-							System.out.println("非长连接，关闭socketChannel");
+//							System.out.println("非长连接，关闭socketChannel");
 							socketChannel.close();
 						} catch (final IOException e) {
 							e.printStackTrace();
