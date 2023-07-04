@@ -267,7 +267,7 @@ public class ZServer extends Thread {
 //				this.handleRequest(socketChannel, request, key);
 
 				ZE.executeInQueue(() -> {
-					final TaskNIO taskNIO = new TaskNIO(socketChannel, request);
+					final TaskNIO taskNIO = new TaskNIO(socketChannel);
 					final ZRequest requestX = TaskNIO.handleRead(request);
 					final ZRequest request2 = Task.parseRequest(requestX);
 					taskNIO.invoke(request2);

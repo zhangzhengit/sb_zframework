@@ -39,7 +39,8 @@ import cn.hutool.core.collection.CollUtil;
 public class TaskNIO {
 
 	private final SocketChannel socketChannel;
-	public TaskNIO(final SocketChannel socketChannel, final String request) {
+
+	public TaskNIO(final SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
 	}
 
