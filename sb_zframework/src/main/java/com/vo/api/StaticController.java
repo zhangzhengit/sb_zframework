@@ -51,11 +51,17 @@ public class StaticController {
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.body(CR.error(HttpStatus.HTTP_500.getMessage()))
 					.write();
-
-			return;
 		}
 
-		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
+		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
+
+		response
+			.contentType(cte.getType())
+
+			.body(loadByteArray)
+			.write();
+
+//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
@@ -85,12 +91,15 @@ public class StaticController {
 		}
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String staticPrefix = serverConfiguration.getStaticPrefix();
+//		final String staticPrefix = serverConfiguration.getStaticPrefix();
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
-			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+//			final byte[] ba1 = ResourcesLoader.loadStaticResource(staticPrefix + resourceName);
+//			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+
+			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
 			final byte[] ba = ZGzip.compress(string);
 
 			response.contentType(cte.getType())
@@ -99,10 +108,10 @@ public class StaticController {
 				    .write();
 
 		} else {
-			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+			final byte[] ba = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 
 			response.contentType(cte.getType())
-				    .body(string)
+				    .body(ba)
 				    .write();
 		}
 
@@ -143,7 +152,7 @@ public class StaticController {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.HTML.getType());
-		final String html = ResourcesLoader.loadHtml(resourceName);
+		final String html = ResourcesLoader.loadStaticResourceString(resourceName);
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);

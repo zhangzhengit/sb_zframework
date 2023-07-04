@@ -23,6 +23,9 @@ import lombok.NoArgsConstructor;
 @ZConfigurationProperties(prefix = "server")
 public class ServerConfiguration {
 
+	/**
+	 * 启动的端口号
+	 */
 	@ZNotNull
 	@ZMin(min = 1)
 	private Integer port;
@@ -42,9 +45,17 @@ public class ServerConfiguration {
 	@ZNotNull
 	private String sslType;
 
+	/**
+	 * 处理http请求的最大线程数量
+	 */
 	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = Integer.MAX_VALUE)
 	private Integer threadCount;
 
+	/**
+	 * 	扫描的包配置，如：com.vo
+	 */
 	@ZNotNull
 	private String scanPackage;
 
@@ -55,24 +66,29 @@ public class ServerConfiguration {
 	@ZMax(max = 52000000)
 	private Integer concurrentQuantity;
 
+	/**
+	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
+	 */
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
 	private Integer keepAliveTimeout;
 
 	/**
-	 * 静态资源的目录前缀
+	 * 配置硬盘上的资源目录，如：E\\x
+	 * 此值配置了，则优先读取此值下的资源文件
+	 * 此值没配置，则读取 staticPrefix 目录下的资源文件
+	 */
+	private String staticPath;
+
+	/**
+	 * 配置读取程序内resources下的资源,
+	 * 相对于 resources 目录静态资源的目录，
+	 * 如： 配置为 /static，则读取目录为 resources/static
 	 */
 	@ZNotNull
 	@ZStartWith(prefix = "/")
 	private String staticPrefix;
-
-	/**
-	 * html 文件所在目录前缀
-	 */
-	@ZNotNull
-	@ZStartWith(prefix = "/")
-	private String htmlPrefix;
 
 	/**
 	 * 是否开启gzip压缩
@@ -81,19 +97,18 @@ public class ServerConfiguration {
 	private Boolean gzipEnable;
 
 	/**
-	 * 开启gzip的content-type
+	 * 开启gzip的content-type,如需配置多个，则用,隔开，如： text/html,text/css
 	 */
 	@ZNotNull
 	private String gzipTypes;
 
 	/**
-	 * 大于多少KB才启用gzip压缩
+	 * 资源大于多少KB才启用gzip压缩
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
 	// FIXME 2023年7月2日 上午1:31:33 zhanghen: gzipMinLength这个值用上
 	private Integer gzipMinLength;
-
 
 	public boolean gzipContains(final String contentType) {
 		final String[] a = this.getGzipContentType();

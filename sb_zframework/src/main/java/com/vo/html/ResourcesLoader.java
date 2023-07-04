@@ -3,6 +3,9 @@ package com.vo.html;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,13 +15,17 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
+import com.vo.ZMain;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
-import com.vo.core.Task;
 import com.vo.core.Task;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
+
+import cn.hutool.core.io.FastByteArrayOutputStream;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * 从 resources 目录加载文件
@@ -35,18 +42,48 @@ public class ResourcesLoader {
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
 
 	/**
-	 * 加载html页面内容，htmlName 不用自己拼接前缀目录了，此方法内自动拼接
+	 * 加载资源为String , resourceName不用自己拼接前缀目录了，此方法内自动拼接
 	 *
-	 * @param htmlName
+	 * @param resourceName
 	 * @return
 	 */
-	public static String loadHtml(final String htmlName) {
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String htmlPrefix = serverConfiguration.getHtmlPrefix();
-		final String key = htmlPrefix + htmlName;
+	public static String loadStaticResourceString(final String resourceName) {
 
-		final String htmlContent = loadString(key);
-		return htmlContent;
+		final String resourcePath = System.getProperty(ZMain.STATIC_RESOURCES_PROPERTY_NAME);
+		if (StrUtil.isNotEmpty(resourcePath)) {
+			try {
+				final String name = resourcePath + (resourceName.replace("/", File.separator));
+				final FileReader fileReader = new FileReader(name);
+				final BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+				final StringBuilder builder = new StringBuilder();
+				while (true) {
+					final String readLine = bufferedReader.readLine();
+					if (readLine == null) {
+						break;
+					}
+					builder.append(readLine);
+					builder.append(NEW_LINE);
+				}
+
+				bufferedReader.close();
+				fileReader.close();
+
+				return builder.toString();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			final String staticPrefix = serverConfiguration.getStaticPrefix();
+			final String key = staticPrefix + resourceName;
+
+			final String string = loadString(key);
+			return string;
+
+		}
+
+		return null;
 	}
 
 	/**
@@ -173,13 +210,38 @@ public class ResourcesLoader {
 	 * @return
 	 *
 	 */
-	public static byte[] loadStaticResource(final String resourceName) {
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String staticPrefix = serverConfiguration.getStaticPrefix();
-		final String key = staticPrefix + resourceName;
+	public static byte[] loadStaticResourceByteArray(final String resourceName) {
 
-		final byte[] ba = loadByteArray(key);
-		return ba;
+		final String resourcePath = System.getProperty(ZMain.STATIC_RESOURCES_PROPERTY_NAME);
+		if (StrUtil.isNotEmpty(resourcePath)) {
+
+//			final byte[] ba1 = loadByteArray(resourcePath + File.separator + (resourceName.replace("/", "")));
+//			final String fileName = resourcePath + File.separator + (resourceName.replace("/", ""));
+			final String fileName = resourcePath + (resourceName.replace("/", File.separator));
+			try {
+				final FileInputStream fileInputStream = new FileInputStream(new File(fileName));
+
+				final FastByteArrayOutputStream read = IoUtil.read(fileInputStream);
+
+				final byte[] byteArray = read.toByteArray();
+
+				fileInputStream.close();
+
+				return byteArray;
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+
+			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			final String staticPrefix = serverConfiguration.getStaticPrefix();
+			final String key = staticPrefix + resourceName;
+
+			final byte[] ba = loadByteArray(key);
+			return ba;
+		}
+
+		return null;
 	}
 
 	/**
@@ -279,6 +341,8 @@ public class ResourcesLoader {
 
 
 	private static InputStream checkInputStream(final String name) {
+//		final URL resource = ResourcesLoader.class.getResource(name);
+//		System.out.println("resource = " + resource);
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
 			throw new IllegalArgumentException("资源不存在,name = " + name);

@@ -239,11 +239,11 @@ public class Task {
 			final String htmlName = ss.charAt(0) == '/' ? ss : '/' + ss;
 			try {
 
-				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-				final String htmlContent = ResourcesLoader.loadString(serverConfiguration.getHtmlPrefix() + htmlName);
+				final String htmlContent = ResourcesLoader.loadStaticResourceString(htmlName);
 
 				final String html = ZTemplate.generate(htmlContent);
 
+				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 				if (serverConfiguration.getGzipEnable()
 						&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
 						&& request.isSupportGZIP()) {
