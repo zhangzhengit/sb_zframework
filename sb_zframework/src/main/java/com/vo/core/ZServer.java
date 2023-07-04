@@ -212,25 +212,14 @@ public class ZServer extends Thread {
 						e.printStackTrace();
 					}
 				} else if (key.isReadable()) {
-					// FIXME 2023年7月4日 上午11:06:21 zhanghen: 在此限流
-
-					if (!Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity())) {
-
-						final SocketChannel socketChannel = (SocketChannel) key.channel();
-						final ZResponse response = new ZResponse(socketChannel);
-
+					if (Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity())) {
+						ZServer.handleRead(key);
+					} else {
+						final ZResponse response = new ZResponse((SocketChannel) key.channel());
 						response.contentType(HeaderEnum.JSON.getType())
 								.httpStatus(HttpStatus.HTTP_403.getCode())
 								.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity())))
 								.writeAndFlushAndClose();
-						try {
-							socketChannel.close();
-						} catch (final IOException e) {
-							e.printStackTrace();
-						}
-
-					} else {
-						ZServer.handleRead(key);
 					}
 				}
 			}
