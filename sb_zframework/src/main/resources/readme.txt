@@ -123,11 +123,8 @@
 		@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
 		
 		
-		
-		
-		
-		
-		
+	ZSingleton :
+		用于获取容器管理的bean
 		
 		
 		
