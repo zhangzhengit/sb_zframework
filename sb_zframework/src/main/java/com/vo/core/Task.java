@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -41,8 +42,6 @@ import com.vo.template.ZTemplate;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.net.URLDecoder;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -58,9 +57,10 @@ public class Task {
 	private static final int READ_LENGTH = DEFAULT_BUFFER_SIZE / 2;
 	public static final String SP = "&";
 	public static final String EMPTY_STRING = "";
-	public static final String UTF_8 = Charset.defaultCharset().displayName();
+
+	public static final String DEFAULT_CHARSET_NAME = Charset.defaultCharset().displayName();
 	public static final String VOID = "void";
-	public static final Charset UTF_8_CHARSET = Charset.defaultCharset();
+	public static final Charset DEFAULT_CHARSET = Charset.defaultCharset();
 	public static final String HTTP_200 = "HTTP/1.1 200";
 	public static final int HTTP_STATUS_500 = 500;
 	public static final int HTTP_STATUS_404 = 404;
@@ -129,7 +129,7 @@ public class Task {
 					final Object object = ZControllerMap.getObjectByMethod(methodTarget);
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
 					try {
-						ZMappingRegex.set(java.net.URLDecoder.decode(path, Task.UTF_8));
+						ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
 						this.invokeAndResponse(methodTarget, arraygP, object, request);
 						return;
 					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
@@ -498,16 +498,25 @@ public class Task {
 				final String param = fullPath.substring("?".length() + wenI);
 				final String simplePath = fullPath.substring(0,wenI);
 
-				line.setPath(URLDecoder.decode(simplePath, UTF_8_CHARSET));
+				try {
+					line.setPath(java.net.URLDecoder.decode(simplePath, DEFAULT_CHARSET_NAME));
+				} catch (final UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 
 				final String[] paramArray = param.split(SP);
 				for (final String p : paramArray) {
 					final String[] p0 = p.split("=");
-					final ZRequest.RequestParam requestParam  = new ZRequest.RequestParam();
+					final ZRequest.RequestParam requestParam = new ZRequest.RequestParam();
 					requestParam.setName(p0[0]);
 					if (p0.length >= 2) {
-						final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING : URLDecoder.decode(p0[1], UTF_8_CHARSET);
-						requestParam.setValue(v);
+						try {
+							final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING
+									: java.net.URLDecoder.decode(p0[1], DEFAULT_CHARSET_NAME);
+							requestParam.setValue(v);
+						} catch (final UnsupportedEncodingException e) {
+							e.printStackTrace();
+						}
 					} else {
 						requestParam.setValue(EMPTY_STRING);
 					}
@@ -518,7 +527,11 @@ public class Task {
 				line.setParamSet(paramSet);
 
 			} else {
-				line.setPath(URLDecoder.decode(fullPath, UTF_8_CHARSET));
+				try {
+					line.setPath(java.net.URLDecoder.decode(fullPath, DEFAULT_CHARSET_NAME));
+				} catch (final UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 			}
 			line.setFullpath(fullPath);
 		}
