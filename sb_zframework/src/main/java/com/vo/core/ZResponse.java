@@ -53,7 +53,6 @@ public class ZResponse {
 	private final ArrayList<Byte> bodyList = Lists.newArrayList();
 
 	public synchronized ZResponse contentType(final String contentType) {
-		// FIXME 2023年7月2日 下午12:05:19 zhanghen: 校验参数是否正确
 		if (!this.setContentType.get()) {
 			this.contentType.set(ZRequest.CONTENT_TYPE + ":" + contentType);
 		}
