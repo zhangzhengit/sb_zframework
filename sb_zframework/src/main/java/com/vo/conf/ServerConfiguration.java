@@ -55,6 +55,11 @@ public class ServerConfiguration {
 	@ZMax(max = 52000000)
 	private Integer concurrentQuantity;
 
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = Integer.MAX_VALUE)
+	private Integer keepAliveTimeout;
+
 	/**
 	 * 静态资源的目录前缀
 	 */
