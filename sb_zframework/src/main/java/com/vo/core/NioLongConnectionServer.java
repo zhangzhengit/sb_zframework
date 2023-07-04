@@ -29,13 +29,13 @@ public class NioLongConnectionServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+
 	private static final int BUFFER_SIZE = 1024 * 100;
 
 	public static void startNIOServer() {
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-
-		LOG.trace("zNIOServer开始启动,serverPort={}",serverConfiguration.getPort());
+		LOG.trace("zNIOServer开始启动,serverPort={}",SERVER_CONFIGURATION.getPort());
 
 		// 创建ServerSocketChannel
 		Selector selector = null;
@@ -43,7 +43,7 @@ public class NioLongConnectionServer {
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
 			serverSocketChannel.configureBlocking(false);
-			serverSocketChannel.bind(new InetSocketAddress(serverConfiguration.getPort()));
+			serverSocketChannel.bind(new InetSocketAddress(SERVER_CONFIGURATION.getPort()));
 
 			// 创建Selector
 			selector = Selector.open();
@@ -52,7 +52,7 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		}
 
-		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", serverConfiguration.getPort());
+		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", SERVER_CONFIGURATION.getPort());
 
 		while (true) {
 			try {
@@ -75,13 +75,13 @@ public class NioLongConnectionServer {
 				if (key.isAcceptable()) {
 					handleAccept(key, selector);
 				} else if (key.isReadable()) {
-					if (Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity())) {
+					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getConcurrentQuantity())) {
 						handleRead(key);
 					} else {
 						new ZResponse((SocketChannel) key.channel())
 								.contentType(HeaderEnum.JSON.getType())
 								.httpStatus(HttpStatus.HTTP_403.getCode())
-								.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity())))
+								.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
 								.write();
 					}
 				}
