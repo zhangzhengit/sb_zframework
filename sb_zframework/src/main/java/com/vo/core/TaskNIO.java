@@ -1,33 +1,49 @@
 package com.vo.core;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.nio.ByteBuffer;
+import java.net.Socket;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
+import java.security.PrivilegedActionException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZRequest.RequestLine;
 import com.vo.core.ZRequest.RequestParam;
+import com.vo.enums.MethodEnum;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
+import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
+import com.vo.http.ZHtml;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.net.URLDecoder;
+import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -38,18 +54,49 @@ import cn.hutool.core.collection.CollUtil;
  */
 public class TaskNIO {
 
+	private static final int DEFAULT_BUFFER_SIZE = 8192;
+	private static final int READ_LENGTH = DEFAULT_BUFFER_SIZE / 2;
+	public static final String SP = "&";
+	public static final String EMPTY_STRING = "";
+	public static final String UTF_8 = "UTF-8";
+	public static final String VOID = "void";
+	public static final Charset UTF_8_CHARSET = Charset.forName(UTF_8);
+	public static final String HTTP_200 = "HTTP/1.1 200";
+	public static final int HTTP_STATUS_500 = 500;
+	public static final int HTTP_STATUS_404 = 404;
+	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
+	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
+	public static final String NEW_LINE = "\r\n";
+
 	private final SocketChannel socketChannel;
+	private final Socket socket;
+	private BufferedInputStream bufferedInputStream;
+	private InputStream inputStream;
+	private OutputStream outputStream;
 
 	public TaskNIO(final SocketChannel socketChannel) {
 		this.socketChannel = socketChannel;
+		this.socket = null;
+	}
+
+	public TaskNIO(final Socket socket) {
+		this.socketChannel = null;
+		this.socket = socket;
+		try {
+			this.inputStream = socket.getInputStream();
+			this.bufferedInputStream = new BufferedInputStream(this.inputStream);
+			this.outputStream = socket.getOutputStream();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static ZRequest handleRead(final String requestString) {
 		final ZRequest request = new ZRequest();
 
-		final boolean contains = requestString.contains(Task.NEW_LINE);
+		final boolean contains = requestString.contains(NEW_LINE);
 		if (contains) {
-			final String[] aa = requestString.split(Task.NEW_LINE);
+			final String[] aa = requestString.split(NEW_LINE);
 			for (final String string : aa) {
 				request.addLine(string);
 			}
@@ -82,7 +129,7 @@ public class TaskNIO {
 					final Object object = ZControllerMap.getObjectByMethod(methodTarget);
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
 					try {
-						ZMappingRegex.set(java.net.URLDecoder.decode(path, Task.UTF_8));
+						ZMappingRegex.set(java.net.URLDecoder.decode(path, TaskNIO.UTF_8));
 						this.invokeAndResponse(methodTarget, arraygP, object, request);
 						return;
 					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
@@ -92,10 +139,10 @@ public class TaskNIO {
 				}
 			}
 
-			new ZResponse(this.socketChannel)
+			new ZResponse(this.outputStream, this.socketChannel)
 						.httpStatus(HttpStatus.HTTP_404.getCode())
-						.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-						.body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
+						.contentType(DEFAULT_CONTENT_TYPE.getType())
+						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
 						.writeAndFlushAndClose();
 
 			return;
@@ -108,31 +155,50 @@ public class TaskNIO {
 			this.invokeAndResponse(method, p, zController, request);
 
 		} catch (final InvocationTargetException | IllegalAccessException e) {
-			new ZResponse(this.socketChannel)
-					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+			new ZResponse(this.outputStream, this.socketChannel)
+					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(JSON.toJSONString(CR.error(Task.INTERNAL_SERVER_ERROR)))
+					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)))
 					.writeAndFlushAndClose();
 
 			e.printStackTrace();
 		} finally {
+			this.close();
+		}
+	}
+
+	private void close() {
+		if (this.socketChannel != null) {
 			try {
 				this.socketChannel.close();
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	private void writeAndClose(final String r1) {
-		final ByteBuffer buffer = ByteBuffer.wrap(r1.getBytes(StandardCharsets.UTF_8));
-		try {
-			this.socketChannel.write(buffer);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
+		if (this.inputStream != null) {
 			try {
-				this.socketChannel.close();
+				this.inputStream.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if (this.bufferedInputStream != null) {
+			try {
+				this.bufferedInputStream.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if (this.outputStream != null) {
+			try {
+				this.outputStream.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if (this.socket != null) {
+			try {
+				this.socket.close();
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
@@ -149,7 +215,7 @@ public class TaskNIO {
 		final boolean allow = ZServer.Counter.allow(controllerName + method.getName(), qps);
 		if (!allow) {
 
-			final ZResponse response = new ZResponse(this.socketChannel);
+			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
 					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")))
@@ -160,7 +226,7 @@ public class TaskNIO {
 
 		this.setZRequestAndZResponse(arraygP, request);
 
-		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+		if (TaskNIO.VOID.equals(method.getReturnType().getCanonicalName())) {
 			method.invoke(zController, arraygP);
 			// XXX 在此自动response.write 会报异常
 			return;
@@ -168,7 +234,7 @@ public class TaskNIO {
 
 		final Object r = method.invoke(zController, arraygP);
 		// 响应
-		if (Task.isMethodAnnotationPresentZHtml(method)) {
+		if (isMethodAnnotationPresentZHtml(method)) {
 			final String ss = String.valueOf(r);
 			final String htmlName = ss.charAt(0) == '/' ? ss : '/' + ss;
 			try {
@@ -183,23 +249,23 @@ public class TaskNIO {
 						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
 
-					new ZResponse(this.socketChannel)
+					new ZResponse(this.outputStream, this.socketChannel)
 						.contentType(HeaderEnum.HTML.getType())
 						.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 						.body(compress)
 						.writeAndFlushAndClose();
 				} else {
-					new ZResponse(this.socketChannel)
+					new ZResponse(this.outputStream, this.socketChannel)
 						.contentType(HeaderEnum.HTML.getType())
 						.body(html)
 						.writeAndFlushAndClose();
 				}
 
 			} catch (final Exception e) {
-				new ZResponse(this.socketChannel)
+				new ZResponse(this.outputStream, this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-					.body(CR.error(Task.HTTP_STATUS_500 + Task.INTERNAL_SERVER_ERROR))
+					.contentType(DEFAULT_CONTENT_TYPE.getType())
+					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR))
 					.writeAndFlushAndClose();
 				e.printStackTrace();
 			}
@@ -207,21 +273,21 @@ public class TaskNIO {
 			final String json = JSON.toJSONString(r);
 			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 			if (serverConfiguration.getGzipEnable()
-					&& serverConfiguration.gzipContains(Task.DEFAULT_CONTENT_TYPE.getType())
+					&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
 					&& request.isSupportGZIP()
 					) {
 				final byte[] compress = ZGzip.compress(json);
 
-				new ZResponse(this.socketChannel)
+				new ZResponse(this.outputStream, this.socketChannel)
 					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(compress)
 					 .writeAndFlushAndClose();
 
 			} else {
 
-				new ZResponse(this.socketChannel)
-					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+				new ZResponse(this.outputStream, this.socketChannel)
+					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(json)
 					 .writeAndFlushAndClose();
 			}
@@ -245,10 +311,10 @@ public class TaskNIO {
 				final String name = a.value();
 				final String headerValue = requestLine.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
-					new ZResponse(this.socketChannel)
+					new ZResponse(this.outputStream, this.socketChannel)
 						.httpStatus(HttpStatus.HTTP_404.getCode())
-						.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-						.body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在")))
+						.contentType(DEFAULT_CONTENT_TYPE.getType())
+						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在")))
 						.writeAndFlushAndClose();
 					return null;
 				}
@@ -256,7 +322,7 @@ public class TaskNIO {
 			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
 			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
-				final ZResponse hResponse = new ZResponse(this.socketChannel);
+				final ZResponse hResponse = new ZResponse(this.outputStream, this.socketChannel);
 				parametersArray[pI++] = hResponse;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
@@ -271,8 +337,8 @@ public class TaskNIO {
 				final Set<RequestParam> paramSet = requestLine.getParamSet();
 				if (CollUtil.isEmpty(paramSet)) {
 //					throw new IllegalArgumentException("Param 为空");
-					new ZResponse(this.socketChannel)
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+					new ZResponse(this.outputStream, this.socketChannel)
+							.contentType(TaskNIO.DEFAULT_CONTENT_TYPE.getType())
 							.httpStatus(HttpStatus.HTTP_404.getCode())
 							.body(JSON.toJSONString(CR.error("Param 为空")))
 							.writeAndFlushAndClose();
@@ -282,10 +348,10 @@ public class TaskNIO {
 				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
 						.findAny();
 				if (!findAny.isPresent()) {
-					new ZResponse(this.socketChannel)
+					new ZResponse(this.outputStream, this.socketChannel)
 							.httpStatus(HttpStatus.HTTP_404.getCode())
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-							.body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
+							.contentType(TaskNIO.DEFAULT_CONTENT_TYPE.getType())
+							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
 							.writeAndFlushAndClose();
 					return null;
 				}
@@ -337,7 +403,235 @@ public class TaskNIO {
 		}
 
 		if (!sR) {
-			ZContext.setZResponse(new ZResponse(this.socketChannel));
+			ZContext.setZResponse(new ZResponse(this.outputStream, this.socketChannel));
 		}
+	}
+
+	static Map<Object, Object> cacheMap = new WeakHashMap<>(1024, 1F);
+	public static Boolean isMethodAnnotationPresentZHtml(final Method method) {
+		final String name = method.getName();
+		final Boolean boolean1 = (Boolean) cacheMap.get(name);
+		if (boolean1 != null) {
+			return boolean1;
+		}
+
+		synchronized (name) {
+
+			final boolean annotationPresent = method.isAnnotationPresent(ZHtml.class);
+			cacheMap.put(name, annotationPresent);
+			return annotationPresent;
+		}
+	}
+
+	private static final ConcurrentMap<Object, Object> CACHE_MAP = Maps.newConcurrentMap();
+	public static ZRequest parseRequest(final ZRequest request) {
+		final Object v = CACHE_MAP.get(request);
+		if (v != null) {
+			return (ZRequest) v;
+		}
+
+		synchronized (request) {
+			final ZRequest v2 = parseRequest0(request);
+			CACHE_MAP.put(request, v2);
+			return v2;
+		}
+	}
+
+	private static ZRequest parseRequest0(final ZRequest request) {
+		final ZRequest.RequestLine requestLine = new ZRequest.RequestLine();
+		if (CollUtil.isEmpty(request.getLineList())) {
+			return request;
+		}
+
+		// 0 为 请求行
+		final String line = request.getLineList().get(0);
+		requestLine.setOriginal(line);
+
+		// method
+		final int methodIndex = line.indexOf(" ");
+		if (methodIndex > -1) {
+			final String methodS = line.substring(0, methodIndex);
+			final MethodEnum me = MethodEnum.valueOfString(methodS);
+			if (me != null) {
+				requestLine.setMethodEnum(me);
+			} else {
+				// FIXME 2023年6月28日 下午10:04:18 zhanghen: 返回500
+//				handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, "不支持的请求方法 method = " + methodS), so);
+				throw new IllegalArgumentException("不支持的请求方法 method = " + methodS);
+			}
+		}
+
+		// path
+		parsePath(line, requestLine, methodIndex);
+
+		// version
+		parseVersion(requestLine, line);
+
+
+		LineMap.put(requestLine.getFullpath(), requestLine);
+
+		// paserHeader
+		paserHeader(request, requestLine);
+
+		// parseBody
+		parseBody(request, requestLine);
+
+		request.setRequestLine(requestLine);
+
+		return request;
+	}
+
+	private static void parsePath(final String s, final ZRequest.RequestLine line, final int methodIndex) {
+		final int pathI = s.indexOf(" ", methodIndex + 1);
+		if (pathI > methodIndex) {
+			final String fullPath = s.substring(methodIndex  + 1, pathI);
+
+			final int wenI = fullPath.indexOf("?");
+			if (wenI > -1) {
+				line.setQueryString(fullPath.substring("?".length() + wenI - 1));
+
+				final Set<RequestParam> paramSet = Sets.newHashSet();
+				final String param = fullPath.substring("?".length() + wenI);
+				final String simplePath = fullPath.substring(0,wenI);
+				line.setPath(simplePath);
+
+				final String[] paramArray = param.split(SP);
+				for (final String p : paramArray) {
+					final String[] p0 = p.split("=");
+					final ZRequest.RequestParam requestParam  = new ZRequest.RequestParam();
+					requestParam.setName(p0[0]);
+					if (p0.length >= 2) {
+						final String v = StrUtil.isEmpty(p0[1]) ? EMPTY_STRING : URLDecoder.decode(p0[1], UTF_8_CHARSET);
+						requestParam.setValue(v);
+					} else {
+						requestParam.setValue(EMPTY_STRING);
+					}
+
+					paramSet.add(requestParam);
+				}
+
+				line.setParamSet(paramSet);
+
+
+			} else {
+				line.setPath(fullPath);
+			}
+			line.setFullpath(fullPath);
+		}
+	}
+
+	private static void parseVersion(final ZRequest.RequestLine requestLine, final String line) {
+		final int hI = line.lastIndexOf("HTTP/");
+		if (hI > -1) {
+			final String version = line.substring(hI);
+			requestLine.setVersion(version);
+		}
+	}
+
+	private static void paserHeader(final ZRequest request, final ZRequest.RequestLine requestLine) {
+		final List<String> x = request.getLineList();
+		final HashMap<String, String> hm = new HashMap<>(16, 1F);
+		for (int i = 1; i < x.size(); i++) {
+			final String l = x.get(i);
+			if (EMPTY_STRING.equals(l)) {
+				continue;
+			}
+
+			final int k = l.indexOf(":");
+			if (k > -1) {
+				final String key = l.substring(0, k).trim();
+				final String value = l.substring(k + 1).trim();
+				hm.put(key, value);
+			}
+		}
+
+		requestLine.setHeaderMap(hm);
+	}
+
+	private static void parseBody(final ZRequest request, final ZRequest.RequestLine requestLine) {
+		final List<String> x = request.getLineList();
+		for (int i = 1; i < x.size(); i++) {
+			final String l2 = x.get(i);
+			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
+
+				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
+				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
+						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
+
+					final StringBuilder json = new StringBuilder();
+					for (int k = i + 1; k < x.size(); k++) {
+						json.append(x.get(k));
+					}
+					request.setBody(json.toString());
+				}
+				break;
+			}
+
+		}
+	}
+
+	public ZRequest readAndParse() {
+		final ZRequest r1 = this.read();
+		final ZRequest r2 = this.parse(r1);
+		return r2;
+	}
+
+	public ZRequest read() {
+		final ZRequest request = this.handleRead();
+		return request;
+	}
+
+	private ZRequest handleRead() {
+
+		final ZRequest request = new ZRequest();
+
+		final int nk = READ_LENGTH;
+		final List<Byte> list = new ArrayList<>(nk);
+
+		while (true) {
+			final byte[] bs = new byte[nk];
+			int read = -4;
+			try {
+				read = this.bufferedInputStream.read(bs);
+			} catch (final IOException e) {
+//						e.printStackTrace();
+				break;
+			}
+			if (read <= 0) {
+				break;
+			}
+
+			for (int i = 0; i < read; i++) {
+				list.add(bs[i]);
+			}
+			if (read <= nk) {
+				break;
+			}
+		}
+
+		final byte[] bsR = new byte[list.size()];
+		for (int x = 0; x < list.size(); x++) {
+			bsR[x] = list.get(x);
+		}
+
+		final String r = new String(bsR);
+
+		final boolean contains = r.contains(NEW_LINE);
+		if (contains) {
+			final String[] aa = r.split(NEW_LINE);
+			for (final String string : aa) {
+				request.addLine(string);
+			}
+		}
+
+//					bufferedInputStream.close();
+//					inputStream.close();
+
+		return request;
+
+	}
+
+	public ZRequest parse(final ZRequest request) {
+		return parseRequest(request);
 	}
 }

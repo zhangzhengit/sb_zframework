@@ -154,7 +154,7 @@ public class ZResponse {
 
 //			final String s = this.responseString();
 			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 
 			// header-Content-Length
 			if (CollUtil.isNotEmpty(this.bodyList)) {
@@ -162,20 +162,20 @@ public class ZResponse {
 
 				// 1
 				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-				this.outputStream.write(Task.NEW_LINE.getBytes());
+				this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 			}
 
 			// 1
 			this.outputStream.write(this.contentType.get().getBytes());
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 
 			for (int i = 0; i < this.headerList.size(); i++) {
 				final ZHeader zHeader = this.headerList.get(i);
 
 				this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-				this.outputStream.write(Task.NEW_LINE.getBytes());
+				this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 			}
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 
 			// body
 			if (CollUtil.isNotEmpty(this.bodyList)) {
@@ -189,7 +189,7 @@ public class ZResponse {
 				this.outputStream.write(JSON.toJSONString(CR.ok()).getBytes());
 			}
 
-			this.outputStream.write(Task.NEW_LINE.getBytes());
+			this.outputStream.write(TaskNIO.NEW_LINE.getBytes());
 
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -205,7 +205,7 @@ public class ZResponse {
 		final ZArray array = new ZArray();
 
 		array.add((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(TaskNIO.NEW_LINE.getBytes());
 
 
 		// header-Content-Length
@@ -213,18 +213,18 @@ public class ZResponse {
 			final int contentLenght = this.bodyList.size();
 
 			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-			array.add(Task.NEW_LINE.getBytes());
+			array.add(TaskNIO.NEW_LINE.getBytes());
 		}
 
 		array.add((this.contentType.get()).getBytes());
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(TaskNIO.NEW_LINE.getBytes());
 
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader zHeader = this.headerList.get(i);
 			array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-			array.add(Task.NEW_LINE.getBytes());
+			array.add(TaskNIO.NEW_LINE.getBytes());
 		}
-		array.add(Task.NEW_LINE.getBytes());
+		array.add(TaskNIO.NEW_LINE.getBytes());
 
 		// body
 		if (CollUtil.isNotEmpty(this.bodyList)) {
@@ -234,7 +234,7 @@ public class ZResponse {
 			}
 
 			array.add(ba);
-			array.add(Task.NEW_LINE.getBytes());
+			array.add(TaskNIO.NEW_LINE.getBytes());
 
 		} else {
 			array.add(JSON.toJSONString(CR.ok()).getBytes());

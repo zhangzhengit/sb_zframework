@@ -15,6 +15,7 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
+import com.vo.core.TaskNIO;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
@@ -120,12 +121,12 @@ public class ResourcesLoader {
 	private static AtomicLong writeOutputStream(final HeaderEnum cte, final OutputStream outputStream,
 			final InputStream inputStream, final BufferedInputStream bufferedInputStream) {
 		try {
-			outputStream.write(Task.HTTP_200.getBytes());
-			outputStream.write(Task.NEW_LINE.getBytes());
+			outputStream.write(TaskNIO.HTTP_200.getBytes());
+			outputStream.write(TaskNIO.NEW_LINE.getBytes());
 			outputStream.write(cte.getValue().getBytes());
-			outputStream.write(Task.NEW_LINE.getBytes());
+			outputStream.write(TaskNIO.NEW_LINE.getBytes());
 			// FIXME 2023年7月3日 下午7:38:24 zhanghen: TODO 加入content-length
-			outputStream.write(Task.NEW_LINE.getBytes());
+			outputStream.write(TaskNIO.NEW_LINE.getBytes());
 		} catch (final IOException e1) {
 			e1.printStackTrace();
 		}
