@@ -136,7 +136,7 @@ public class ZServer extends Thread {
 					ZServer.ZE.executeInQueue(() -> {
 
 						// FIXME 2023年7月4日 上午10:26:22 zhanghen: 用TaskNIO
-						final TaskNIO task = new TaskNIO(socket);
+						final Task task = new Task(socket);
 						final ZRequest request = task.readAndParse();
 						task.invoke(request);
 					});
@@ -257,9 +257,9 @@ public class ZServer extends Thread {
 			if (socketChannel.isOpen()) {
 
 				ZE.executeInQueue(() -> {
-					final TaskNIO taskNIO = new TaskNIO(socketChannel);
-					final ZRequest requestX = TaskNIO.handleRead(request);
-					final ZRequest request2 = TaskNIO.parseRequest(requestX);
+					final Task taskNIO = new Task(socketChannel);
+					final ZRequest requestX = Task.handleRead(request);
+					final ZRequest request2 = Task.parseRequest(requestX);
 					taskNIO.invoke(request2);
 				});
 

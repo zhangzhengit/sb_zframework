@@ -15,7 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
 import com.vo.core.Task;
-import com.vo.core.TaskNIO;
+import com.vo.core.Task;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZResponse;
@@ -139,7 +139,7 @@ public class ZControllerScanner {
 	}
 
 	private static void checkNoVoidWithZResponse(final Method method) {
-		if (!TaskNIO.VOID.equals(method.getReturnType().getCanonicalName())) {
+		if (!Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Parameter[] ps = method.getParameters();
 			final Optional<Parameter> ro = Lists.newArrayList(ps).stream()
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))

@@ -76,7 +76,7 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		final String method = TaskNIO.parseRequest(this).getRequestLine().getMethodEnum().getMethod();
+		final String method = Task.parseRequest(this).getRequestLine().getMethodEnum().getMethod();
 		return method;
 	}
 
@@ -128,7 +128,7 @@ public class ZRequest {
 	}
 
 	private RequestLine ppp() {
-		final RequestLine requestLine = TaskNIO.parseRequest(this).getRequestLine();
+		final RequestLine requestLine = Task.parseRequest(this).getRequestLine();
 		return requestLine;
 	}
 
