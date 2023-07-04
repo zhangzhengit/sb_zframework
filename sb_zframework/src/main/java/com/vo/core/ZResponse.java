@@ -41,7 +41,7 @@ public class ZResponse {
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
-	private final AtomicReference<String> contentType = new AtomicReference<>();
+	private final AtomicReference<String> contentTypeAR = new AtomicReference<>();
 
 	private OutputStream outputStream;
 
@@ -52,7 +52,7 @@ public class ZResponse {
 
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get()) {
-			this.contentType.set(ZRequest.CONTENT_TYPE + ":" + contentType);
+			this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType);
 		}
 
 		this.setContentType.set(true);
@@ -146,7 +146,7 @@ public class ZResponse {
 			if (this.closed.get()) {
 				return;
 			}
-			if (StrUtil.isEmpty(this.contentType.get())) {
+			if (StrUtil.isEmpty(this.contentTypeAR.get())) {
 				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
 			}
 
@@ -164,7 +164,7 @@ public class ZResponse {
 			}
 
 			// 1
-			this.outputStream.write(this.contentType.get().getBytes());
+			this.outputStream.write(this.contentTypeAR.get().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			for (int i = 0; i < this.headerList.size(); i++) {
@@ -214,7 +214,7 @@ public class ZResponse {
 			array.add(Task.NEW_LINE.getBytes());
 		}
 
-		array.add((this.contentType.get()).getBytes());
+		array.add((this.contentTypeAR.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
 
 		for (int i = 0; i < this.headerList.size(); i++) {
