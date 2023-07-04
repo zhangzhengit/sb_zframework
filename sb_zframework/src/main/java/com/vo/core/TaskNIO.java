@@ -94,7 +94,8 @@ public class TaskNIO {
 				}
 			}
 
-			new ZResponse(this.socketChannel).contentType(Task.DEFAULT_CONTENT_TYPE.getValue())
+			new ZResponse(this.socketChannel)
+					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 				  .body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
 				  .writeAndFlushAndClose();
 
@@ -109,7 +110,7 @@ public class TaskNIO {
 
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			new ZResponse(this.socketChannel)
-					.contentType(Task.DEFAULT_CONTENT_TYPE.getValue())
+					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.body(JSON.toJSONString(CR.error(Task.INTERNAL_SERVER_ERROR)))
 					.writeAndFlushAndClose();
@@ -212,15 +213,16 @@ public class TaskNIO {
 					) {
 				final byte[] compress = ZGzip.compress(json);
 
-				final ZResponse rrrrr = new ZResponse(this.socketChannel);
-				rrrrr.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+				new ZResponse(this.socketChannel)
+					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 					 .body(compress)
 					 .writeAndFlushAndClose();
+
 			} else {
 
 				new ZResponse(this.socketChannel)
-					 .contentType(Task.DEFAULT_CONTENT_TYPE.getValue())
+					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					 .body(json)
 					 .writeAndFlushAndClose();
 			}

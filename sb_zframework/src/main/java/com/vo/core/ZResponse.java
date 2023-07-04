@@ -104,13 +104,7 @@ public class ZResponse {
 	}
 
 	public ZResponse body(final String body) {
-		try {
-			return this.body(body.getBytes(Charset.defaultCharset().displayName()));
-		} catch (final UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-
-		return this;
+		return this.body(body.getBytes());
 	}
 
 	/**
