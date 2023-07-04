@@ -111,7 +111,7 @@ public class ResourcesLoader {
 		response.contentType(cte.getType())
 				.header(ZRequest.CONTENT_LENGTH,String.valueOf(baR.length))
 				.body(baR)
-				.writeAndFlushAndClose();
+				.write();
 
 		write1.set(baR.length);
 

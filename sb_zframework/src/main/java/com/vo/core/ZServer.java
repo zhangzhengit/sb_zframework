@@ -51,50 +51,38 @@ public class ZServer extends Thread {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	private static final String Z_SERVER_QPS = "ZServer_QPS";
+	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
 	public static final String DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX = "zframework-nio-http-thread-";
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
-	private static final int BUFFER_SIZE = 1024 * 50;
-
-
-	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
-			.getFrameworkPropertiesInstance();
-	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(),
-			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
-
-	private static final ServerConfiguration serverConfiguration = ZSingleton
+	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton
 			.getSingletonByClass(ServerConfiguration.class);
 
-	private Selector selector;
-
+	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATION.getThreadCount(),
+			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
 
 	@Override
 	public void run() {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (serverConfiguration.getSslEnable()) {
 			LOG.info("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
-			this.startSSLServer();
+			ZServer.startSSLServer();
 		} else {
 			LOG.info("启动Server,port={}", serverConfiguration.getPort());
-			this.startNIOServer();
+			NioLongConnectionServer.startNIOServer();
 		}
 	}
 
-	private void startSSLServer() {
+	private static void startSSLServer() {
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-
-		// 加载密钥库文件
-		// 密钥库密码
-		final char[] password = serverConfiguration.getSslPassword().toCharArray();
-		KeyStore keyStore;
 		try {
-
-			keyStore = KeyStore.getInstance(serverConfiguration.getSslType());
-			final FileInputStream fis = new FileInputStream(serverConfiguration.getSslKeyStore());
+			// 加载密钥库文件
+			// 密钥库密码
+			final KeyStore keyStore = KeyStore.getInstance(SERVER_CONFIGURATION.getSslType());
+			final FileInputStream fis = new FileInputStream(SERVER_CONFIGURATION.getSslKeyStore());
+			final char[] password = SERVER_CONFIGURATION.getSslPassword().toCharArray();
 			keyStore.load(fis, password);
 
 			// 初始化密钥管理器
@@ -112,32 +100,33 @@ public class ZServer extends Thread {
 			final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 			sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
 
-			ZServer.LOG.trace("zSSLServer开始启动,serverPort={}",serverConfiguration.getPort());
+			ZServer.LOG.trace("zSSLServer开始启动,serverPort={}", SERVER_CONFIGURATION.getPort());
 
 			// 创建ServerSocket并绑定SSL上下文
-			final ServerSocket serverSocket = sslContext.getServerSocketFactory().createServerSocket(serverConfiguration.getPort());
+			final ServerSocket serverSocket = sslContext.getServerSocketFactory()
+					.createServerSocket(SERVER_CONFIGURATION.getPort());
 
-			ZServer.LOG.trace("zSSLServer启动成功，等待连接,serverPort={}",serverConfiguration.getPort());
+			ZServer.LOG.trace("zSSLServer启动成功，等待连接,serverPort={}", SERVER_CONFIGURATION.getPort());
 
 			// 启动服务器
 			while (true) {
 				final SSLSocket socket = (SSLSocket) serverSocket.accept();
 
-				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
+				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getConcurrentQuantity());
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
 
-					response.contentType(HeaderEnum.JSON.getType())
+					response
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity())))
-							.writeAndFlushAndClose();
+							.contentType(HeaderEnum.JSON.getType())
+							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
+							.write();
 
 					socket.close();
 
 				} else {
 					ZServer.ZE.executeInQueue(() -> {
-
 						// FIXME 2023年7月4日 上午10:26:22 zhanghen: 用TaskNIO
 						final Task task = new Task(socket);
 						final ZRequest request = task.readAndParse();
@@ -149,132 +138,6 @@ public class ZServer extends Thread {
 		} catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException
 				| UnrecoverableKeyException | KeyManagementException e) {
 			e.printStackTrace();
-		}
-	}
-
-
-
-	public void startNIOServer() {
-		ZServer.LOG.trace("zNIOServer开始启动,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
-
-		try {
-			this.selector = Selector.open();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-
-		ServerSocketChannel serverSocketChannel = null;
-		try {
-			serverSocketChannel = ServerSocketChannel.open();
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		try {
-			serverSocketChannel
-					.bind(new InetSocketAddress(ZSingleton.getSingletonByClass(ServerConfiguration.class).getPort()));
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		try {
-			serverSocketChannel.configureBlocking(false);
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-		try {
-			serverSocketChannel.register(this.selector, SelectionKey.OP_ACCEPT);
-		} catch (final ClosedChannelException e) {
-			e.printStackTrace();
-		}
-
-		ZServer.LOG.trace("zNIOServer启动成功，等待连接,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
-
-		while (true) {
-			try {
-				this.selector.select();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-
-			final Iterator<SelectionKey> keyIterator = this.selector.selectedKeys().iterator();
-			while (keyIterator.hasNext()) {
-				final SelectionKey key = keyIterator.next();
-				keyIterator.remove();
-				final boolean valid = key.isValid();
-
-				if (!valid) {
-					continue;
-				}
-
-				if (key.isAcceptable()) {
-					try {
-						this.handleAccept(key);
-					} catch (final IOException e) {
-						e.printStackTrace();
-					}
-				} else if (key.isReadable()) {
-					if (Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity())) {
-						ZServer.handleRead(key);
-					} else {
-						final ZResponse response = new ZResponse((SocketChannel) key.channel());
-						response.contentType(HeaderEnum.JSON.getType())
-								.httpStatus(HttpStatus.HTTP_403.getCode())
-								.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity())))
-								.writeAndFlushAndClose();
-					}
-				}
-			}
-		}
-	}
-
-	private void handleAccept(final SelectionKey key) throws IOException {
-		final ServerSocketChannel serverSocketChannel = (ServerSocketChannel) key.channel();
-		final SocketChannel socketChannel = serverSocketChannel.accept();
-		socketChannel.configureBlocking(false);
-		socketChannel.register(this.selector, SelectionKey.OP_READ);
-	}
-
-	private static void handleRead(final SelectionKey key) {
-		final SocketChannel socketChannel = (SocketChannel) key.channel();
-		final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-		final boolean open = socketChannel.isOpen();
-		if (!open) {
-			return;
-		}
-		int bytesRead = 0;
-		try {
-			bytesRead = socketChannel.read(buffer);
-		} catch (final IOException e) {
-			return;
-		}
-
-		if (bytesRead == -1) {
-			try {
-				key.cancel();
-				socketChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-			return;
-		}
-
-		if (bytesRead > 0) {
-			buffer.flip();
-			final byte[] requestData = new byte[buffer.remaining()];
-			buffer.get(requestData);
-
-			final String request = new String(requestData, StandardCharsets.UTF_8);
-
-			key.cancel();
-			if (socketChannel.isOpen()) {
-
-				ZE.executeInQueue(() -> {
-					final Task taskNIO = new Task(socketChannel);
-					final ZRequest requestX = Task.handleRead(request);
-					final ZRequest request2 = Task.parseRequest(requestX);
-					taskNIO.invoke(request2);
-				});
-
-			}
 		}
 	}
 

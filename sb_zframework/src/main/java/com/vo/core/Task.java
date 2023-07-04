@@ -142,7 +142,7 @@ public class Task {
 						.httpStatus(HttpStatus.HTTP_404.getCode())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
-						.writeAndFlushAndClose();
+						.write();
 
 			return;
 		}
@@ -158,7 +158,7 @@ public class Task {
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)))
-					.writeAndFlushAndClose();
+					.write();
 
 			e.printStackTrace();
 		} finally {
@@ -167,13 +167,9 @@ public class Task {
 	}
 
 	private void close() {
-		if (this.socketChannel != null) {
-			try {
-				this.socketChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
+		// socketChannel 不关闭
+//		if (this.socketChannel != null) {
+//		}
 		if (this.inputStream != null) {
 			try {
 				this.inputStream.close();
@@ -218,7 +214,7 @@ public class Task {
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
 					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")))
-					.writeAndFlushAndClose();
+					.write();
 
 			return;
 		}
@@ -252,12 +248,12 @@ public class Task {
 						.contentType(HeaderEnum.HTML.getType())
 						.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 						.body(compress)
-						.writeAndFlushAndClose();
+						.write();
 				} else {
 					new ZResponse(this.outputStream, this.socketChannel)
 						.contentType(HeaderEnum.HTML.getType())
 						.body(html)
-						.writeAndFlushAndClose();
+						.write();
 				}
 
 			} catch (final Exception e) {
@@ -265,7 +261,7 @@ public class Task {
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR))
-					.writeAndFlushAndClose();
+					.write();
 				e.printStackTrace();
 			}
 		} else {
@@ -281,14 +277,14 @@ public class Task {
 					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(compress)
-					 .writeAndFlushAndClose();
+					 .write();
 
 			} else {
 
 				new ZResponse(this.outputStream, this.socketChannel)
 					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(json)
-					 .writeAndFlushAndClose();
+					 .write();
 			}
 		}
 	}
@@ -314,7 +310,7 @@ public class Task {
 						.httpStatus(HttpStatus.HTTP_404.getCode())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在")))
-						.writeAndFlushAndClose();
+						.write();
 					return null;
 				}
 				parametersArray[pI++] = headerValue;
@@ -340,7 +336,7 @@ public class Task {
 							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 							.httpStatus(HttpStatus.HTTP_404.getCode())
 							.body(JSON.toJSONString(CR.error("Param 为空")))
-							.writeAndFlushAndClose();
+							.write();
 					 return null;
 				}
 
@@ -351,7 +347,7 @@ public class Task {
 							.httpStatus(HttpStatus.HTTP_404.getCode())
 							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
-							.writeAndFlushAndClose();
+							.write();
 					return null;
 				}
 

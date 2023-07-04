@@ -40,7 +40,7 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
+				.write();
 
 			return;
 		}
@@ -51,7 +51,7 @@ public class StaticController {
 			response
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-					.writeAndFlushAndClose();
+					.write();
 
 			return;
 		}
@@ -70,7 +70,7 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
+				.write();
 
 			return;
 		}
@@ -80,7 +80,7 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.writeAndFlushAndClose();
+				.write();
 
 			return;
 		}
@@ -97,14 +97,14 @@ public class StaticController {
 			response.contentType(cte.getType())
 					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 				    .body(ba)
-				    .writeAndFlushAndClose();
+				    .write();
 
 		} else {
 			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
 
 			response.contentType(cte.getType())
 				    .body(string)
-				    .writeAndFlushAndClose();
+				    .write();
 		}
 
 	}
@@ -126,7 +126,7 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
+				.write();
 
 			return;
 		}
@@ -137,7 +137,7 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.writeAndFlushAndClose();
+				.write();
 			return;
 		}
 
@@ -151,11 +151,11 @@ public class StaticController {
 			response.contentType(cte.getType())
 					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 				    .body(ba)
-				    .writeAndFlushAndClose();
+				    .write();
 		} else {
 			response.contentType(cte.getType())
 				    .body(html)
-				    .writeAndFlushAndClose();
+				    .write();
 		}
 	}
 }

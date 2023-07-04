@@ -108,7 +108,7 @@ public class ZResponse {
 	 * 根据 contentType、 header、body 写入响应结果，只写一次。
 	 *
 	 */
-	public synchronized void writeAndFlushAndClose() {
+	public synchronized void write() {
 
 		if (this.outputStream != null) {
 			this.writeOutputStream();
@@ -129,12 +129,6 @@ public class ZResponse {
 
 		} catch (final IOException e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				this.socketChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
