@@ -151,7 +151,7 @@ public class Task {
 		try {
 
 			final Object[] p = this.generateParameters(method, request, requestLine, path);
-			if (ArrayUtil.isEmpty(p)) {
+			if (p == null) {
 				return;
 			}
 
@@ -392,7 +392,7 @@ public class Task {
 
 	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {
 
-		if (ArrayUtil.isEmpty(arraygP)) {
+		if (arraygP == null) {
 			return;
 		}
 
