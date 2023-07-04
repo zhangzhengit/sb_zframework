@@ -27,9 +27,6 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	private Integer port;
 
-//	@ZNotNull
-//	private Boolean nioEnable;
-
 	/**
 	 * 是否开启SSL
 	 */
