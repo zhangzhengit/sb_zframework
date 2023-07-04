@@ -127,5 +127,12 @@
 		用于获取容器管理的bean
 		
 		
+	静态文件服务器使用如下：
+		1 	配置	server.static.path=E:\\x
+		2	E:\\x 目录下 新建ok.html,
+		3   输入 http://localhost/html/ok.html 即可展示ok.html
 		
+		server.static.path 优先于	server.static.prefix
+		
+				
 		
