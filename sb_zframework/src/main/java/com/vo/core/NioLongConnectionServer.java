@@ -14,12 +14,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.Maps;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
 import com.vo.enums.CollectionEnum;
@@ -43,16 +43,24 @@ public class NioLongConnectionServer {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String CONNECTION = "Connection";
+
+	/**
+	 * 执行长连接超时任务的线程池
+	 */
 	private final static ScheduledExecutorService TIMEOUT_ZE = Executors.newScheduledThreadPool(1);
 
-	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+	/**
+	 *	存放长连接的SocketChannel对象
+	 *
+	 */
+	// FIXME 2023年7月5日 上午6:56:44 zhanghen: 改为自最后一次活动后开始计时，超时后关闭
+	private final static Map<Long, SS> SOCKET_CHANNEL_MAP = new ConcurrentHashMap<>(16, 1F);
 
-	private final static Map<Long,SS > socketChannelMap = Maps.newConcurrentMap();
+	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 
 	private static final int BUFFER_SIZE = 1024 * 100;
 
 	public static void startNIOServer() {
-
 
 		keepAliveTimeoutJOB();
 
@@ -100,17 +108,15 @@ public class NioLongConnectionServer {
 						handleRead(key);
 					} else {
 						new ZResponse((SocketChannel) key.channel())
-								.contentType(HeaderEnum.JSON.getType())
-								.httpStatus(HttpStatus.HTTP_403.getCode())
-								.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
-								.write();
+							.contentType(HeaderEnum.JSON.getType())
+							.httpStatus(HttpStatus.HTTP_403.getCode())
+							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
+							.write();
 					}
 				}
 			}
 		}
 	}
-
-	private static Object lock = new Object();
 
 	private static void keepAliveTimeoutJOB() {
 
@@ -119,13 +125,13 @@ public class NioLongConnectionServer {
 
 		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
 
-			if (socketChannelMap.isEmpty()) {
+			if (SOCKET_CHANNEL_MAP.isEmpty()) {
 				return;
 			}
 
 			final long now = System.currentTimeMillis();
 
-			final Set<Long> keySet = socketChannelMap.keySet();
+			final Set<Long> keySet = SOCKET_CHANNEL_MAP.keySet();
 
 			final List<Long> delete = new ArrayList<>(10);
 
@@ -136,7 +142,7 @@ public class NioLongConnectionServer {
 			}
 
 			for (final Long k : delete) {
-				final SS ss = socketChannelMap.remove(k);
+				final SS ss = SOCKET_CHANNEL_MAP.remove(k);
 				synchronized (ss.getSocketChannel()) {
 					try {
 						ss.getSocketChannel().close();
@@ -211,23 +217,22 @@ public class NioLongConnectionServer {
 			if (socketChannel.isOpen()) {
 
 				ZServer.ZE.executeInQueue(() -> {
-					final Task taskNIO = new Task(socketChannel);
 					final ZRequest requestX = Task.handleRead(requestString);
 					final ZRequest request = Task.parseRequest(requestX);
 					synchronized (socketChannel) {
 						if(socketChannel.isOpen()) {
+							final Task taskNIO = new Task(socketChannel);
 							taskNIO.invoke(request);
 						}
 					}
 
 					final String connection = request.getHeader(CONNECTION);
 					if (StrUtil.isNotEmpty(connection)
-							&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue()) || connection
-									.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
-						socketChannelMap.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+							&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
+								|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
+						SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
 					} else {
 						try {
-//							System.out.println("非长连接，关闭socketChannel");
 							socketChannel.close();
 						} catch (final IOException e) {
 							e.printStackTrace();
