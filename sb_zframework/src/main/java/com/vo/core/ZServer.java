@@ -54,18 +54,19 @@ public class ZServer extends Thread {
 	private static final String Z_SERVER_QPS = "ZServer_QPS";
 
 	public static final String DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX = "zframework-nio-http-thread-";
-	public static final String DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX = "zframework-http-thread-";
 
 	public static final int DEFAULT_HTTP_PORT = 80;
+
+	private static final int BUFFER_SIZE = 1024 * 50;
+
 
 	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
 			.getFrameworkPropertiesInstance();
 	private final static ZE ZE = ZES.newZE(ZServer.FRAMEWORK_PROPERTIES.getThreadCount(),
-//			ZSingleton.getSingletonByClass(ServerConfiguration.class).getNioEnable()
-//					?
-							DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX
-//					: DEFAULT_ZFRAMEWORK_HTTP_THREAD_NAME_PREFIX
-					);
+			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
+
+	private Selector selector;
+
 
 	@Override
 	public void run() {
@@ -76,12 +77,6 @@ public class ZServer extends Thread {
 		} else {
 			LOG.info("启动Server,port={}", serverConfiguration.getPort());
 			this.startNIOServer();
-
-//			if (serverConfiguration.getNioEnable()) {
-//				this.startNIOServer();
-//			} else {
-//				this.startServer();
-//			}
 		}
 	}
 
@@ -154,9 +149,7 @@ public class ZServer extends Thread {
 		}
 	}
 
-	private static final int BUFFER_SIZE = 1024 * 50;
 
-	private Selector selector;
 
 	public void startNIOServer() {
 		ZServer.LOG.trace("zNIOServer开始启动,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
@@ -206,7 +199,6 @@ public class ZServer extends Thread {
 				final boolean valid = key.isValid();
 
 				if (!valid) {
-					System.out.println("key is valid");
 					continue;
 				}
 
@@ -217,7 +209,7 @@ public class ZServer extends Thread {
 						e.printStackTrace();
 					}
 				} else if (key.isReadable()) {
-					this.handleRead(key);
+					ZServer.handleRead(key);
 				}
 			}
 		}
@@ -230,7 +222,7 @@ public class ZServer extends Thread {
 		socketChannel.register(this.selector, SelectionKey.OP_READ);
 	}
 
-	private  void handleRead(final SelectionKey key) {
+	private static void handleRead(final SelectionKey key) {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 		final boolean open = socketChannel.isOpen();
@@ -274,79 +266,6 @@ public class ZServer extends Thread {
 			}
 		}
 	}
-
-	private void handleRequest(final SocketChannel socketChannel, final String request, final SelectionKey key) {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "NonBlockingHttpServer.handleRequest()");
-		try {
-			Thread.sleep(1);
-		} catch (final InterruptedException e1) {
-			e1.printStackTrace();
-		}
-
-		// 在这里处理请求并生成响应
-		final String response =
-					  "HTTP/1.1 200 OK\r\n"
-					+ "Content-Type: text/plain\r\n"
-					+ "Content-Length: 12\r\n"
-					+ "\r\n"
-					+ "Hello World!";
-
-		try {
-			final ByteBuffer buffer = ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8));
-			socketChannel.write(buffer);
-			socketChannel.close();
-		} catch (final IOException e) {
-//	            e.printStackTrace();
-			return;
-		}
-	}
-
-//	private void startServer() {
-//
-//		ServerSocket serverSocket = null;
-//		try {
-//
-//			ZServer.LOG.trace("zserver开始启动,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
-//			serverSocket = new ServerSocket(ZServer.FRAMEWORK_PROPERTIES.getServerPort());
-//			ZServer.LOG.trace("zserver启动成功，等待连接,serverPort={}",ZServer.FRAMEWORK_PROPERTIES.getServerPort());
-//			while (true) {
-//				final Socket socket = serverSocket.accept();
-//				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-//				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, serverConfiguration.getConcurrentQuantity());
-//				if (!allow) {
-//
-//					final ZResponse response = new ZResponse(socket.getOutputStream());
-//
-//					response.contentType(HeaderEnum.JSON.getType())
-//							.httpStatus(HttpStatus.HTTP_403.getCode())
-//							.body(CR.error("超出QPS限制,qps = " + serverConfiguration.getConcurrentQuantity()))
-//							.writeAndFlushAndClose();
-//
-//
-//					socket.close();
-//
-//				} else {
-//					ZServer.ZE.executeInQueue(() -> {
-//						final Task task = new Task(socket);
-//						final ZRequest request = task.readAndParse();
-//						task.invoke(request);
-//					});
-//				}
-//			}
-//		} catch (final IOException e) {
-//			e.printStackTrace();
-//		} finally {
-//			try {
-//				if (serverSocket != null) {
-//					serverSocket.close();
-//				}
-//			} catch (final IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//
-//	}
 
 	/**
 	 * 一秒内是否超过允许的次数
