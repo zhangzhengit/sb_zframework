@@ -93,9 +93,10 @@ public class TaskNIO {
 			}
 
 			new ZResponse(this.socketChannel)
-					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-				  .body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
-				  .writeAndFlushAndClose();
+						.httpStatus(HttpStatus.HTTP_404.getCode())
+						.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+						.body(JSON.toJSONString(CR.error(Task.HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
+						.writeAndFlushAndClose();
 
 			return;
 		}
