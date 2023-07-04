@@ -228,7 +228,7 @@ public class Task {
 
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			method.invoke(zController, arraygP);
-			// XXX 在此自动response.write 会报异常
+			// XXX 在此自动response.write 会报异常，所以需要 response.xx.xx.write() 最后.write()一下了
 			return;
 		}
 
