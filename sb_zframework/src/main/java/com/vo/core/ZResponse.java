@@ -207,45 +207,24 @@ public class ZResponse {
 		array.add((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
 
-//		builder.append((ZResponse.HTTP_1_1 + this.httpStatus.get()));
-//		builder.append(Task.NEW_LINE);
-
 
 		// header-Content-Length
 		if (CollUtil.isNotEmpty(this.bodyList)) {
 			final int contentLenght = this.bodyList.size();
 
-//			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-//			array.add(Task.NEW_LINE.getBytes());
-
-//			builder.append(ZRequest.CONTENT_LENGTH + ":" + contentLenght);
-//			builder.append(Task.NEW_LINE);
+			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
+			array.add(Task.NEW_LINE.getBytes());
 		}
 
 		array.add((this.contentType.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
 
-//		builder.append(this.contentType.get());
-//		builder.append(Task.NEW_LINE);
-
 		for (int i = 0; i < this.headerList.size(); i++) {
 			final ZHeader zHeader = this.headerList.get(i);
-
 			array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
 			array.add(Task.NEW_LINE.getBytes());
-
-//			builder.append(zHeader.getName() + ":" + zHeader.getValue());
-//			builder.append(Task.NEW_LINE);
 		}
 		array.add(Task.NEW_LINE.getBytes());
-//		builder.append(Task.NEW_LINE);
-
-//		try {
-//			ByteBuffer buffer = ByteBuffer.wrap(builder.toString().getBytes(Charset.defaultCharset().displayName()));
-//			this.socketChannel.write(buffer);
-//		} catch (IOException e1) {
-//			e1.printStackTrace();
-//		}
 
 		// body
 		if (CollUtil.isNotEmpty(this.bodyList)) {
@@ -253,100 +232,19 @@ public class ZResponse {
 			for (int b = 0; b < this.bodyList.size(); b++) {
 				ba[b] = this.bodyList.get(b);
 			}
-
 
 			array.add(ba);
 			array.add(Task.NEW_LINE.getBytes());
 
-//			try {
-//				builder.append(new String(ba,Charset.defaultCharset().displayName()));
-//			} catch (final UnsupportedEncodingException e) {
-//				e.printStackTrace();
-//			}
 		} else {
-//			builder.append(JSON.toJSONString(CR.ok()));
 			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
 
 		final byte[] a = array.add(new byte[] {});
-//		final byte[] a = array.add(Task.NEW_LINE.getBytes());
 		final ByteBuffer buffer = ByteBuffer.wrap(a);
-
 
 		return buffer;
 
-	}
-	private String responseString()  {
-		final StringBuilder builder = new StringBuilder();
-
-		// 2
-		builder.append((ZResponse.HTTP_1_1 + this.httpStatus.get()));
-		builder.append(Task.NEW_LINE);
-
-		// 1
-//			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
-//			this.outputStream.write(Task.NEW_LINE.getBytes());
-
-		// header-Content-Length
-		if (CollUtil.isNotEmpty(this.bodyList)) {
-			final int contentLenght = this.bodyList.size();
-
-			// 2
-			builder.append(ZRequest.CONTENT_LENGTH + ":" + contentLenght);
-			builder.append(Task.NEW_LINE);
-
-			// 1
-//				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-//				this.outputStream.write(Task.NEW_LINE.getBytes());
-		}
-
-		// 2
-		builder.append(this.contentType.get());
-		builder.append(Task.NEW_LINE);
-
-		// 1
-//			this.outputStream.write(this.contentType.get().getBytes());
-//			this.outputStream.write(Task.NEW_LINE.getBytes());
-
-		for (int i = 0; i < this.headerList.size(); i++) {
-			final ZHeader zHeader = this.headerList.get(i);
-			// 2
-			builder.append(zHeader.getName() + ":" + zHeader.getValue());
-			builder.append(Task.NEW_LINE);
-
-			// 1
-//				this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-//				this.outputStream.write(Task.NEW_LINE.getBytes());
-		}
-		// 2
-		builder.append(Task.NEW_LINE);
-		// 1
-//			this.outputStream.write(Task.NEW_LINE.getBytes());
-
-		// body
-		if (CollUtil.isNotEmpty(this.bodyList)) {
-			final byte[] ba = new byte[this.bodyList.size()];
-			for (int b = 0; b < this.bodyList.size(); b++) {
-				ba[b] = this.bodyList.get(b);
-			}
-			// 2
-			try {
-				builder.append(new String(ba,Charset.defaultCharset().displayName()));
-			} catch (final UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-			// 1
-//				this.outputStream.write(new String(ba).getBytes(Charset.defaultCharset().displayName()));
-		} else {
-			builder.append(JSON.toJSONString(CR.ok()));
-//				this.outputStream.write(JSON.toJSONString(CR.ok()).getBytes());
-		}
-
-		builder.append(Task.NEW_LINE);
-//			this.outputStream.write(Task.NEW_LINE.getBytes());
-
-		final String s = builder.toString();
-		return s;
 	}
 
 	public void flushAndClose() {

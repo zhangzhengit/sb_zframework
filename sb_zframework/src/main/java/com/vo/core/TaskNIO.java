@@ -39,11 +39,8 @@ import cn.hutool.core.collection.CollUtil;
 public class TaskNIO {
 
 	private final SocketChannel socketChannel;
-	private final String request;
-
 	public TaskNIO(final SocketChannel socketChannel, final String request) {
 		this.socketChannel = socketChannel;
-		this.request = request;
 	}
 
 	public static ZRequest handleRead(final String requestString) {
@@ -108,7 +105,7 @@ public class TaskNIO {
 			final Object zController = ZControllerMap.getObjectByMethod(method);
 			this.invokeAndResponse(method, p, zController, request);
 
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (final InvocationTargetException | IllegalAccessException e) {
 			new ZResponse(this.socketChannel)
 					.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
@@ -214,8 +211,8 @@ public class TaskNIO {
 				final byte[] compress = ZGzip.compress(json);
 
 				new ZResponse(this.socketChannel)
-					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
+					 .contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 					 .body(compress)
 					 .writeAndFlushAndClose();
 
@@ -268,7 +265,18 @@ public class TaskNIO {
 				parametersArray[pI++] = object;
 			} else {
 
+				// 到此 肯定是从 paramSet 取值作为参数，如果 paramSet 为空，则说明没传
 				final Set<RequestParam> paramSet = requestLine.getParamSet();
+				if (CollUtil.isEmpty(paramSet)) {
+//					throw new IllegalArgumentException("Param 为空");
+					new ZResponse(this.socketChannel)
+							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+							.httpStatus(HttpStatus.HTTP_404.getCode())
+							.body(JSON.toJSONString(CR.error("Param 为空")))
+							.writeAndFlushAndClose();
+					 return null;
+				}
+
 				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
 						.findAny();
 				if (!findAny.isPresent()) {

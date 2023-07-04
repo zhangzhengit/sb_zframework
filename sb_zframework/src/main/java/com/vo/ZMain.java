@@ -51,7 +51,8 @@ public class ZMain {
 		ZControllerScanner.scanAndCreateObject(scanPackage);
 
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
-		ZAutowiredScanner.scanAndCreateObject(scanPackage, ZComponent.class);
+		// FIXME 2023年7月4日 上午8:33:03 zhanghen: 暂不支持 ZComponent 里面用ZAutowird
+//		ZAutowiredScanner.scanAndCreateObject(scanPackage, ZComponent.class);
 		ZAutowiredScanner.scanAndCreateObject(scanPackage, ZController.class);
 
 		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
@@ -82,10 +83,19 @@ public class ZMain {
 
 			final ZClass proxyClass = map.get(zc.getSimpleName());
 
-			final Object newInstance = proxyClass.newInstance();
+			if (proxyClass == null) {
+				try {
+					final Object newInstance = zc.newInstance();
+					ZComponentMap.put(zc.getCanonicalName(), newInstance);
+				} catch (InstantiationException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			} else {
+				final Object newInstance = proxyClass.newInstance();
+				// 放代理类
+				ZComponentMap.put(zc.getCanonicalName(), newInstance);
+			}
 
-			// 放代理类
-			ZComponentMap.put(zc.getCanonicalName(), newInstance);
 		}
 		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", ZComponent.class.getCanonicalName(), zcSet.size());
 	}
