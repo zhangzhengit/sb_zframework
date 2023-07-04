@@ -1,18 +1,14 @@
 package com.vo.core;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
@@ -23,7 +19,6 @@ import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 
@@ -137,7 +132,10 @@ public class ZResponse {
 	private void writeSocketChannel() {
 		try {
 			final ByteBuffer buffer = this.fillByteBuffer();
-			this.socketChannel.write(buffer);
+			while (buffer.remaining() > 0) {
+				this.socketChannel.write(buffer);
+			}
+
 		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -224,8 +222,8 @@ public class ZResponse {
 		if (CollUtil.isNotEmpty(this.bodyList)) {
 			final int contentLenght = this.bodyList.size();
 
-			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-			array.add(Task.NEW_LINE.getBytes());
+//			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
+//			array.add(Task.NEW_LINE.getBytes());
 
 //			builder.append(ZRequest.CONTENT_LENGTH + ":" + contentLenght);
 //			builder.append(Task.NEW_LINE);
@@ -277,7 +275,8 @@ public class ZResponse {
 			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
 
-		final byte[] a = array.add(Task.NEW_LINE.getBytes());
+		final byte[] a = array.add(new byte[] {});
+//		final byte[] a = array.add(Task.NEW_LINE.getBytes());
 		final ByteBuffer buffer = ByteBuffer.wrap(a);
 
 

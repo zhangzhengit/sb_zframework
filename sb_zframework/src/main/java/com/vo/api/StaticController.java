@@ -24,6 +24,7 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
+	// FIXME 2023年7月3日 下午9:01:07 zhanghen: Nio linux上图片显示不完全
 	public static final String CONTENT_ENCODING = "Content-Encoding";
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",

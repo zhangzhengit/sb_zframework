@@ -73,6 +73,7 @@ public class ResourcesLoader {
 		}
 
 		if (response.getSocketChannel() != null) {
+
 			return writeSocketChannel(cte, response, bufferedInputStream);
 		}
 
