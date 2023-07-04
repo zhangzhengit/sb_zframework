@@ -42,6 +42,7 @@ import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.net.URLDecoder;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -150,6 +151,10 @@ public class Task {
 		try {
 
 			final Object[] p = this.generateParameters(method, request, requestLine, path);
+			if (ArrayUtil.isEmpty(p)) {
+				return;
+			}
+
 			final Object zController = ZControllerMap.getObjectByMethod(method);
 			this.invokeAndResponse(method, p, zController, request);
 
@@ -386,6 +391,11 @@ public class Task {
 	}
 
 	private void setZRequestAndZResponse(final Object[] arraygP, final ZRequest request) {
+
+		if (ArrayUtil.isEmpty(arraygP)) {
+			return;
+		}
+
 		ZContext.setZRequest(request);
 
 		boolean sR = false;
