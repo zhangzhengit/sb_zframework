@@ -108,7 +108,7 @@ public class ZResponse {
 	 * 根据 contentType、 header、body 写入响应结果，只写一次。
 	 *
 	 */
-	public synchronized void write() {
+	public void write() {
 
 		if (this.outputStream != null) {
 			this.writeOutputStream();

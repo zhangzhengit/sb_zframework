@@ -9,14 +9,26 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Maps;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
+import com.vo.enums.CollectionEnum;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * NIO长连接server
@@ -29,11 +41,19 @@ public class NioLongConnectionServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	public static final String CONNECTION = "Connection";
+	private final static ScheduledExecutorService TIMEOUT_ZE = Executors.newScheduledThreadPool(1);
+
 	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+
+	private final static Map<Long,SS > socketChannelMap = Maps.newConcurrentMap();
 
 	private static final int BUFFER_SIZE = 1024 * 100;
 
 	public static void startNIOServer() {
+
+
+		keepAliveTimeoutJOB();
 
 		LOG.trace("zNIOServer开始启动,serverPort={}",SERVER_CONFIGURATION.getPort());
 
@@ -87,6 +107,46 @@ public class NioLongConnectionServer {
 				}
 			}
 		}
+	}
+
+	private static Object lock = new Object();
+
+	private static void keepAliveTimeoutJOB() {
+
+		final Integer keepAliveTimeout = SERVER_CONFIGURATION.getKeepAliveTimeout();
+		LOG.info("长连接超时任务启动,keepAliveTimeout=[{}]秒", SERVER_CONFIGURATION.getKeepAliveTimeout());
+
+		TIMEOUT_ZE.scheduleAtFixedRate(() -> {
+
+			if (socketChannelMap.isEmpty()) {
+				return;
+			}
+
+			final long now = System.currentTimeMillis();
+
+			final Set<Long> keySet = socketChannelMap.keySet();
+
+			final List<Long> delete = new ArrayList<>(10);
+
+			for (final Long key : keySet) {
+				if (now - key >= keepAliveTimeout * 1000) {
+					delete.add(key);
+				}
+			}
+
+			for (final Long k : delete) {
+				final SS ss = socketChannelMap.remove(k);
+				synchronized (ss.getSocketChannel()) {
+					try {
+						ss.getSocketChannel().close();
+						ss.getSelectionKey().cancel();
+					} catch (final IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		}, 1, 1, TimeUnit.SECONDS);
 	}
 
 	private static void handleAccept(final SelectionKey key, final Selector selector) {
@@ -145,17 +205,26 @@ public class NioLongConnectionServer {
 			final byte[] requestData = new byte[buffer.remaining()];
 			buffer.get(requestData);
 
-			final String request = new String(requestData, StandardCharsets.UTF_8);
+			final String requestString = new String(requestData, StandardCharsets.UTF_8);
 
 			if (socketChannel.isOpen()) {
 
 				ZServer.ZE.executeInQueue(() -> {
 					final Task taskNIO = new Task(socketChannel);
-					final ZRequest requestX = Task.handleRead(request);
-					final ZRequest request2 = Task.parseRequest(requestX);
-					taskNIO.invoke(request2);
+					final ZRequest requestX = Task.handleRead(requestString);
+					final ZRequest request = Task.parseRequest(requestX);
+					synchronized (socketChannel) {
+						if(socketChannel.isOpen()) {
+							taskNIO.invoke(request);
+						}
+					}
 
-					if (!request.toLowerCase().contains("keep-alive")) {
+					final String connection = request.getHeader(CONNECTION);
+
+					if (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
+							|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase())) {
+						socketChannelMap.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+					} else {
 						try {
 							System.out.println("非长连接，关闭socketChannel");
 							socketChannel.close();
@@ -163,10 +232,22 @@ public class NioLongConnectionServer {
 							e.printStackTrace();
 						}
 					}
+
 				});
 
 			}
 		}
 	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SS {
+
+		private SocketChannel socketChannel;
+		private SelectionKey selectionKey;
+
+	}
+
 
 }
