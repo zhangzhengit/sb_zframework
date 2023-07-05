@@ -59,6 +59,7 @@ public class ZAutowiredScanner {
 
 				final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
+				// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 				if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
 					final Object object = ZComponentMap.getByName(cls.getCanonicalName());
 //					final Object value = ZComponentMap.getByName(f.getType().getCanonicalName());
