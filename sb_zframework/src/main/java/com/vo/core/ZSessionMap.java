@@ -45,7 +45,6 @@ public class ZSessionMap {
 
 				if (now - createTime.getTime() >= maxInactiveInterval * 1000) {
 					session.invalidate();
-//					System.out.println("session 超时 ,id = " + session.getId());
 					SESSION_MAP.remove(entry.getKey());
 				}
 			}

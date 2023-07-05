@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,6 +32,8 @@ import lombok.Getter;
 @Data
 public class ZResponse {
 
+	private static final String CHARSET = "charset";
+
 	public static final String HTTP_1_1 = "HTTP/1.1 ";
 
 	public static final String SET_COOKIE = "Set-Cookie";
@@ -52,11 +55,20 @@ public class ZResponse {
 
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get()) {
-			this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType);
+
+			if (StrUtil.isEmpty(contentType)) {
+				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + " 不能为空");
+			}
+
+			if (!contentType.toLowerCase().contains(CHARSET.toLowerCase())) {
+				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType + ";" + CHARSET.toLowerCase() + "="
+						+ Charset.defaultCharset().displayName());
+			} else {
+				this.contentTypeAR.set(ZRequest.CONTENT_TYPE + ":" + contentType);
+			}
+
 		}
-
 		this.setContentType.set(true);
-
 		return this;
 	}
 

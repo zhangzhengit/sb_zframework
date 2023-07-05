@@ -64,9 +64,10 @@ public class ZSession {
 	 *
 	 */
 	public void setMaxInactiveInterval(final int interval) {
-    	this.checkInvalidate();
-    	this.intervalSeconds = interval;
-    }
+		this.checkInvalidate();
+		this.intervalSeconds = interval;
+		ZSessionMap.put(this);
+	}
 
     public int getMaxInactiveInterval() {
     	this.checkInvalidate();
