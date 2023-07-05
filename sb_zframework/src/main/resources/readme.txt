@@ -134,5 +134,21 @@
 		
 		server.static.path 优先于	server.static.prefix
 		
-				
+	手动注入对象：
+		1 注入ZComponent 对象:
+			如：新建类A,
+			A a = new A();		
+			在 工程main方法调用 ZApplication.run 之前执行如下代码：
+			
+			ZComponentMap.put(a.getClass().getCanonicalName(), a);
+			
+			即可注入a对象.
+			
+			需要使用A对象的地方正常使用即可
+			 
+			@ZAutowired
+			A a;
+			
+			
+							
 		
