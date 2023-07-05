@@ -1,9 +1,11 @@
 package com.vo.scanner;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +13,8 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.security.PrivilegedActionException;
+import java.util.Enumeration;
+import java.util.Properties;
 
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
@@ -28,20 +31,12 @@ import cn.hutool.core.io.IoUtil;
  * @date 2023年7月5日
  *
  */
-// FIXME 2023年7月5日 下午1:50:37 zhanghen: TODO @ZConfigurationProperties、 @ZValue 等注解加一个属性 ： 是否监听变动
-// 或者再单独加一个用在字段上的注解，表示此字段是否监听变动，此注解可用的前提是必须有上面的注解
+// FIXME 2023年7月5日 下午3:26:18 zhanghen: TODO @ZValue 已通过加属性listenForChanges 实现实时更新，继续做 @ZConfigurationProperties
+// 或者 不做 @ZConfigurationProperties 的实时更新，因为这大概率可能是基础配置，如端口号等等，如需实时更新，则直接用 @ZValue 算了
 public class ZPropertiesListener {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	private static final ZE ZE = ZES.newZE(1, ZProperties.PROPERTIES_NAME + "-Thread-");
-
-//	public static void main(final String[] args) throws Exception {
-//
-//		// 监听的文件路径
-//		final String filePath = "E:\\x\\x.txt";
-//
-//		listen(filePath);
-//	}
 
 	public static void listen(final String filePath) {
 
@@ -92,9 +87,31 @@ public class ZPropertiesListener {
 							// 在这里执行你的逻辑代码
 							try {
 								final String string = IoUtil.read(new FileReader(new File(filePath)));
-								System.out.println("string = \n");
-								System.out.println(string);
-							} catch (IORuntimeException | FileNotFoundException e) {
+//								System.out.println("string = \n");
+//								System.out.println(string);
+								final Properties  properties = new Properties();
+
+								final FileInputStream fileInputStream = new FileInputStream(new File(filePath));
+								final InputStreamReader isr = new InputStreamReader(fileInputStream,
+										Charset.defaultCharset().displayName());
+
+//							    properties.load(new FileInputStream(new File(filePath)));
+					    		properties.load(isr);
+
+//								System.out.println("properties = \n");
+//								System.out.println(properties);
+								final Enumeration<Object> keys = properties.keys();
+								while(keys.hasMoreElements()) {
+									final Object k = keys.nextElement();
+
+									final Object v = properties.get(k);
+//									String v2 = new String
+//									System.out.println(k + "=" + v);
+
+									ZValueScanner.updateValue(String.valueOf(k), v);
+								}
+
+							} catch (IORuntimeException | IOException e) {
 								e.printStackTrace();
 							}
 						}

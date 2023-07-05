@@ -39,13 +39,19 @@ public class ZMain {
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
 	public static void main(final String[] args) {
+
+	}
+
+	public static void start(final String packageName,final String[] args) {
+
+
 		ZMain.LOG.info("zframework开始启动");
 
-		// 0 最先初始化 对象生成器
-		ZObjectGeneratorStarter.start();
+		// 0 读取配置，创建配置类
+		ZConfigurationPropertiesScanner.scanAndCreateObject(packageName);
 
-		// 1 读取配置，创建配置类
-		ZConfigurationPropertiesScanner.scanAndCreateObject();
+		// 1 最先初始化 对象生成器
+		ZObjectGeneratorStarter.start();
 
 		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
 		scanZComponentAndCreate();
@@ -73,7 +79,6 @@ public class ZMain {
 		zs.start();
 
 		ZSessionMap.sessionTimeoutJOB();
-
 	}
 
 

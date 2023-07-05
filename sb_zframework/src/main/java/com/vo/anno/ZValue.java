@@ -28,4 +28,12 @@ public @interface ZValue {
 	 */
 	String name();
 
+	/**
+	 * 是否监听配置文件变动来更新值
+	 *
+	 * @return
+	 *
+	 */
+	boolean listenForChanges() default false;
+
 }

@@ -46,7 +46,6 @@ public class ZObjectGeneratorStarter {
 		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
 				+ "ZObjectGeneratorStarter.start()");
 
-
 		final List<ZObjectGenerator> zogList = scan();
 		System.out.println("zogList.size = " + zogList.size());
 		for (final ZObjectGenerator zObjectGenerator : zogList) {
@@ -64,7 +63,7 @@ public class ZObjectGeneratorStarter {
 			}
 		} else {
 			System.out.println("无自定义ZOG，使用自定义生成");
-			final ZDefaultObjectGenerator dd = (ZDefaultObjectGenerator) ZSingleton.getSingletonByClass(ZDefaultObjectGenerator.class);
+			final ZDefaultObjectGenerator dd = ZSingleton.getSingletonByClass(ZDefaultObjectGenerator.class);
 			glis.add(dd);
 			System.out.println("开始生成 = " + dd);
 		}

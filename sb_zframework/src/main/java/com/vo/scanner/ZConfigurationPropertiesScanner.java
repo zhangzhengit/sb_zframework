@@ -42,9 +42,9 @@ public class ZConfigurationPropertiesScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreateObject() {
+	public static void scanAndCreateObject(final String packageName) {
 
-		final Set<Class<?>> csSet = scanPackage_COM();
+		final Set<Class<?>> csSet = scanPackage(packageName);
 
 		for (final Class<?> cs : csSet) {
 
@@ -411,12 +411,12 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	public static Set<Class<?>> scanPackage_COM() {
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String scanPackage = serverConfiguration.getScanPackage();
+	public static Set<Class<?>> scanPackage(final String packageName) {
+//		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+//		final String scanPackage = serverConfiguration.getScanPackage();
 
-		LOG.info("开始扫描类,scanPackage={}", scanPackage);
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
+		LOG.info("开始扫描类,scanPackage={}", packageName);
+		final Set<Class<?>> clsSet = ClassUtil.scanPackage(packageName);
 		return clsSet;
 	}
 
