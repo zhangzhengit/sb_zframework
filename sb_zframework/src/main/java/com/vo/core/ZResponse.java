@@ -44,7 +44,7 @@ public class ZResponse {
 	private final AtomicBoolean setContentType  = new AtomicBoolean(false);
 
 	private final AtomicReference<Integer> httpStatus = new AtomicReference<>(HttpStatus.HTTP_200.getCode());
-	private final AtomicReference<String> contentTypeAR = new AtomicReference<>();
+	private final AtomicReference<String> contentTypeAR = new AtomicReference<>(Task.DEFAULT_CONTENT_TYPE.getValue());
 
 	private OutputStream outputStream;
 
