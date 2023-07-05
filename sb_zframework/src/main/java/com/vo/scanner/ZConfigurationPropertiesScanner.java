@@ -17,8 +17,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
-import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
-import com.vo.conf.ZFrameworkProperties;
+import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -413,8 +412,9 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		final ZFrameworkProperties p = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance();
-		final String scanPackage = p.getScanPackage();
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String scanPackage = serverConfiguration.getScanPackage();
+
 		LOG.info("开始扫描类,scanPackage={}", scanPackage);
 		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
 		return clsSet;

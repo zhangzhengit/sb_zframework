@@ -1,6 +1,5 @@
 package com.vo;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,8 +8,6 @@ import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOPScaner;
 import com.vo.conf.ServerConfiguration;
-import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
-import com.vo.conf.ZFrameworkProperties;
 import com.vo.core.ZClass;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
@@ -41,8 +38,6 @@ public class ZMain {
 
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
-	private static final ZFrameworkProperties FRAMEWORK_PROPERTIES = ZFrameworkDatasourcePropertiesLoader
-			.getFrameworkPropertiesInstance();
 	public static void main(final String[] args) {
 		ZMain.LOG.info("zframework开始启动");
 
@@ -56,7 +51,8 @@ public class ZMain {
 		scanZComponentAndCreate();
 
 		// 3 创建 @ZController 对象
-		final String scanPackage = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance().getScanPackage();
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String scanPackage = serverConfiguration.getScanPackage();
 		ZControllerScanner.scanAndCreateObject(scanPackage);
 
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
@@ -67,7 +63,6 @@ public class ZMain {
 		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
 		ZValueScanner.scan(scanPackage);
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
 			System.setProperty(STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
 			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
