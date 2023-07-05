@@ -40,7 +40,7 @@ public class ZSessionMap {
 			final Set<Entry<String, ZSession>> es = SESSION_MAP.entrySet();
 			for (final Entry<String, ZSession> entry : es) {
 				final ZSession session = entry.getValue();
-				final int maxInactiveInterval = session.getMaxInactiveInterval();
+				final long maxInactiveInterval = session.getMaxInactiveInterval();
 				final Date createTime = session.getCreateTime();
 
 				if (now - createTime.getTime() >= maxInactiveInterval * 1000) {

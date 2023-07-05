@@ -204,6 +204,9 @@ public class ZRequest {
 	private static ZSession newSession() {
 		final String zSessionID = ZRequest.gSessionID();
 		final ZSession session = new ZSession(zSessionID, new Date());
+
+		ZSessionMap.put(session);
+
 		return session;
 	}
 

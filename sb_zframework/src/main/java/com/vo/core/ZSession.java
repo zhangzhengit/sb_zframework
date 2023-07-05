@@ -26,7 +26,7 @@ public class ZSession {
 	private final String id;
 	private final Date createTime;
 	private Date lastAccessedTime;
-	private int intervalSeconds;
+	private long intervalSeconds;
 
 	private final AtomicBoolean invalidate = new AtomicBoolean(false);
 
@@ -35,7 +35,7 @@ public class ZSession {
 		this.createTime = createTime;
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final Integer sessionTimeout = serverConfiguration.getSessionTimeout();
+		final Long sessionTimeout = serverConfiguration.getSessionTimeout();
 		this.setMaxInactiveInterval(sessionTimeout);
 	}
 
@@ -63,13 +63,13 @@ public class ZSession {
 	 * @param interval
 	 *
 	 */
-	public void setMaxInactiveInterval(final int interval) {
+	public void setMaxInactiveInterval(final long interval) {
 		this.checkInvalidate();
 		this.intervalSeconds = interval;
 		ZSessionMap.put(this);
 	}
 
-    public int getMaxInactiveInterval() {
+    public long getMaxInactiveInterval() {
     	this.checkInvalidate();
     	return this.intervalSeconds;
     }

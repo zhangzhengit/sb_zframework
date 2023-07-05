@@ -86,8 +86,9 @@ public class ServerConfiguration {
 	 * session超时秒数，超时此值则销毁session
 	 */
 	@ZNotNull
+	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer sessionTimeout;
+	private Long sessionTimeout;
 
 	/**
 	 * 配置硬盘上的资源目录，如：E\\x
