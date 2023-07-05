@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
@@ -118,6 +119,20 @@ public class Task {
 
 		// 查找对应的控制器来处理
 		if (method == null) {
+			final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
+			if (CollUtil.isNotEmpty(methodMap)) {
+				final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+
+				new ZResponse(this.socketChannel)
+					.header(ZRequest.ALLOW, methodString)
+					.httpStatus(HttpStatus.HTTP_405.getCode())
+					.contentType(HeaderEnum.JSON.getType())
+						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+								+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)))
+					.write();
+
+				return;
+			}
 
 			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
 			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
@@ -135,10 +150,10 @@ public class Task {
 					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}
-
 				}
 			}
 
+			// 无匹配的正则表达式接口，返回404
 			new ZResponse(this.outputStream, this.socketChannel)
 						.httpStatus(HttpStatus.HTTP_404.getCode())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())

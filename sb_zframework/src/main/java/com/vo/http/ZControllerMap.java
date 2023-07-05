@@ -17,7 +17,7 @@ import com.vo.enums.MethodEnum;
  *
  */
 public class ZControllerMap {
-	static final HashBasedTable<MethodEnum, String, Method> methodTable = HashBasedTable.create();
+	static final HashBasedTable<MethodEnum, String, Method> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
@@ -31,7 +31,7 @@ public class ZControllerMap {
 					"接口方法的 mapping值重复, mapping = " + mapping + "\t" + " method = " + method.getName());
 		}
 
-		methodTable.put(methodEnum, mapping, method);
+		methodPathTable.put(methodEnum, mapping, method);
 
 		methodIsregexTable.put(method, mapping, isRegex);
 
@@ -58,14 +58,19 @@ public class ZControllerMap {
 		return object;
 	}
 
+
 	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
-		final Method method = methodTable.get(methodEnum, path);
+		final Method method = methodPathTable.get(methodEnum, path);
 		return method;
 	}
 
+	public static Map<MethodEnum, Method> getByPath(final String path) {
+		final Map<MethodEnum, Method> column = methodPathTable.column(path);
+		return column;
+	}
 	public static Map<String, Method> getByMethodEnum(final MethodEnum methodEnum) {
 
-		final Map<String, Method> row = methodTable.row(methodEnum);
+		final Map<String, Method> row = methodPathTable.row(methodEnum);
 		return row;
 	}
 
