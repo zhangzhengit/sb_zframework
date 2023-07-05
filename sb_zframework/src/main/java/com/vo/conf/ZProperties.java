@@ -1,5 +1,6 @@
 package com.vo.conf;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -7,6 +8,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Lists;
 import com.vo.core.ZLog2;
+import com.vo.scanner.ZPropertiesListener;
 
 /**
  * zframework.properties 配置文件里全部的k=v的值
@@ -61,8 +63,15 @@ public class ZProperties {
 			throw new IllegalArgumentException("找不到配置文件 " + ZProperties.PROPERTIES_NAME);
 		}
 
+
+		final String path = propertiesConfiguration.getPath();
+		System.out.println("path = " + path);
+
 		PROPERTIESCONFIGURATION_ENCODING.set(propertiesConfiguration.getEncoding());
 		System.out.println("propertiesConfiguration-encoding = " + propertiesConfiguration.getEncoding());
+
+		ZPropertiesListener.listen(path);
+
 		P = propertiesConfiguration;
 	}
 
