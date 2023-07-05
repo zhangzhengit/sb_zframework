@@ -22,6 +22,8 @@ public enum HttpStatus {
 
 	HTTP_404(404, "404-not-found"),
 
+	HTTP_405(405, "405-Method Not Allowed"),
+
 	HTTP_500(500, "500-Internal Server Error"),;
 
 	private int code;

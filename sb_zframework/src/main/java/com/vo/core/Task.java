@@ -91,7 +91,7 @@ public class Task {
 		}
 	}
 
-	public static ZRequest handleRead(final String requestString) {
+	public ZRequest handleRead(final String requestString) {
 		final ZRequest request = new ZRequest();
 
 		final boolean contains = requestString.contains(NEW_LINE);
@@ -436,7 +436,11 @@ public class Task {
 		}
 
 		synchronized (request) {
-			final ZRequest v2 = parseRequest0(request);
+			final ZRequest v2 = Task.parseRequest0(request);
+			if (v2 == null) {
+				return v2;
+			}
+
 			CACHE_MAP.put(request, v2);
 			return v2;
 		}
@@ -457,13 +461,8 @@ public class Task {
 		if (methodIndex > -1) {
 			final String methodS = line.substring(0, methodIndex);
 			final MethodEnum me = MethodEnum.valueOfString(methodS);
-			if (me != null) {
-				requestLine.setMethodEnum(me);
-			} else {
-				// FIXME 2023年6月28日 下午10:04:18 zhanghen: 返回500
-//				handleWrite500(DEFAULT_CONTENT_TYPE, CR.error(HTTP_STATUS_500, "不支持的请求方法 method = " + methodS), so);
-				throw new IllegalArgumentException("不支持的请求方法 method = " + methodS);
-			}
+			// 可能是null，在这里不管，在外面处理，返回405
+			requestLine.setMethodEnum(me);
 		}
 
 		// path
@@ -649,6 +648,7 @@ public class Task {
 	}
 
 	public ZRequest parse(final ZRequest request) {
-		return parseRequest(request);
+		return Task.parseRequest(request);
 	}
+
 }

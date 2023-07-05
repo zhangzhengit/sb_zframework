@@ -70,7 +70,8 @@ public class ZServer extends Thread {
 			ZServer.startSSLServer();
 		} else {
 			LOG.info("启动Server,port={}", serverConfiguration.getPort());
-			NioLongConnectionServer.startNIOServer();
+			final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
+			nioLongConnectionServer.startNIOServer();
 		}
 	}
 

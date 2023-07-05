@@ -18,11 +18,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
 import com.vo.enums.CollectionEnum;
+import com.vo.enums.MethodEnum;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 
@@ -60,7 +63,7 @@ public class NioLongConnectionServer {
 
 	private static final int BUFFER_SIZE = 1024 * 100;
 
-	public static void startNIOServer() {
+	public void startNIOServer() {
 
 		keepAliveTimeoutJOB();
 
@@ -105,7 +108,7 @@ public class NioLongConnectionServer {
 					handleAccept(key, selector);
 				} else if (key.isReadable()) {
 					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getConcurrentQuantity())) {
-						handleRead(key);
+						this.handleRead(key);
 					} else {
 						new ZResponse((SocketChannel) key.channel())
 							.contentType(HeaderEnum.JSON.getType())
@@ -182,7 +185,7 @@ public class NioLongConnectionServer {
 
 	}
 
-	private static void handleRead(final SelectionKey key) {
+	private void handleRead(final SelectionKey key) {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		if (!socketChannel.isOpen()) {
 			return;
@@ -217,27 +220,39 @@ public class NioLongConnectionServer {
 			if (socketChannel.isOpen()) {
 
 				ZServer.ZE.executeInQueue(() -> {
-					final ZRequest requestX = Task.handleRead(requestString);
-					final ZRequest request = Task.parseRequest(requestX);
 					synchronized (socketChannel) {
 						if(socketChannel.isOpen()) {
-							final Task taskNIO = new Task(socketChannel);
-							taskNIO.invoke(request);
+							final Task task = new Task(socketChannel);
+							final ZRequest requestX = task.handleRead(requestString);
+							final ZRequest request = Task.parseRequest(requestX);
+							if (request.getRequestLine().getMethodEnum() == null) {
+								final MethodEnum[] values = MethodEnum.values();
+								final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+								new ZResponse(socketChannel)
+									.header(ZRequest.ALLOW, methodString)
+									.httpStatus(HttpStatus.HTTP_405.getCode())
+									.contentType(HeaderEnum.JSON.getType())
+									.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
+									.write();
+							} else {
+								task.invoke(request);
+							}
+
+							final String connection = request.getHeader(CONNECTION);
+							if (StrUtil.isNotEmpty(connection)
+									&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
+											|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
+								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+							} else {
+								try {
+									socketChannel.close();
+								} catch (final IOException e) {
+									e.printStackTrace();
+								}
+							}
 						}
 					}
 
-					final String connection = request.getHeader(CONNECTION);
-					if (StrUtil.isNotEmpty(connection)
-							&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
-								|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
-						SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
-					} else {
-						try {
-							socketChannel.close();
-						} catch (final IOException e) {
-							e.printStackTrace();
-						}
-					}
 
 				});
 
