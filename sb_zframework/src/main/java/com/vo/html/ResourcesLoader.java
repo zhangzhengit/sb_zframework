@@ -168,6 +168,7 @@ public class ResourcesLoader {
 		}
 
 		final AtomicLong write = writeToOutputStream(bufferedInputStream, outputStream);
+
 		try {
 //			outputStream.write(Task.NEW_LINE.getBytes());
 			outputStream.flush();

@@ -135,7 +135,6 @@ public class ZValueScanner {
 			} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
 				setValue(field, object, Character.valueOf(String.valueOf(value).charAt(0)));
 			} else {
-				// FIXME 2023年7月1日 上午9:19:27 zhanghen: 继续考虑支持什么类型
 				throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
 						+ field.getType().getSimpleName() + " 暂不支持");
 			}
