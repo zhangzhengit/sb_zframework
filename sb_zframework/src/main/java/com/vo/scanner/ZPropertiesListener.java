@@ -35,13 +35,13 @@ public class ZPropertiesListener {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	private static final ZE ZE = ZES.newZE(1, ZProperties.PROPERTIES_NAME + "-Thread-");
 
-	public static void main(final String[] args) throws Exception {
-
-		// 监听的文件路径
-		final String filePath = "E:\\x\\x.txt";
-
-		listen(filePath);
-	}
+//	public static void main(final String[] args) throws Exception {
+//
+//		// 监听的文件路径
+//		final String filePath = "E:\\x\\x.txt";
+//
+//		listen(filePath);
+//	}
 
 	public static void listen(final String filePath) {
 
