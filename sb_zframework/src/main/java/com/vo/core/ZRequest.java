@@ -148,13 +148,13 @@ public class ZRequest {
 
 
 	private static String gSessionID() {
-		final Hasher putString = Hashing.sha256().newHasher().putString(
-				ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
+		final Hasher putString = Hashing.sha256()
+				.newHasher()
+				.putString(ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
 				Charset.defaultCharset());
 
 		final HashCode hash = putString.hash();
-		final String string2 = hash.toString();
-		return string2;
+		return hash.toString();
 	}
 
 	public ZSession getSession() {
@@ -184,7 +184,7 @@ public class ZRequest {
 						return null;
 					}
 
-					final ZSession newSession = this.newSession();
+					final ZSession newSession = ZRequest.newSession();
 					ZSessionMap.put(newSession);
 
 					return newSession;
@@ -196,18 +196,12 @@ public class ZRequest {
 			return null;
 		}
 
-		final ZSession session = this.newSession();
+		final ZSession session = ZRequest.newSession();
 		ZSessionMap.put(session);
-
-		// FIXME 2023年7月2日 上午6:39:15 zhanghen: 发送到response
-//		final ZResponse response = ZContext.getZResponseAndRemove();
-//		response.addCookie(ZCookie);
-//		response.writeAndFlushAndClose();
-
 		return session;
 	}
 
-	private ZSession newSession() {
+	private static ZSession newSession() {
 		final String zSessionID = ZRequest.gSessionID();
 		final ZSession session = new ZSession(zSessionID, new Date());
 		return session;

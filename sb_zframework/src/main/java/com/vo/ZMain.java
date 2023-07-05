@@ -15,6 +15,7 @@ import com.vo.core.ZClass;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZServer;
+import com.vo.core.ZSessionMap;
 import com.vo.core.ZSingleton;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
@@ -75,6 +76,8 @@ public class ZMain {
 		final ZServer zs = new ZServer();
 		zs.setName(Z_SERVER_THREAD);
 		zs.start();
+
+		ZSessionMap.sessionTimeoutJOB();
 
 	}
 

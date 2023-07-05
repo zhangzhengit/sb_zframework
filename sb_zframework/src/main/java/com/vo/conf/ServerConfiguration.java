@@ -83,6 +83,13 @@ public class ServerConfiguration {
 	private Integer keepAliveTimeout;
 
 	/**
+	 * session超时秒数，超时此值则销毁session
+	 */
+	@ZNotNull
+	@ZMax(max = Integer.MAX_VALUE)
+	private Integer sessionTimeout;
+
+	/**
 	 * 配置硬盘上的资源目录，如：E\\x
 	 * 此值配置了，则优先读取此值下的资源文件
 	 * 此值没配置，则读取 staticPrefix 目录下的资源文件

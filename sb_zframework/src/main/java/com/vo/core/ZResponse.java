@@ -108,7 +108,11 @@ public class ZResponse {
 	 * 根据 contentType、 header、body 写入响应结果，只写一次。
 	 *
 	 */
-	public void write() {
+	public synchronized void write() {
+
+		if (this.write.get()) {
+			return;
+		}
 
 		if (this.outputStream != null) {
 			this.writeOutputStream();
@@ -118,6 +122,8 @@ public class ZResponse {
 			throw new IllegalArgumentException(
 					ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
 		}
+
+		this.write.set(true);
 	}
 
 	private void writeSocketChannel() {
@@ -194,19 +200,23 @@ public class ZResponse {
 
 	private ByteBuffer fillByteBuffer()  {
 
+		if (StrUtil.isEmpty(this.contentTypeAR.get())) {
+			throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
+		}
+
 		final ZArray array = new ZArray();
 
 		array.add((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
 
-
 		// header-Content-Length
 		if (CollUtil.isNotEmpty(this.bodyList)) {
 			final int contentLenght = this.bodyList.size();
-
 			array.add((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
-			array.add(Task.NEW_LINE.getBytes());
+		} else {
+			array.add((ZRequest.CONTENT_LENGTH + ":" + 0).getBytes());
 		}
+		array.add(Task.NEW_LINE.getBytes());
 
 		array.add((this.contentTypeAR.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
@@ -229,7 +239,7 @@ public class ZResponse {
 			array.add(Task.NEW_LINE.getBytes());
 
 		} else {
-			array.add(JSON.toJSONString(CR.ok()).getBytes());
+//			array.add(JSON.toJSONString(CR.ok()).getBytes());
 		}
 
 		final byte[] a = array.add(new byte[] {});
