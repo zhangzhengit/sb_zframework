@@ -78,7 +78,7 @@ public class ServerConfiguration {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = Integer.MAX_VALUE)
+	@ZMax(max = 86400)
 	// FIXME 2023年7月4日 下午6:57:06 zhanghen: TODO 改为：从连接最后一次活动开始计时，超过此值再关闭
 	private Integer keepAliveTimeout;
 
