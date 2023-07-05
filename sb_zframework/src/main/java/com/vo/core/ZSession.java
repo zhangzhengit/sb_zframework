@@ -65,7 +65,6 @@ public class ZSession {
 	 */
 	public void setMaxInactiveInterval(final int interval) {
     	this.checkInvalidate();
-    	// FIXME 2023年7月5日 上午11:36:41 zhanghen: 加一个session超时job
     	this.intervalSeconds = interval;
     }
 
