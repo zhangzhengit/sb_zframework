@@ -50,6 +50,9 @@ public class ZMain {
 		// 0 读取配置，创建配置类
 		ZConfigurationPropertiesScanner.scanAndCreateObject(packageName);
 
+		// 0.1 扫描 @ZConfiguration类，生成配置
+		ZConfigurationScanner.scan();
+
 		// 1 最先初始化 对象生成器
 		ZObjectGeneratorStarter.start();
 
