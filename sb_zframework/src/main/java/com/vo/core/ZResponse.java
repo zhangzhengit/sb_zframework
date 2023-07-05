@@ -25,6 +25,49 @@ import lombok.Getter;
  *
  * 表示一个http 响应对象
  *
+ * 典型使用如下，
+ *
+ * 	new ZResponse(socketChannel)
+		.header(ZRequest.ALLOW, "GET")
+		.httpStatus(HttpStatus.HTTP_405.getCode())
+		.contentType(HeaderEnum.JSON.getType())
+		.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
+		.write();
+---------------------------------------------------------
+	响应如下：
+	status:405
+
+	Content-Type:application/json;charset=UTF-8
+	Allow:GET
+	Content-Length: 此值自动根据body计算，无body则为0
+
+	{"code":405,"message":"具体的响应信息JSON","ok":false}
+---------------------------------------------------------
+	header 			非必须，按需设置
+	httpStatus 		非必须，默认200，按需设置
+	cookie			非必须，按需设置
+	contentType 	非必须，默认application/json，按需设置
+	body 			非必须，默认空，按需设置
+	write 			非必须，可以手动调用，也可不调用，接口方法执行结束后会自动调用
+---------------------------------------------------------
+	最简单的接口响应如下：
+
+	@ZRequestMapping(mapping = { "/test" })
+	public void test(final ZResponse response) {
+		// 此处无需response做任务事情即可得到一个最简单的响应
+		// 如果设置则按需设置
+	}
+
+	response 什么也不做，访问http://localhost/test
+	即会得到一个如下响应结果：
+		status:200
+
+		Content-Type:application/json;charset=UTF-8
+		Content-Length:0
+
+		---无body-----
+
+ *
  * @author zhangzhen
  * @date 2023年6月26日
  *
