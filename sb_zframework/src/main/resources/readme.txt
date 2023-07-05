@@ -23,6 +23,13 @@
 			@ZNotNull 表示此配置字段不能是null
 			@ZStartWith 表示此配置字段必须以特定值开头
 		
+	@ZValue
+		用于组件的字段上，表示此字段取值自配置文件,如：
+		@ZValue(name = "name", listenForChanges = true)
+		String name;
+		表示 String类型的name字段，取值自配置文件中的name。listenForChanges = true 表示name字段实时读取配置文件
+		变动并且更新字段值.
+		
 		
 	@ZComponent 
 		用于声明一个通用组件
