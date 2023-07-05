@@ -220,6 +220,7 @@ public class Task {
 		}
 	}
 
+	@SuppressWarnings("boxing")
 	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
@@ -243,7 +244,12 @@ public class Task {
 
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			method.invoke(zController, arraygP);
-			// XXX 在此自动response.write 会报异常，所以需要 response.xx.xx.write() 最后.write()一下了
+			// 在此自动response.write，接口中ZResponse参数可以省去.write()
+			final ZResponse response = ZContext.getZResponseAndRemove();
+			if (!response.getWrite().get()) {
+				response.write();
+			}
+
 			return;
 		}
 
