@@ -68,8 +68,8 @@ public class ZConfigurationScanner {
 					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
 							ZBean.class.getSimpleName(), method.getName(), r);
 
-					final String canonicalName = r.getClass().getCanonicalName();
-					ZComponentMap.put(canonicalName, r);
+					ZComponentMap.put(method.getName(), r);
+					ZComponentMap.put(r.getClass().getCanonicalName(), r);
 
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 					e.printStackTrace();

@@ -12,14 +12,14 @@ import com.google.common.collect.Maps;
  *
  */
 public class ZConfigurationPropertiesMap {
-	static ConcurrentMap<Class, Object> m = Maps.newConcurrentMap();
+	static ConcurrentMap<Object, Object> m = Maps.newConcurrentMap();
 
-	public static void put(final Class<?> cls, final Object object) {
-		m.put(cls, object);
+	public static void put(final Object key, final Object value) {
+		m.put(key, value);
 	}
 
-	public static Object get(final Class<?> cls) {
-		return m.get(cls);
+	public static Object get(final Object key) {
+		return m.get(key);
 	}
 
 }

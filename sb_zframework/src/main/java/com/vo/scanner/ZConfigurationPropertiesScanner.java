@@ -65,6 +65,7 @@ public class ZConfigurationPropertiesScanner {
 
 			System.out.println("ZCP-object = " + object);
 			ZConfigurationPropertiesMap.put(cs, object);
+			ZConfigurationPropertiesMap.put(cs.getCanonicalName(), object);
 		}
 	}
 
