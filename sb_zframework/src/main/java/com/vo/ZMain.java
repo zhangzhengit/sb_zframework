@@ -94,20 +94,33 @@ public class ZMain {
 			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", ZComponent.class.getCanonicalName(),
 					zc.getCanonicalName(), in);
 
-			final ZClass proxyClass = map.get(zc.getSimpleName());
+			// 2
 
-			if (proxyClass == null) {
-				try {
-					final Object newInstance = zc.newInstance();
-					ZComponentMap.put(zc.getCanonicalName(), newInstance);
-				} catch (InstantiationException | IllegalAccessException e) {
-					e.printStackTrace();
-				}
-			} else {
+			final Object newComponent = ZObjectGeneratorStarter.generate(zc);
+			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
+			if (proxyClass != null) {
 				final Object newInstance = proxyClass.newInstance();
-				// 放代理类
-				ZComponentMap.put(zc.getCanonicalName(), newInstance);
+//				// 放代理类
+				ZComponentMap.put(newComponent.getClass().getCanonicalName(), newInstance);
+			} else {
+				ZComponentMap.put(newComponent.getClass().getCanonicalName(), newComponent);
 			}
+
+			// 1
+//			final ZClass proxyClass = map.get(zc.getSimpleName());
+//
+//			if (proxyClass == null) {
+//				try {
+//					final Object newInstance = zc.newInstance();
+//					ZComponentMap.put(zc.getCanonicalName(), newInstance);
+//				} catch (InstantiationException | IllegalAccessException e) {
+//					e.printStackTrace();
+//				}
+//			} else {
+//				final Object newInstance = proxyClass.newInstance();
+//				// 放代理类
+//				ZComponentMap.put(zc.getCanonicalName(), newInstance);
+//			}
 
 		}
 		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", ZComponent.class.getCanonicalName(), zcSet.size());

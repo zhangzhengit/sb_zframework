@@ -54,7 +54,7 @@ public class ZAutowiredScanner {
 			for (final Field f : fs) {
 				final boolean isFiedlZAutowired = f.isAnnotationPresent(ZAutowired.class);
 				if (isFiedlZAutowired) {
-					ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", targetClass.getCanonicalName(), ZAutowired.class.getCanonicalName(),
+					ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(), ZAutowired.class.getCanonicalName(),
 							f.getType().getCanonicalName());
 
 					if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
