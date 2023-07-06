@@ -81,6 +81,9 @@ public class ZResponse {
 
 	public static final String SET_COOKIE = "Set-Cookie";
 
+	/**
+	 * write 方法是否执行过
+	 */
 	@Getter
 	private final AtomicBoolean write = new AtomicBoolean(false);
 	private final AtomicBoolean closed  = new AtomicBoolean(false);
@@ -174,6 +177,7 @@ public class ZResponse {
 		} else if (this.socketChannel != null) {
 			this.writeSocketChannel();
 		} else {
+			this.write.set(true);
 			throw new IllegalArgumentException(
 					ZResponse.class.getSimpleName() + " outputStream 和 socketChannel 不能同时为空");
 		}
