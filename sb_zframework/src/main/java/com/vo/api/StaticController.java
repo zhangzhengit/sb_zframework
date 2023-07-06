@@ -35,31 +35,18 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error("不支持无后缀的文件"))
-				.write();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-
-			response
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-					.write();
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 		}
 
 		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 
-		response
-			.contentType(cte.getType())
-
-			.body(loadByteArray)
-			.write();
+		response.contentType(cte.getType()).body(loadByteArray);
 
 //		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
@@ -75,23 +62,19 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error("不支持无后缀的文件"))
-				.write();
+//				.write()
+				;
 
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.write();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
 		}
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-//		final String staticPrefix = serverConfiguration.getStaticPrefix();
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
@@ -100,17 +83,12 @@ public class StaticController {
 			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
 			final byte[] ba = ZGzip.compress(string);
 
-			response.contentType(cte.getType())
-					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-				    .body(ba)
-				    .write();
+			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
 
 		} else {
 			final byte[] ba = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 
-			response.contentType(cte.getType())
-				    .body(ba)
-				    .write();
+			response.contentType(cte.getType()).body(ba);
 		}
 
 	}
@@ -129,21 +107,13 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error("不支持无后缀的文件"))
-				.write();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.write();
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
 		}
 
@@ -154,14 +124,9 @@ public class StaticController {
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);
-			response.contentType(cte.getType())
-					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-				    .body(ba)
-				    .write();
+			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
 		} else {
-			response.contentType(cte.getType())
-				    .body(html)
-				    .write();
+			response.contentType(cte.getType()).body(html);
 		}
 	}
 }
