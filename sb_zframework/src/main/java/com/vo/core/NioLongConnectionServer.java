@@ -235,15 +235,6 @@ public class NioLongConnectionServer {
 									&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
 											|| connection.toLowerCase()
 													.contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
-							if (keepAlive) {
-								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
-							} else {
-								try {
-									socketChannel.close();
-								} catch (final IOException e) {
-									e.printStackTrace();
-								}
-							}
 
 							// 解析请求时，无匹配的Method
 							if (zRequest.getRequestLine().getMethodEnum() == null) {
@@ -264,6 +255,16 @@ public class NioLongConnectionServer {
 										response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
 									}
 									response.write();
+								}
+							}
+
+							if (keepAlive) {
+								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+							} else {
+								try {
+									socketChannel.close();
+								} catch (final IOException e) {
+									e.printStackTrace();
 								}
 							}
 
