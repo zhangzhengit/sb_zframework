@@ -23,6 +23,13 @@
 			@ZNotNull 表示此配置字段不能是null
 			@ZStartWith 表示此配置字段必须以特定值开头
 		
+	@ZValue
+		用于组件的字段上，表示此字段取值自配置文件,如：
+		@ZValue(name = "name", listenForChanges = true)
+		String name;
+		表示 String类型的name字段，取值自配置文件中的name。listenForChanges = true 表示name字段实时读取配置文件
+		变动并且更新字段值.
+		
 		
 	@ZComponent 
 		用于声明一个通用组件
@@ -123,12 +130,32 @@
 		@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
 		
 		
+	ZSingleton :
+		用于获取容器管理的bean
 		
 		
+	静态文件服务器使用如下：
+		1 	配置	server.static.path=E:\\x
+		2	E:\\x 目录下 新建ok.html,
+		3   输入 http://localhost/html/ok.html 即可展示ok.html
 		
+		server.static.path 优先于	server.static.prefix
 		
-		
-		
-		
-		
+	手动注入对象：
+		1 注入ZComponent 对象:
+			如：新建类A,
+			A a = new A();		
+			在 工程main方法调用 ZApplication.run 之前执行如下代码：
+			
+			ZComponentMap.put(a.getClass().getCanonicalName(), a);
+			
+			即可注入a对象.
+			
+			需要使用A对象的地方正常使用即可
+			 
+			@ZAutowired
+			A a;
+			
+			
+							
 		

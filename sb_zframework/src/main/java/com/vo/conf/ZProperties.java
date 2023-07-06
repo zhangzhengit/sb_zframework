@@ -1,11 +1,18 @@
 package com.vo.conf;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import com.google.common.collect.Lists;
+import com.vo.core.ZLog2;
+import com.vo.scanner.ZPropertiesListener;
+
 /**
+ * zframework.properties 配置文件里全部的k=v的值
+ *
  * 加载全部的配置文件的值
  *
  * @author zhangzhen
@@ -15,7 +22,23 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 // FIXME 2023年6月29日 下午11:26:04 zhanghen: 是否支持配置项热更新？改为实时读取配置项？
 public class ZProperties {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+
 	public static final ThreadLocal<String> PROPERTIESCONFIGURATION_ENCODING = new ThreadLocal<>();
+
+
+	public static final String PROPERTIES_NAME = "zframework.properties";
+
+	public static final String PROPERTIES = "zframework.properties";
+
+	public static final String PROPERTIES_1 = "config/zframework.properties";
+	public static final String PROPERTIES_2 = "zframework.properties";
+	public static final String PROPERTIES_3 = "src/main/resources/zframework.properties";
+	public static final String PROPERTIES_4 = "src/main/resources/config/zframework.properties";
+
+	public static final List<String> PROPERTIES_LIST = Lists.newArrayList(PROPERTIES, PROPERTIES_1, PROPERTIES_2,
+			PROPERTIES_3, PROPERTIES_4);
+
 	public static final PropertiesConfiguration P;
 
 	public static PropertiesConfiguration getInstance() {
@@ -26,11 +49,8 @@ public class ZProperties {
 	}
 
 	static {
-		final List<String> plist = ZFrameworkDatasourcePropertiesLoader.PROPERTIES_LIST;
-
-
 		PropertiesConfiguration propertiesConfiguration = null;
-		for (final String pv : plist) {
+		for (final String pv : PROPERTIES_LIST) {
 			try {
 				propertiesConfiguration = new PropertiesConfiguration(pv);
 			} catch (final ConfigurationException e) {
@@ -39,11 +59,19 @@ public class ZProperties {
 		}
 
 		if (propertiesConfiguration == null) {
-			throw new IllegalArgumentException("配置文件不存在");
+			LOG.error("找不到配置文件 [{}", ZProperties.PROPERTIES_NAME);
+			throw new IllegalArgumentException("找不到配置文件 " + ZProperties.PROPERTIES_NAME);
 		}
+
+
+		final String path = propertiesConfiguration.getPath();
+		System.out.println("path = " + path);
 
 		PROPERTIESCONFIGURATION_ENCODING.set(propertiesConfiguration.getEncoding());
 		System.out.println("propertiesConfiguration-encoding = " + propertiesConfiguration.getEncoding());
+
+		ZPropertiesListener.listen(path);
+
 		P = propertiesConfiguration;
 	}
 

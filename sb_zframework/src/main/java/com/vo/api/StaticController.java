@@ -24,7 +24,6 @@ import com.votool.common.CR;
 @ZController
 public class StaticController {
 
-	// FIXME 2023年7月3日 下午9:01:07 zhanghen: Nio linux上图片显示不完全
 	public static final String CONTENT_ENCODING = "Content-Encoding";
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
@@ -36,27 +35,20 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-
-			response
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-					.writeAndFlushAndClose();
-
-			return;
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 		}
 
-		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
+		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
+
+		response.contentType(cte.getType()).body(loadByteArray);
+
+//		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
 
 	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
@@ -70,41 +62,33 @@ public class StaticController {
 			response
 				.httpStatus(HttpStatus.HTTP_500.getCode())
 				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
+//				.write()
+				;
 
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.writeAndFlushAndClose();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
 		}
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String staticPrefix = serverConfiguration.getStaticPrefix();
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
-			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+
+			final String string = ResourcesLoader.loadStaticResourceString(resourceName);
 			final byte[] ba = ZGzip.compress(string);
 
-			response.contentType(cte.getType())
-					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-				    .body(ba)
-				    .writeAndFlushAndClose();
+			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
 
 		} else {
-			final String string = ResourcesLoader.loadString(staticPrefix + resourceName);
+			final byte[] ba = ResourcesLoader.loadStaticResourceByteArray(resourceName);
 
-			response.contentType(cte.getType())
-				    .body(string)
-				    .writeAndFlushAndClose();
+			response.contentType(cte.getType()).body(ba);
 		}
 
 	}
@@ -123,39 +107,26 @@ public class StaticController {
 
 		final int i = resourceName.indexOf(".");
 		if (i <= -1) {
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error("不支持无后缀的文件"))
-				.writeAndFlushAndClose();
-
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error("不支持无后缀的文件"));
 			return;
 		}
 
 		final HeaderEnum cte = HeaderEnum.gType(resourceName.substring(i + 1));
 		if (cte == null) {
-
-			response
-				.httpStatus(HttpStatus.HTTP_500.getCode())
-				.body(CR.error(HttpStatus.HTTP_500.getMessage()))
-				.writeAndFlushAndClose();
+			response.httpStatus(HttpStatus.HTTP_500.getCode()).body(CR.error(HttpStatus.HTTP_500.getMessage()));
 			return;
 		}
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.HTML.getType());
-		final String html = ResourcesLoader.loadHtml(resourceName);
+		final String html = ResourcesLoader.loadStaticResourceString(resourceName);
 
 		if (gzipEnable && gzipContains && request.isSupportGZIP()) {
 			final byte[] ba = ZGzip.compress(html);
-			response.contentType(cte.getType())
-					.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-				    .body(ba)
-				    .writeAndFlushAndClose();
+			response.contentType(cte.getType()).header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(ba);
 		} else {
-			response.contentType(cte.getType())
-				    .body(html)
-				    .writeAndFlushAndClose();
+			response.contentType(cte.getType()).body(html);
 		}
 	}
 }

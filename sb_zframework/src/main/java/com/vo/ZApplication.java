@@ -4,6 +4,8 @@ import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  *
  * zf 启动类，供依赖此项目的main方法启动
@@ -16,9 +18,20 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void run(final String[] args) {
+	/**
+	 * 启动程序
+	 *
+	 * @param scanPackageName 要扫描的包名，如：com
+	 * @param args
+	 */
+	public static void run(final String scanPackageName, final String[] args) {
+
+		if (StrUtil.isEmpty(scanPackageName)) {
+			throw new IllegalArgumentException("启动出错,scanPackageName 不能为空");
+		}
+
 		final long t1 = System.currentTimeMillis();
-		ZMain.main(args);
+		ZMain.start(scanPackageName, args);
 		final long t2 = System.currentTimeMillis();
 
 		final long freeMemory = Runtime.getRuntime().freeMemory();
@@ -34,7 +47,6 @@ public class ZApplication {
 						maxMemory / 1024/1024,
 						serverConfiguration
 					);
-
 	}
 
 }

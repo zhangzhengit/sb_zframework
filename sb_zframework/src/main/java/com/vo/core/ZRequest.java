@@ -1,17 +1,24 @@
 package com.vo.core;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
+import com.vo.http.LineMap;
 import com.vo.http.ZCookie;
 
 import cn.hutool.core.collection.CollUtil;
@@ -40,6 +47,7 @@ public class ZRequest {
 
 	public static final String COOKIE = "Cookie";
 
+	public static final String ALLOW = "Allow";
 	public static final String CONTENT_LENGTH = "Content-Length";
 
 	public static final String CONTENT_TYPE = "Content-Type";
@@ -76,8 +84,8 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		final String method = Task.parseRequest(this).getRequestLine().getMethodEnum().getMethod();
-		return method;
+		final RequestLine ppp = this.ppp();
+		return ppp.getMethodEnum().getMethod();
 	}
 
 	public String getBody() {
@@ -140,13 +148,13 @@ public class ZRequest {
 
 
 	private static String gSessionID() {
-		final Hasher putString = Hashing.sha256().newHasher().putString(
-				ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
+		final Hasher putString = Hashing.sha256()
+				.newHasher()
+				.putString(ZRequest.Z_SESSION_ID + System.currentTimeMillis() + ZRequest.GZSESSIONID.getAndDecrement(),
 				Charset.defaultCharset());
 
 		final HashCode hash = putString.hash();
-		final String string2 = hash.toString();
-		return string2;
+		return hash.toString();
 	}
 
 	public ZSession getSession() {
@@ -176,7 +184,7 @@ public class ZRequest {
 						return null;
 					}
 
-					final ZSession newSession = this.newSession();
+					final ZSession newSession = ZRequest.newSession();
 					ZSessionMap.put(newSession);
 
 					return newSession;
@@ -188,20 +196,17 @@ public class ZRequest {
 			return null;
 		}
 
-		final ZSession session = this.newSession();
+		final ZSession session = ZRequest.newSession();
 		ZSessionMap.put(session);
-
-		// FIXME 2023年7月2日 上午6:39:15 zhanghen: 发送到response
-//		final ZResponse response = ZContext.getZResponseAndRemove();
-//		response.addCookie(ZCookie);
-//		response.writeAndFlushAndClose();
-
 		return session;
 	}
 
-	private ZSession newSession() {
+	private static ZSession newSession() {
 		final String zSessionID = ZRequest.gSessionID();
 		final ZSession session = new ZSession(zSessionID, new Date());
+
+		ZSessionMap.put(session);
+
 		return session;
 	}
 
@@ -331,6 +336,5 @@ public class ZRequest {
 		private String name;
 		private String value;
 	}
-
 
 }

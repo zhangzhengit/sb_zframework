@@ -12,12 +12,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
+
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.vo.conf.ZFrameworkDatasourcePropertiesLoader;
-import com.vo.conf.ZFrameworkProperties;
+import com.vo.conf.ServerConfiguration;
+import com.vo.conf.ZProperties;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
 import com.vo.core.ZLog2;
@@ -242,8 +244,9 @@ public class ZAOPScaner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		final ZFrameworkProperties p = ZFrameworkDatasourcePropertiesLoader.getFrameworkPropertiesInstance();
-		final String scanPackage = p.getScanPackage();
+		final PropertiesConfiguration propertiesConfiguration = ZProperties.getInstance();
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final String scanPackage = serverConfiguration.getScanPackage();
 		LOG.info("开始扫描类,scanPackage={}", scanPackage);
 		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
 		return clsSet;

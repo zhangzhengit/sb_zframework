@@ -12,7 +12,7 @@ import com.vo.enums.BeanModeEnum;
 
 /**
  *
- * 用在type上，表示此类是配置类
+ * 用在type上，表示此类是配置类，里面加入带有@ZBean的方法来声明配置
  *
  * @author zhangzhen
  * @date 2023年6月12日

@@ -5,18 +5,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.vo.conf.ServerConfiguration;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  *
+ * session
  *
  * @author zhangzhen
  * @date 2023年6月26日
  *
  */
 @Data
-@AllArgsConstructor
 public class ZSession {
 
 	private final Map<String, Object> map = new HashMap<>(2, 1F);
@@ -24,14 +26,17 @@ public class ZSession {
 	private final String id;
 	private final Date createTime;
 	private Date lastAccessedTime;
-	private int intervalSeconds;
+	private long intervalSeconds;
 
 	private final AtomicBoolean invalidate = new AtomicBoolean(false);
-
 
 	public ZSession(final String id, final Date createTime) {
 		this.id = id;
 		this.createTime = createTime;
+
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final Long sessionTimeout = serverConfiguration.getSessionTimeout();
+		this.setMaxInactiveInterval(sessionTimeout);
 	}
 
 	public long getCreationTime() {
@@ -49,15 +54,22 @@ public class ZSession {
 		if (this.lastAccessedTime == null) {
 			return -1L;
     	}
-    	return this.lastAccessedTime.getTime();
-    }
+		return this.lastAccessedTime.getTime();
+	}
 
-    public void setMaxInactiveInterval(final int interval) {
-    	this.checkInvalidate();
-    	this.intervalSeconds = interval;
-    }
+	/**
+	 * 设置session最大存活秒数，超过此时间则销毁
+	 *
+	 * @param interval
+	 *
+	 */
+	public void setMaxInactiveInterval(final long interval) {
+		this.checkInvalidate();
+		this.intervalSeconds = interval;
+		ZSessionMap.put(this);
+	}
 
-    public int getMaxInactiveInterval() {
+    public long getMaxInactiveInterval() {
     	this.checkInvalidate();
     	return this.intervalSeconds;
     }

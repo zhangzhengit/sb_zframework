@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
+import com.vo.api.StaticController;
+import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.Task;
 import com.vo.core.ZLog2;
@@ -39,6 +41,7 @@ import com.vo.http.ZTrace;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
+import io.lettuce.core.api.StatefulConnection;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -60,7 +63,19 @@ public class ZControllerScanner {
 		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZController.class);
 		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+
 		for (final Class<?> cls : zcSet) {
+			final Boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();
+			if (Boolean.FALSE.equals(staticControllerEnable)
+				&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
+
+				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象",
+						StaticController.class.getSimpleName(),StaticController.class.getSimpleName()
+						);
+
+				continue;
+			}
 
 			final Object newZController1 = ZObjectGeneratorStarter.generate(cls);
 
