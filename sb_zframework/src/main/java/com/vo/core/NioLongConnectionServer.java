@@ -24,7 +24,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
-import com.vo.enums.CollectionEnum;
+import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
@@ -43,8 +43,12 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	public static final String SERVER = "Server";
+	public static final String Z_SERVER = "zserver";
 	public static final String CONNECTION = "Connection";
 
 	/**
@@ -222,10 +226,27 @@ public class NioLongConnectionServer {
 				ZServer.ZE.executeInQueue(() -> {
 					synchronized (socketChannel) {
 						if(socketChannel.isOpen()) {
+
 							final Task task = new Task(socketChannel);
-							final ZRequest requestX = task.handleRead(requestString);
-							final ZRequest request = Task.parseRequest(requestX);
-							if (request.getRequestLine().getMethodEnum() == null) {
+							final ZRequest zRequest = task.handleRead(requestString);
+
+							final String connection = zRequest.getHeader(CONNECTION);
+							final boolean keepAlive = StrUtil.isNotEmpty(connection)
+									&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+											|| connection.toLowerCase()
+													.contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+							if (keepAlive) {
+								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+							} else {
+								try {
+									socketChannel.close();
+								} catch (final IOException e) {
+									e.printStackTrace();
+								}
+							}
+
+							// 解析请求时，无匹配的Method
+							if (zRequest.getRequestLine().getMethodEnum() == null) {
 								final MethodEnum[] values = MethodEnum.values();
 								final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
 								new ZResponse(socketChannel)
@@ -235,21 +256,17 @@ public class NioLongConnectionServer {
 									.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
 									.write();
 							} else {
-								task.invoke(request);
-							}
-
-							final String connection = request.getHeader(CONNECTION);
-							if (StrUtil.isNotEmpty(connection)
-									&& (connection.equalsIgnoreCase(CollectionEnum.KEEP_ALIVE.getValue())
-											|| connection.toLowerCase().contains(CollectionEnum.KEEP_ALIVE.getValue().toLowerCase()))) {
-								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
-							} else {
-								try {
-									socketChannel.close();
-								} catch (final IOException e) {
-									e.printStackTrace();
+								final ZResponse response = task.invoke(zRequest);
+								if (response != null && !response.getWrite().get()) {
+									// 在此自动write，接口中可以不调用write
+									response.header(SERVER, Z_SERVER);
+									if (keepAlive) {
+										response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+									}
+									response.write();
 								}
 							}
+
 						}
 					}
 

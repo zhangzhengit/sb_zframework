@@ -103,14 +103,22 @@ public class Task {
 			}
 		}
 
-		return request;
+		final ZRequest parseRequest = parseRequest(request);
+		return parseRequest;
 	}
 
-	public void invoke(final ZRequest request) {
+	/**
+	 * 执行目标方法（接口Method）
+	 *
+	 * @param request 请求体
+	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
+	 *
+	 */
+	public ZResponse invoke(final ZRequest request) {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
-			return;
+			return null;
 		}
 
 		final String path = requestLine.getPath();
@@ -123,15 +131,20 @@ public class Task {
 			if (CollUtil.isNotEmpty(methodMap)) {
 				final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
 
-				new ZResponse(this.socketChannel)
+//				new ZResponse(this.socketChannel)
+//					.header(ZRequest.ALLOW, methodString)
+//					.httpStatus(HttpStatus.HTTP_405.getCode())
+//					.contentType(HeaderEnum.JSON.getType())
+//						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+//								+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)))
+//					.write();
+				return new ZResponse(this.socketChannel)
 					.header(ZRequest.ALLOW, methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
 					.contentType(HeaderEnum.JSON.getType())
-						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-								+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)))
-					.write();
+					.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+							+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)));
 
-				return;
 			}
 
 			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
@@ -145,8 +158,8 @@ public class Task {
 					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
 					try {
 						ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
-						this.invokeAndResponse(methodTarget, arraygP, object, request);
-						return;
+						final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
+						return invokeAndResponse;
 					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}
@@ -154,36 +167,39 @@ public class Task {
 			}
 
 			// 无匹配的正则表达式接口，返回404
-			new ZResponse(this.outputStream, this.socketChannel)
+			return	new ZResponse(this.outputStream, this.socketChannel)
 						.httpStatus(HttpStatus.HTTP_404.getCode())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
 						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
-						.write();
+//						.write()
+						;
 
-			return;
 		}
 
 		try {
 
 			final Object[] p = this.generateParameters(method, request, requestLine, path);
 			if (p == null) {
-				return;
+				return null;
 			}
 
 			final Object zController = ZControllerMap.getObjectByMethod(method);
-			this.invokeAndResponse(method, p, zController, request);
+			final ZResponse re = this.invokeAndResponse(method, p, zController, request);
+			return re;
 
 		} catch (final InvocationTargetException | IllegalAccessException e) {
-			new ZResponse(this.outputStream, this.socketChannel)
+			e.printStackTrace();
+			return new ZResponse(this.outputStream, this.socketChannel)
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)))
-					.write();
+//					.write()
+					;
 
-			e.printStackTrace();
 		} finally {
 			this.close();
 		}
+
 	}
 
 	private void close() {
@@ -221,7 +237,7 @@ public class Task {
 	}
 
 	@SuppressWarnings("boxing")
-	private void invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
+	private ZResponse invokeAndResponse(final Method method, final Object[] arraygP, final Object zController, final ZRequest request)
 			throws IllegalAccessException, InvocationTargetException {
 
 
@@ -235,9 +251,10 @@ public class Task {
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
 					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")))
-					.write();
+//					.write()
+					;
 
-			return;
+			return response;
 		}
 
 		this.setZRequestAndZResponse(arraygP, request);
@@ -246,11 +263,11 @@ public class Task {
 			method.invoke(zController, arraygP);
 			// 在此自动response.write，接口中ZResponse参数可以省去.write()
 			final ZResponse response = ZContext.getZResponseAndRemove();
-			if (!response.getWrite().get()) {
-				response.write();
-			}
+//			if (!response.getWrite().get()) {
+//				response.write();
+//			}
 
-			return;
+			return response;
 		}
 
 		final Object r = method.invoke(zController, arraygP);
@@ -270,25 +287,28 @@ public class Task {
 						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
 
-					new ZResponse(this.outputStream, this.socketChannel)
+					return new ZResponse(this.outputStream, this.socketChannel)
 						.contentType(HeaderEnum.HTML.getType())
 						.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 						.body(compress)
-						.write();
+//						.write()
+						;
 				} else {
-					new ZResponse(this.outputStream, this.socketChannel)
+					return 	new ZResponse(this.outputStream, this.socketChannel)
 						.contentType(HeaderEnum.HTML.getType())
 						.body(html)
-						.write();
+//						.write()
+						;
 				}
 
 			} catch (final Exception e) {
-				new ZResponse(this.outputStream, this.socketChannel)
+				e.printStackTrace();
+				return new ZResponse(this.outputStream, this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR))
-					.write();
-				e.printStackTrace();
+//					.write()
+					;
 			}
 		} else {
 			final String json = JSON.toJSONString(r);
@@ -299,22 +319,24 @@ public class Task {
 					) {
 				final byte[] compress = ZGzip.compress(json);
 
-				new ZResponse(this.outputStream, this.socketChannel)
+				return 	new ZResponse(this.outputStream, this.socketChannel)
 					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
 					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(compress)
-					 .write();
+//					 .write()
+					 ;
 
 			} else {
 
-				new ZResponse(this.outputStream, this.socketChannel)
+				return  new ZResponse(this.outputStream, this.socketChannel)
 					 .contentType(DEFAULT_CONTENT_TYPE.getType())
 					 .body(json)
-					 .write();
+//					 .write()
+					 ;
 			}
 		}
-	}
 
+	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
 			final RequestLine requestLine, final String path) {
