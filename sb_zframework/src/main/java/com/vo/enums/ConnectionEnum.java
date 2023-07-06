@@ -16,7 +16,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum CollectionEnum {
+public enum ConnectionEnum {
 
 	KEEP_ALIVE("keep-alive"),
 
@@ -26,16 +26,16 @@ public enum CollectionEnum {
 
 	private String value;
 
-	private final static ConcurrentMap<String, CollectionEnum> mapV = Maps.newConcurrentMap();
+	private final static ConcurrentMap<String, ConnectionEnum> mapV = Maps.newConcurrentMap();
 	static {
-		final CollectionEnum[] v = values();
-		for (final CollectionEnum e : v) {
+		final ConnectionEnum[] v = values();
+		for (final ConnectionEnum e : v) {
 			mapV.put(e.getValue(), e);
 		}
 
 	}
 
-	public static CollectionEnum valueOfString(final String string) {
+	public static ConnectionEnum valueOfString(final String string) {
 		return mapV.get(string);
 	}
 
