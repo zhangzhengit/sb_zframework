@@ -36,8 +36,6 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ResourcesLoader {
 
-	public static final String NEW_LINE = "\n\r";
-
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
 
 	/**
@@ -62,7 +60,7 @@ public class ResourcesLoader {
 						break;
 					}
 					builder.append(readLine);
-					builder.append(NEW_LINE);
+					builder.append(Task.NEW_LINE);
 				}
 
 				bufferedReader.close();
@@ -291,7 +289,7 @@ public class ResourcesLoader {
 				final String readLine = reader.readLine();
 				if (readLine != null) {
 					builder.append(readLine);
-					builder.append(NEW_LINE);
+					builder.append(Task.NEW_LINE);
 				} else {
 					break;
 				}
