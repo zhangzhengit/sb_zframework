@@ -166,6 +166,7 @@ public class ZResponse {
 	 * 根据 contentType、 header、body 写入响应结果，只写一次。
 	 *
 	 */
+	// FIXME 2023年7月6日 下午8:59:52 zhanghen: TODO 改为private不让调用，然后server中task.invoke后反射调用？
 	public synchronized void write() {
 
 		if (this.write.get()) {
