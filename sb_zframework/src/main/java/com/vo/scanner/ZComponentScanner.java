@@ -21,7 +21,7 @@ import reactor.core.publisher.SynchronousSink;
 public class ZComponentScanner {
 
 	public static Set<Class<?>> scan(final String packageName) {
-		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZComponent.class);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZComponent.class);
 
 		System.out.println("ZComponentScanner-zcSet.size = " + zcSet.size());
 

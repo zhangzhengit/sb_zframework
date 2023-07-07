@@ -3,16 +3,12 @@ package com.vo.scanner;
 import java.lang.reflect.Field;
 import java.util.Set;
 
-import com.vo.ZMain;
 import com.vo.anno.ZAutowired;
-import com.vo.anno.ZBean;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.core.ZLog2;
 import com.vo.http.ZConMap;
-
-import cn.hutool.core.util.ClassUtil;
 
 /**
  * 扫描 @ZBean 的类，注册为一个控制类
@@ -30,7 +26,7 @@ public class ZBeanScanner {
 
 		ZBeanScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
 		// XXX 不要每次都扫描
-		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, targetClass);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, targetClass);
 		ZBeanScanner.LOG.info("带有[{}]注解的类个数={}", targetClass.getCanonicalName(), zcSet.size());
 
 		for (final Class<?> cls : zcSet) {

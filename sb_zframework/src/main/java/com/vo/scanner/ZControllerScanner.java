@@ -17,7 +17,6 @@ import com.vo.anno.ZController;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
-import com.vo.core.Task;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZResponse;
@@ -41,7 +40,6 @@ import com.vo.http.ZTrace;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
-import io.lettuce.core.api.StatefulConnection;
 
 /**
  * 扫描 @ZController 的类，注册为一个控制类
@@ -60,7 +58,7 @@ public class ZControllerScanner {
 
 	public static Set<Class<?>> scanAndCreateObject(final String packageName) {
 		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZController.class);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
 		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);

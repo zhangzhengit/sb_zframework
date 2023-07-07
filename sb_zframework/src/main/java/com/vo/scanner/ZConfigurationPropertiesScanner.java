@@ -17,7 +17,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
-import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -28,7 +27,6 @@ import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 import com.vo.validator.ZStartWith;
 
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -413,11 +411,8 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	public static Set<Class<?>> scanPackage(final String packageName) {
-//		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-//		final String scanPackage = serverConfiguration.getScanPackage();
-
 		LOG.info("开始扫描类,scanPackage={}", packageName);
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage(packageName);
+		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		return clsSet;
 	}
 

@@ -27,9 +27,9 @@ import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
+import com.vo.scanner.ClassMap;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.ClassUtil;
 
 /**
  *
@@ -248,7 +248,7 @@ public class ZAOPScaner {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String scanPackage = serverConfiguration.getScanPackage();
 		LOG.info("开始扫描类,scanPackage={}", scanPackage);
-		final Set<Class<?>> clsSet = ClassUtil.scanPackage(scanPackage);
+		final Set<Class<?>> clsSet = ClassMap.scanPackage(scanPackage);
 		return clsSet;
 	}
 

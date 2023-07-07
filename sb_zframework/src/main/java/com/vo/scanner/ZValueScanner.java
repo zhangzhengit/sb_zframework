@@ -12,14 +12,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.xml.transform.sax.SAXTransformerFactory;
-
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.logging.log4j.message.StringFormattedMessage;
-import org.apache.tomcat.util.digester.ObjectCreateRule;
-import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 
-import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -32,10 +26,7 @@ import com.vo.core.ZLog2;
 import com.vo.http.ZConMap;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.ReflectUtil;
-import lombok.val;
 
 /**
  *
@@ -54,8 +45,8 @@ public class ZValueScanner {
 	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
 
 	public static void scan(final String packageName) {
-		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, ZComponent.class);
-		final Set<Class<?>> zc2Set = ClassUtil.scanPackageByAnnotation(packageName, ZController.class);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZComponent.class);
+		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
 
 		final List<Class<?>> clist = Lists.newArrayListWithCapacity(zcSet.size() + zc2Set.size());
 		clist.addAll(zcSet);

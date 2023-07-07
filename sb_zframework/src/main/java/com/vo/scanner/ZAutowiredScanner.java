@@ -29,8 +29,8 @@ public class ZAutowiredScanner {
 	public static Set<Class<?>> scanAndCreateObject(final String packageName, final Class targetClass) {
 
 		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
-		// XXX 不要每次都扫描
-		final Set<Class<?>> zcSet = ClassUtil.scanPackageByAnnotation(packageName, targetClass);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, targetClass);
+
 		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", targetClass.getCanonicalName(), zcSet.size());
 
 		for (final Class<?> cls : zcSet) {

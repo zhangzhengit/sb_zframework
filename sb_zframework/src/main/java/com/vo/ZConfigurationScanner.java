@@ -11,9 +11,9 @@ import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
+import com.vo.scanner.ClassMap;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ClassUtil;
 
 /**
  *	扫描 @ZConfiguration 注解，找到里面的 @ZBean方法，来生成一个配置类
@@ -30,7 +30,7 @@ public class ZConfigurationScanner {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final Set<Class<?>> clsSet = ClassUtil.scanPackageByAnnotation(serverConfiguration.getScanPackage(),
+		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(serverConfiguration.getScanPackage(),
 				ZConfiguration.class);
 		if (CollUtil.isEmpty(clsSet)) {
 			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
