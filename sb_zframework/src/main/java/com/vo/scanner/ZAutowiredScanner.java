@@ -48,49 +48,7 @@ public class ZAutowiredScanner {
 
 			final Field[] fs = o2.getClass().getDeclaredFields();
 			for (final Field f : fs) {
-				final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
-				if (autowired == null) {
-					continue;
-				}
-
-				ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
-						ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
-
-				final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
-
-				// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
-				if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-//					final Object object = ZComponentMap.getByName(cls.getCanonicalName());
-					final Object object = ZContext.getBean(cls.getCanonicalName());
-//					final Object value = ZComponentMap.getByName(f.getType().getCanonicalName());
-//					final Object value = ZComponentMap.getByName(name);
-					final Object value = ZContext.getBean(name);
-					ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
-					continue;
-				}
-
-				if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-//					final Object object = ZConMap.getByName(cls.getCanonicalName());
-					final Object object = ZContext.getBean(cls.getCanonicalName());
-//					final Object vT = ZComponentMap.getByName(name);
-					final Object vT = ZContext.getBean(name);
-//					final Object vT = ZComponentMap.getByName(f.getType().getCanonicalName());
-//					final Object value = vT != null ? vT : ZConfigurationPropertiesMap.get(f.getType());
-					final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
-
-					try {
-						f.setAccessible(true);
-						final Object fOldV = f.get(object);
-						System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
-						ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
-						final Object fNewV = f.get(object);
-						System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
-					} catch (IllegalArgumentException | IllegalAccessException e) {
-						e.printStackTrace();
-					}
-
-					continue;
-				}
+				inject(cls, f);
 
 			}
 		}
@@ -99,11 +57,52 @@ public class ZAutowiredScanner {
 	}
 
 
-	private static void setFiledValue(final Class targetClass, final Field f, final Object object, final Object value) {
+	public static String inject(final Class<?> cls, final Field f) {
+		final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
+		if (autowired == null) {
+			return null;
+		}
+
+		ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
+				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
+
+		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+
+		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
+//		if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
+//			final Object object = ZContext.getBean(cls.getCanonicalName());
+//			final Object value = ZContext.getBean(name);
+//			ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
+//			return name;
+//		}
+
+//		if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
+			final Object object = ZContext.getBean(cls.getCanonicalName());
+			final Object vT = ZContext.getBean(name);
+			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+
+			try {
+				f.setAccessible(true);
+				final Object fOldV = f.get(object);
+				System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
+				ZAutowiredScanner.setFiledValue(f, object, value);
+				final Object fNewV = f.get(object);
+				System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+			return name;
+//		}
+//		return name;
+	}
+
+
+	private static void setFiledValue(final Field f, final Object object, final Object value) {
 		try {
 			f.setAccessible(true);
 			f.set(object, value);
-			ZAutowiredScanner.LOG.info("[{}]对象的[{}]字段赋值[{}]完成", targetClass.getCanonicalName(),
+			ZAutowiredScanner.LOG.info("对象的[{}]字段赋值[{}]完成",
 					ZAutowired.class.getCanonicalName(),value);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
