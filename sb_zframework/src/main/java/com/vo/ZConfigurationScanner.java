@@ -26,7 +26,7 @@ public class ZConfigurationScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scan() {
+	public static void scanAndCreateObject() {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);

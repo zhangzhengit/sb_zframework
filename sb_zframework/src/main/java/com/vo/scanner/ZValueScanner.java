@@ -44,7 +44,7 @@ public class ZValueScanner {
 	private final static ConcurrentMap<Field, Object> valueMap = Maps.newConcurrentMap();
 	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
 
-	public static void scan(final String packageName) {
+	public static void scanAndCreateObject(final String packageName) {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZComponent.class);
 		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
 
