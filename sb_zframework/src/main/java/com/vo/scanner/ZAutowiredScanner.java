@@ -64,8 +64,9 @@ public class ZAutowiredScanner {
 					final Object object = ZComponentMap.getByName(cls.getCanonicalName());
 //					final Object value = ZComponentMap.getByName(f.getType().getCanonicalName());
 					final Object value = ZComponentMap.getByName(name);
-					if (value == null) {
-						throw new IllegalArgumentException("@" + ZAutowired.class.getSimpleName() + " 依赖 " + name + " 不能为null");
+					if (!autowired.nullable() && value == null) {
+						throw new IllegalArgumentException(
+								"@" + ZAutowired.class.getSimpleName() + " 依赖 " + name + " 不能为null");
 					}
 
 					ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
@@ -78,8 +79,9 @@ public class ZAutowiredScanner {
 //					final Object vT = ZComponentMap.getByName(f.getType().getCanonicalName());
 					final Object value = vT != null ? vT : ZConfigurationPropertiesMap.get(f.getType());
 
-					if (value == null) {
-						throw new IllegalArgumentException("@" + ZAutowired.class.getSimpleName() + " 依赖 " + name + " 不能为null");
+					if (!autowired.nullable() && value == null) {
+						throw new IllegalArgumentException(
+								"@" + ZAutowired.class.getSimpleName() + " 依赖 " + name + " 不能为null");
 					}
 
 					try {

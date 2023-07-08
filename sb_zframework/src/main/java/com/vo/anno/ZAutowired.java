@@ -28,4 +28,6 @@ public @interface ZAutowired {
 	 */
 	String name() default "";
 
+	boolean nullable() default false;
+
 }
