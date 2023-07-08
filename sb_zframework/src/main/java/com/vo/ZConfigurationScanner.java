@@ -4,14 +4,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
+import com.vo.anno.ZValue;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
+import com.vo.scanner.ZAutowiredScanner;
+import com.vo.scanner.ZValueScanner;
 
 import cn.hutool.core.collection.CollUtil;
 
@@ -39,6 +44,9 @@ public class ZConfigurationScanner {
 
 		for (final Class<?> cls : clsSet) {
 
+			final Object newInstance = ZSingleton.getSingletonByClass(cls);
+			ZContext.addBean(cls.getCanonicalName(), newInstance);
+
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
 				final ZBean bean = method.getAnnotation(ZBean.class);
@@ -46,20 +54,12 @@ public class ZConfigurationScanner {
 					continue;
 				}
 
-				if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-					throw new IllegalArgumentException(
-							"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + "返回值不能为void");
-				}
-
-				if (method.getParameterCount() >= 1) {
-					throw new IllegalArgumentException(
-							"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不允许有参数");
-				}
+				check(method);
 
 				try {
 					LOG.info("找到@{}类[{}]的@{}方法{},开始创建bean", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
 							ZBean.class.getSimpleName(), method.getName());
-					final Object newInstance = ZSingleton.getSingletonByClass(cls);
+
 					final Object r = method.invoke(newInstance, null);
 					if (r == null) {
 						throw new RuntimeException("@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不能返回null");
@@ -68,13 +68,10 @@ public class ZConfigurationScanner {
 					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
 							ZBean.class.getSimpleName(), method.getName(), r);
 
-//					ZComponentMap.put(method.getName(), r);
-//					ZComponentMap.put(r.getClass().getCanonicalName(), r);
-
 					ZContext.addBean(method.getName(), r);
 					ZContext.addBean(r.getClass().getCanonicalName(), r);
 
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				} catch (final InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 					e.printStackTrace();
 				}
 
@@ -82,5 +79,29 @@ public class ZConfigurationScanner {
 
 		}
 
+		for (final Class<?> cls : clsSet) {
+			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
+			Lists.newArrayList(cls.getDeclaredFields()).stream()
+				.filter(f -> f.isAnnotationPresent(ZAutowired.class))
+				.forEach(f -> ZAutowiredScanner.inject(cls, f));
+
+			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
+			Lists.newArrayList(cls.getDeclaredFields()).stream()
+				.filter(f -> f.isAnnotationPresent(ZValue.class))
+				.forEach(f -> ZValueScanner.inject(cls, f));
+		}
+
+	}
+
+	private static void check(final Method method) {
+		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
+			throw new IllegalArgumentException(
+					"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + "返回值不能为void");
+		}
+
+		if (method.getParameterCount() >= 1) {
+			throw new IllegalArgumentException(
+					"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不允许有参数");
+		}
 	}
 }
