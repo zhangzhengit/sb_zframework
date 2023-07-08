@@ -69,13 +69,9 @@ public class ZConfigurationPropertiesScanner {
 			}
 
 			System.out.println("ZCP-object = " + object);
-//			ZConfigurationPropertiesMap.put(cs, object);
-//			ZConfigurationPropertiesMap.put(cs.getCanonicalName(), object);
 
 			ZContext.addBean(cs, object);
 			ZContext.addBean(cs.getCanonicalName(), object);
-
-
 		}
 
 		for (final Class<?> cls : csSet) {
@@ -85,13 +81,12 @@ public class ZConfigurationPropertiesScanner {
 				.forEach(f -> ZAutowiredScanner.inject(cls, f));
 
 			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
-//			Lists.newArrayList(cls.getDeclaredFields()).stream()
-//				.filter(f -> f.isAnnotationPresent(ZValue.class))
-//				.forEach(f -> ZValueScanner.inject(cls, f));
+			Lists.newArrayList(cls.getDeclaredFields()).stream()
+				.filter(f -> f.isAnnotationPresent(ZValue.class))
+				.forEach(f -> ZValueScanner.inject(cls, f));
 		}
 	}
 
-	@SuppressWarnings("boxing")
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) {
 		final PropertiesConfiguration p = ZProperties.getInstance();
 		final String key = prefix + field.getName();

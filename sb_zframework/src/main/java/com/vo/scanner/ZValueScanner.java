@@ -56,31 +56,37 @@ public class ZValueScanner {
 		}
 
 		for (final Class<?> cls : clist) {
-//			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
-			final Object c1 = ZContext.getBean(cls.getCanonicalName());
-//			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
-			final Object c2 = ZContext.getBean(cls.getCanonicalName());
-
-			final Object object = c1 == null ? c2 : c1;
+////			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
+//			final Object c1 = ZContext.getBean(cls.getCanonicalName());
+////			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
+//			final Object c2 = ZContext.getBean(cls.getCanonicalName());
+//			final Object object = c1 == null ? c2 : c1;
+//
+			final Object object = ZContext.getBean(cls.getCanonicalName());
 			if (object == null) {
 				continue;
 			}
 
 			final Field[] fields = ReflectUtil.getFields(object.getClass());
-			for (final Field f2 : fields) {
-				final ZValue value = f2.getAnnotation(ZValue.class);
-				if (value == null) {
-					continue;
-				}
-
-				if (value.listenForChanges()) {
-					valueMap.put(f2, object);
-					valueTable.put(value.name(), f2, object);
-				}
-
-				setValue(f2, value, object);
+			for (final Field field : fields) {
+				inject(cls, field);
 			}
 		}
+	}
+
+	public static void inject(final Class<?> cls, final Field field) {
+		final Object object = ZContext.getBean(cls.getCanonicalName());
+		final ZValue value = field.getAnnotation(ZValue.class);
+		if (value == null) {
+			return;
+		}
+
+		if (value.listenForChanges()) {
+			valueMap.put(field, object);
+			valueTable.put(value.name(), field, object);
+		}
+
+		setValue(field, value, object);
 	}
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
