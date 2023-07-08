@@ -156,6 +156,13 @@
 			@ZAutowired
 			A a;
 			
+	@ZAsync 
+		用在方法上，表示此方法异步执行，使用说明：
+		1、配置文件添加如下内容：
+			async.thread.count=12
+			async.thread.name.prefix=zasync-Thread-
+		2、在模板方法上加入 @ZAsync，支持调用即可
+		
 			
 							
 		
