@@ -5,10 +5,9 @@ import java.util.Set;
 
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
-import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
-import com.vo.http.ZConMap;
 
 /**
  * 扫描 @ZBean 的类，注册为一个控制类
@@ -32,10 +31,12 @@ public class ZBeanScanner {
 		for (final Class<?> cls : zcSet) {
 			Object o2 = null;
 			if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-				o2 = ZConMap.getByName(cls.getCanonicalName());
+//				o2 = ZConMap.getByName(cls.getCanonicalName());
+				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-				o2 = ZComponentMap.getByName(cls.getCanonicalName());
+//				o2 = ZComponentMap.getByName(cls.getCanonicalName());
+				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (o2 == null) {
 				throw new IllegalArgumentException("扫描的注解类型不支持:[" + targetClass.getCanonicalName() + "]");

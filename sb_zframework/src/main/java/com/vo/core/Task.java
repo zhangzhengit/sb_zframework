@@ -262,7 +262,7 @@ public class Task {
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			method.invoke(zController, arraygP);
 			// 在此自动response.write，接口中ZResponse参数可以省去.write()
-			final ZResponse response = ZContext.getZResponseAndRemove();
+			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 //			if (!response.getWrite().get()) {
 //				response.write();
 //			}
@@ -439,19 +439,19 @@ public class Task {
 			return;
 		}
 
-		ZContext.setZRequest(request);
+		ZHttpContext.setZRequest(request);
 
 		boolean sR = false;
 		for (final Object object : arraygP) {
 			if (object.getClass().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
-				ZContext.setZResponse((ZResponse) object);
+				ZHttpContext.setZResponse((ZResponse) object);
 				sR = true;
 				break;
 			}
 		}
 
 		if (!sR) {
-			ZContext.setZResponse(new ZResponse(this.outputStream, this.socketChannel));
+			ZHttpContext.setZResponse(new ZResponse(this.outputStream, this.socketChannel));
 		}
 	}
 

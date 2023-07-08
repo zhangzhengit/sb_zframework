@@ -18,9 +18,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.conf.ZProperties;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-import com.vo.http.ZConfigurationPropertiesMap;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
@@ -40,7 +40,7 @@ public class ZConfigurationPropertiesScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreateObject(final String packageName) {
+	public static void scanAndCreate(final String packageName) {
 
 		final Set<Class<?>> csSet = scanPackage(packageName);
 
@@ -62,9 +62,15 @@ public class ZConfigurationPropertiesScanner {
 			}
 
 			System.out.println("ZCP-object = " + object);
-			ZConfigurationPropertiesMap.put(cs, object);
-			ZConfigurationPropertiesMap.put(cs.getCanonicalName(), object);
+//			ZConfigurationPropertiesMap.put(cs, object);
+//			ZConfigurationPropertiesMap.put(cs.getCanonicalName(), object);
+
+			ZContext.addBean(cs, object);
+			ZContext.addBean(cs.getCanonicalName(), object);
+
+
 		}
+
 	}
 
 	@SuppressWarnings("boxing")

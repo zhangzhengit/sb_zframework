@@ -18,12 +18,11 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vo.anno.ZComponent;
-import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
 import com.vo.anno.ZValue;
 import com.vo.conf.ZProperties;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
-import com.vo.http.ZConMap;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -44,7 +43,7 @@ public class ZValueScanner {
 	private final static ConcurrentMap<Field, Object> valueMap = Maps.newConcurrentMap();
 	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
 
-	public static void scan(final String packageName) {
+	public static void inject(final String packageName) {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZComponent.class);
 		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
 
@@ -57,8 +56,10 @@ public class ZValueScanner {
 		}
 
 		for (final Class<?> cls : clist) {
-			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
-			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
+//			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
+			final Object c1 = ZContext.getBean(cls.getCanonicalName());
+//			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
+			final Object c2 = ZContext.getBean(cls.getCanonicalName());
 
 			final Object object = c1 == null ? c2 : c1;
 			if (object == null) {

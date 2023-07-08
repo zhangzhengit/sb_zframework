@@ -5,10 +5,10 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import com.vo.anno.ZBean;
-import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZConfiguration;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
@@ -26,7 +26,7 @@ public class ZConfigurationScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scan() {
+	public static void scanAndCreate() {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
@@ -68,8 +68,11 @@ public class ZConfigurationScanner {
 					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
 							ZBean.class.getSimpleName(), method.getName(), r);
 
-					ZComponentMap.put(method.getName(), r);
-					ZComponentMap.put(r.getClass().getCanonicalName(), r);
+//					ZComponentMap.put(method.getName(), r);
+//					ZComponentMap.put(r.getClass().getCanonicalName(), r);
+
+					ZContext.addBean(method.getName(), r);
+					ZContext.addBean(r.getClass().getCanonicalName(), r);
 
 				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 					e.printStackTrace();

@@ -5,13 +5,10 @@ import java.util.Set;
 
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
-import com.vo.anno.ZComponentMap;
 import com.vo.anno.ZController;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
-import com.vo.http.ZConMap;
-import com.vo.http.ZConfigurationPropertiesMap;
 
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -26,7 +23,7 @@ public class ZAutowiredScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 
-	public static Set<Class<?>> scanAndCreateObject(final String packageName, final Class targetClass) {
+	public static Set<Class<?>> inject(final String packageName, final Class targetClass) {
 
 		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, targetClass);
@@ -36,10 +33,12 @@ public class ZAutowiredScanner {
 		for (final Class<?> cls : zcSet) {
 			Object o2 = null;
 			if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-				o2 = ZConMap.getByName(cls.getCanonicalName());
+//				o2 = ZConMap.getByName(cls.getCanonicalName());
+				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-				o2 = ZComponentMap.getByName(cls.getCanonicalName());
+//				o2 = ZComponentMap.getByName(cls.getCanonicalName());
+				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 
 			if (o2 == null) {
@@ -61,18 +60,23 @@ public class ZAutowiredScanner {
 
 				// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 				if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-					final Object object = ZComponentMap.getByName(cls.getCanonicalName());
+//					final Object object = ZComponentMap.getByName(cls.getCanonicalName());
+					final Object object = ZContext.getBean(cls.getCanonicalName());
 //					final Object value = ZComponentMap.getByName(f.getType().getCanonicalName());
-					final Object value = ZComponentMap.getByName(name);
+//					final Object value = ZComponentMap.getByName(name);
+					final Object value = ZContext.getBean(name);
 					ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
 					continue;
 				}
 
 				if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-					final Object object = ZConMap.getByName(cls.getCanonicalName());
-					final Object vT = ZComponentMap.getByName(name);
+//					final Object object = ZConMap.getByName(cls.getCanonicalName());
+					final Object object = ZContext.getBean(cls.getCanonicalName());
+//					final Object vT = ZComponentMap.getByName(name);
+					final Object vT = ZContext.getBean(name);
 //					final Object vT = ZComponentMap.getByName(f.getType().getCanonicalName());
-					final Object value = vT != null ? vT : ZConfigurationPropertiesMap.get(f.getType());
+//					final Object value = vT != null ? vT : ZConfigurationPropertiesMap.get(f.getType());
+					final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
 					try {
 						f.setAccessible(true);
