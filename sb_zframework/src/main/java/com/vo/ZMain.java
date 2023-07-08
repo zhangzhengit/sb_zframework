@@ -47,13 +47,13 @@ public class ZMain {
 
 		ZMain.LOG.info("zframework开始启动");
 
-		// 0 读取配置，创建配置类
+		// 0 读取 @ZConfigurationProperties 配置，创建配置类
 		ZConfigurationPropertiesScanner.scanAndCreateObject(packageName);
 
 		// 0.1 扫描 @ZConfiguration类，生成配置
 		ZConfigurationScanner.scan();
 
-		// 1 最先初始化 对象生成器
+		// 1 初始化 对象生成器
 		ZObjectGeneratorStarter.start();
 
 		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
