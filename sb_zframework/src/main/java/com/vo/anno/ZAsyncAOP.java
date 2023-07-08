@@ -15,6 +15,9 @@ import com.votool.ze.ZE;
 @ZAOP(interceptType = ZAsync.class)
 public class ZAsyncAOP implements ZIAOP {
 
+	@ZAutowired(name = "zeZAsync")
+	private ZE ze;
+
 	@Override
 	public Object before(final AOPParameter aopParameter) {
 		return null;
@@ -22,9 +25,8 @@ public class ZAsyncAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
-		final ZE ze = ZAsyncExecutors.getInstance();
 
-		ze.executeInQueue(() -> {
+		this.ze.executeInQueue(() -> {
 			final Object invoke = aopParameter.invoke();
 		});
 

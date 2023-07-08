@@ -2,6 +2,7 @@ package com.vo;
 
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
+import com.vo.aop.ZAOP;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
@@ -56,6 +57,7 @@ public class ZMain {
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
 		ZAutowiredScanner.inject(scanPackage, ZComponent.class);
 		ZAutowiredScanner.inject(scanPackage, ZController.class);
+		ZAutowiredScanner.inject(scanPackage, ZAOP.class);
 
 		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
 		ZValueScanner.inject(scanPackage);

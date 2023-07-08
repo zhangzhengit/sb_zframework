@@ -6,8 +6,10 @@ import java.util.Set;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
+import com.vo.aop.ZAOP;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.core.ZSingleton;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -33,12 +35,13 @@ public class ZAutowiredScanner {
 		for (final Class<?> cls : zcSet) {
 			Object o2 = null;
 			if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-//				o2 = ZConMap.getByName(cls.getCanonicalName());
 				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-//				o2 = ZComponentMap.getByName(cls.getCanonicalName());
 				o2 = ZContext.getBean(cls.getCanonicalName());
+			}
+			if (targetClass.getCanonicalName().equals(ZAOP.class.getCanonicalName())) {
+				o2 = ZSingleton.getSingletonByClass(cls);
 			}
 
 			if (o2 == null) {
@@ -69,32 +72,24 @@ public class ZAutowiredScanner {
 		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
 
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
-//		if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
-//			final Object object = ZContext.getBean(cls.getCanonicalName());
-//			final Object value = ZContext.getBean(name);
-//			ZAutowiredScanner.setFiledValue(targetClass, f, object, value);
-//			return name;
-//		}
+		final Object object = cls.isAnnotationPresent(ZAOP.class)
+					? ZSingleton.getSingletonByClass(cls)
+					: ZContext.getBean(cls.getCanonicalName());
+		final Object vT = ZContext.getBean(name);
+		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
-//		if (targetClass.getCanonicalName().equals(ZController.class.getCanonicalName())) {
-			final Object object = ZContext.getBean(cls.getCanonicalName());
-			final Object vT = ZContext.getBean(name);
-			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+		try {
+			f.setAccessible(true);
+			final Object fOldV = f.get(object);
+			System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
+			ZAutowiredScanner.setFiledValue(f, object, value);
+			final Object fNewV = f.get(object);
+			System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
 
-			try {
-				f.setAccessible(true);
-				final Object fOldV = f.get(object);
-				System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
-				ZAutowiredScanner.setFiledValue(f, object, value);
-				final Object fNewV = f.get(object);
-				System.out.println("对象 " + object + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-
-			return name;
-//		}
-//		return name;
+		return name;
 	}
 
 
