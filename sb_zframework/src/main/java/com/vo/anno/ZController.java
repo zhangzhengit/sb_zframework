@@ -27,7 +27,8 @@ public @interface ZController {
 	 * @return
 	 *
 	 */
-	String prefix() default "";
+	// FIXME 2023年7月9日 上午10:19:32 zhanghen: 暂未实现，注释掉
+//	String prefix() default "";
 
 	BeanModeEnum modeEnum() default BeanModeEnum.SINGLETON;
 
