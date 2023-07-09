@@ -78,7 +78,6 @@ public class ZControllerScanner {
 
 			LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
 					newZController1);
-//			ZConMap.putBean(cls.getCanonicalName(), newZController1);
 
 			ZContext.addBean(cls.getCanonicalName(), newZController1);
 
