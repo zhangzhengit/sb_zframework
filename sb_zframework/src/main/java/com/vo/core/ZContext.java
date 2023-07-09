@@ -13,17 +13,18 @@ import com.google.common.collect.Maps;
  */
 public class ZContext {
 
-	private static final ConcurrentMap<String, Object> MAP = Maps.newConcurrentMap();
+	private static final ConcurrentMap<String, Object> BEAN_MAP = Maps.newConcurrentMap();
 
-	public static void addBean(final Class clsName, final Object bean) {
-//		addBean(clsName.getCanonicalName(), bean);
+	public static Object getBean(final String beanName) {
+		return BEAN_MAP.get(beanName);
+	}
+
+	public static void addBean(final Class<?> clsName, final Object bean) {
+		addBean(clsName.getCanonicalName(), bean);
 	}
 
 	public static void addBean(final String beanName, final Object bean) {
-		MAP.put(beanName, bean);
+		BEAN_MAP.put(beanName, bean);
 	}
 
-	public static Object getBean(final String beanName) {
-		return MAP.get(beanName);
-	}
 }
