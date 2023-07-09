@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.scanner;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,9 +14,6 @@ import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-import com.vo.scanner.ClassMap;
-import com.vo.scanner.ZAutowiredScanner;
-import com.vo.scanner.ZValueScanner;
 
 import cn.hutool.core.collection.CollUtil;
 

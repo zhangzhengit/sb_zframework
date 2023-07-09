@@ -12,6 +12,7 @@ import com.vo.core.ZSingleton;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
+import com.vo.scanner.ZConfigurationScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZValueScanner;
 
