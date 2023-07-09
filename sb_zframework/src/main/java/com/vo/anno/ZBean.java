@@ -12,7 +12,26 @@ import com.vo.enums.BeanModeEnum;
 
 /**
  *
- * 用在方法上，把此方法的返回值声明为一个Bean，用方法名称作为beanName
+ * 用在 @ZConfiguration 类里面的方法上，把此方法的返回值声明为一个Bean，用方法名称作为beanName，如：
+ *
+ * 	@ZBean
+ *	public ZBean bean1() {
+ *		final ZBean bean = new ZBean();
+ *		return bean;
+ *	}
+ *
+ *	此方法表示，声明一个bean由容器自动管理，类型为ZBean，名称为bean1。
+ *
+ *	使用类型注入：
+ *		@ZAutowired
+ *		ZBean zBean;
+ *
+ *	或者使用名称注入：
+ *
+ *		@ZAutowired(name = "bean1")
+ *		ZBean zBean;
+ *
+ * 	即可注入上面 @ZBean 声明的bean1对象
  *
  * @author zhangzhen
  * @date 2023年6月12日
