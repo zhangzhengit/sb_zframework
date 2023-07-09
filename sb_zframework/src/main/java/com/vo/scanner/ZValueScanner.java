@@ -56,18 +56,9 @@ public class ZValueScanner {
 		}
 
 		for (final Class<?> cls : clist) {
-////			final Object c1 = ZComponentMap.getByName(cls.getCanonicalName());
-//			final Object c1 = ZContext.getBean(cls.getCanonicalName());
-////			final Object c2 = ZConMap.getByName(cls.getCanonicalName());
-//			final Object c2 = ZContext.getBean(cls.getCanonicalName());
-//			final Object object = c1 == null ? c2 : c1;
-//
-			final Object object = ZContext.getBean(cls.getCanonicalName());
-			if (object == null) {
-				continue;
-			}
+			final Object bean = ZContext.getBean(cls.getCanonicalName());
 
-			final Field[] fields = ReflectUtil.getFields(object.getClass());
+			final Field[] fields = ReflectUtil.getFields(bean.getClass());
 			for (final Field field : fields) {
 				inject(cls, field);
 			}
@@ -75,18 +66,18 @@ public class ZValueScanner {
 	}
 
 	public static void inject(final Class<?> cls, final Field field) {
-		final Object object = ZContext.getBean(cls.getCanonicalName());
+		final Object bean = ZContext.getBean(cls.getCanonicalName());
 		final ZValue value = field.getAnnotation(ZValue.class);
 		if (value == null) {
 			return;
 		}
 
 		if (value.listenForChanges()) {
-			valueMap.put(field, object);
-			valueTable.put(value.name(), field, object);
+			valueMap.put(field, bean);
+			valueTable.put(value.name(), field, bean);
 		}
 
-		setValue(field, value, object);
+		setValue(field, value, bean);
 	}
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
