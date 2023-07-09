@@ -1,5 +1,6 @@
-package com.vo.anno;
+package com.vo.conf;
 
+import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
