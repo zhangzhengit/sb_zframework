@@ -47,7 +47,7 @@
 	
 		@ZRequestMapping 方法支持的参数，按需使用
 			@ZRequestParam
-				表示此参数作为一个http参数,如 @ZRequestParam Strng name		
+				表示此参数作为一个http参数,如 @ZRequestParam String name		
 			@ZRequestBody 
 				表示此参数是一个请求体
 			@ZRequestHeader 
@@ -130,8 +130,8 @@
 		@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
 		
 		
-	ZSingleton :
-		用于获取容器管理的bean
+	ZContext :
+		用于手动注入bean到容器、获取由容器管理的bean
 		
 		
 	静态文件服务器使用如下：
@@ -147,7 +147,7 @@
 			A a = new A();		
 			在 工程main方法调用 ZApplication.run 之前执行如下代码：
 			
-			ZComponentMap.put(a.getClass().getCanonicalName(), a);
+			ZContext.addBean(a.getClass().getCanonicalName(), a);
 			
 			即可注入a对象.
 			
