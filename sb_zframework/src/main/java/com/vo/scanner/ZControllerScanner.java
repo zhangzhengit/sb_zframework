@@ -17,13 +17,13 @@ import com.vo.anno.ZController;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.enums.BeanModeEnum;
 import com.vo.enums.MethodEnum;
-import com.vo.http.ZConMap;
 import com.vo.http.ZConnect;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZDelete;
@@ -38,7 +38,6 @@ import com.vo.http.ZRequestMapping;
 import com.vo.http.ZTrace;
 
 import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -77,10 +76,10 @@ public class ZControllerScanner {
 
 			final Object newZController1 = ZObjectGeneratorStarter.generate(cls);
 
-			ZControllerScanner.LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
+			LOG.info("带有[{}]的类[{}]创建对象[{}]完成", ZController.class.getCanonicalName(), cls.getCanonicalName(),
 					newZController1);
-			ZConMap.putBean(cls.getCanonicalName(), newZController1);
 
+			ZContext.addBean(cls.getCanonicalName(), newZController1);
 
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {

@@ -12,21 +12,26 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vo.anno.ZAutowired;
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.anno.ZValue;
 import com.vo.conf.ZProperties;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-import com.vo.http.ZConfigurationPropertiesMap;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 import com.vo.validator.ZStartWith;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -40,16 +45,18 @@ public class ZConfigurationPropertiesScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreateObject(final String packageName) {
+	public static void scanAndCreate(final String packageName) {
 
-		final Set<Class<?>> csSet = scanPackage(packageName);
+		final Set<Class<?>> csSet = scanPackage(packageName).stream()
+				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
+				.collect(Collectors.toSet());
+		if (CollUtil.isEmpty(csSet)) {
+			return;
+		}
 
 		for (final Class<?> cs : csSet) {
 
 			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
-			if (zcp == null) {
-				continue;
-			}
 
 			final String prefix = StrUtil.isEmpty(zcp.prefix()) ? ""
 					: (zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".");
@@ -62,12 +69,24 @@ public class ZConfigurationPropertiesScanner {
 			}
 
 			System.out.println("ZCP-object = " + object);
-			ZConfigurationPropertiesMap.put(cs, object);
-			ZConfigurationPropertiesMap.put(cs.getCanonicalName(), object);
+
+			ZContext.addBean(cs, object);
+			ZContext.addBean(cs.getCanonicalName(), object);
+		}
+
+		for (final Class<?> cls : csSet) {
+			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
+			Lists.newArrayList(cls.getDeclaredFields()).stream()
+				.filter(f -> f.isAnnotationPresent(ZAutowired.class))
+				.forEach(f -> ZAutowiredScanner.inject(cls, f));
+
+			// 如果Class有 @ZValue 字段 ，则先给此字段注入值
+			Lists.newArrayList(cls.getDeclaredFields()).stream()
+				.filter(f -> f.isAnnotationPresent(ZValue.class))
+				.forEach(f -> ZValueScanner.inject(cls, f));
 		}
 	}
 
-	@SuppressWarnings("boxing")
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) {
 		final PropertiesConfiguration p = ZProperties.getInstance();
 		final String key = prefix + field.getName();

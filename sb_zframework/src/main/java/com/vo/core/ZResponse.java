@@ -210,7 +210,6 @@ public class ZResponse {
 				throw new IllegalArgumentException(ZRequest.CONTENT_TYPE + "未设置");
 			}
 
-//			final String s = this.responseString();
 			this.outputStream.write((ZResponse.HTTP_1_1 + this.httpStatus.get()).getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
@@ -218,12 +217,10 @@ public class ZResponse {
 			if (CollUtil.isNotEmpty(this.bodyList)) {
 				final int contentLenght = this.bodyList.size();
 
-				// 1
 				this.outputStream.write((ZRequest.CONTENT_LENGTH + ":" + contentLenght).getBytes());
 				this.outputStream.write(Task.NEW_LINE.getBytes());
 			}
 
-			// 1
 			this.outputStream.write(this.contentTypeAR.get().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
@@ -241,7 +238,6 @@ public class ZResponse {
 				for (int b = 0; b < this.bodyList.size(); b++) {
 					ba[b] = this.bodyList.get(b);
 				}
-				// 1
 				this.outputStream.write(ba);
 			} else {
 				this.outputStream.write(JSON.toJSONString(CR.ok()).getBytes());

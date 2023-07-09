@@ -1,6 +1,5 @@
 package com.vo.conf;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -19,7 +18,6 @@ import com.vo.scanner.ZPropertiesListener;
  * @date 2023年6月29日
  *
  */
-// FIXME 2023年6月29日 下午11:26:04 zhanghen: 是否支持配置项热更新？改为实时读取配置项？
 public class ZProperties {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();

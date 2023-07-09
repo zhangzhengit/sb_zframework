@@ -1,34 +1,35 @@
 package com.vo.core;
 
+import java.util.concurrent.ConcurrentMap;
+
+import com.google.common.collect.Maps;
+
 /**
- *
+ * 存取 Bean
  *
  * @author zhangzhen
- * @date 2023年7月2日
+ * @date 2023年7月8日
  *
  */
 public class ZContext {
 
-	private static final ThreadLocal<ZResponse> RESPONSE = new ThreadLocal<>();
+	private static final ConcurrentMap<String, Object> BEAN_MAP = Maps.newConcurrentMap();
 
-	private static final ThreadLocal<ZRequest> REQUEST = new ThreadLocal<>();
-
-	public static void setZResponse(final ZResponse response) {
-		ZContext.RESPONSE.set(response);
+	@SuppressWarnings("unchecked")
+	public static <T> T getBean(final Class<T> beanClass) {
+		return (T) getBean(beanClass.getCanonicalName());
 	}
 
-	public static void setZRequest(final ZRequest request) {
-		ZContext.REQUEST.set(request);
+	public static Object getBean(final String beanName) {
+		return BEAN_MAP.get(beanName);
 	}
 
-	public static ZRequest getZRequest() {
-		return ZContext.REQUEST.get();
+	public static void addBean(final Class<?> className, final Object bean) {
+		addBean(className.getCanonicalName(), bean);
 	}
 
-	public static ZResponse getZResponseAndRemove() {
-		final ZResponse v = ZContext.RESPONSE.get();
-		ZContext.RESPONSE.remove();
-		return v;
+	public static void addBean(final String beanName, final Object bean) {
+		BEAN_MAP.put(beanName, bean);
 	}
 
 }

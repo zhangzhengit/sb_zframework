@@ -1,5 +1,8 @@
-package com.vo.anno;
+package com.vo.conf;
 
+import com.vo.anno.ZAutowired;
+import com.vo.anno.ZBean;
+import com.vo.anno.ZConfiguration;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
@@ -11,10 +14,7 @@ import com.votool.ze.ZES;
  * @date 2023年7月8日
  *
  */
-//@ZConfiguration
-// FIXME 2023年7月8日 上午10:28:15 zhanghen: TODO 此方式
-// （@ZConfiguration 里面用 @ZAutowired）还不支持，因为ZMain里面是按顺序扫描各个注解来设值的
-// 扫描 @ZConfiguration 在扫描 @ZAutowired 之前，所以此方式暂不支持
+@ZConfiguration
 public class ZAsyncConfiguration {
 
 	@ZAutowired

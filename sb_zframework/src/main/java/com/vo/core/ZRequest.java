@@ -1,24 +1,17 @@
 package com.vo.core;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
-import com.vo.http.LineMap;
 import com.vo.http.ZCookie;
 
 import cn.hutool.core.collection.CollUtil;
@@ -93,8 +86,7 @@ public class ZRequest {
 	}
 
     public String getServerName() {
-    	final RequestLine requestLine = this.ppp();
-    	final String host = requestLine.getHeaderMap().get(ZRequest.HOST);
+    	final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
