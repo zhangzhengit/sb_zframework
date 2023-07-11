@@ -13,6 +13,7 @@ import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.scanner.ZConfigurationScanner;
+import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZValueScanner;
 
@@ -54,6 +55,9 @@ public class ZMain {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String scanPackage = serverConfiguration.getScanPackage();
 		ZControllerScanner.scanAndCreateObject(scanPackage);
+
+		// 3.1 创建 @ZController 的拦截器对象
+		ZControllerInterceptorScanner.scan();
 
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
 		ZAutowiredScanner.inject(scanPackage, ZComponent.class);

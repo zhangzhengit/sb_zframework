@@ -163,6 +163,7 @@
 			async.thread.name.prefix=zasync-Thread-
 		2、在模板方法上加入 @ZAsync，支持调用即可
 		
-			
-							
+	
+	ZControllerInterceptor 接口，实现此接口拦截 @ZController 里面的接口方法.
+								
 		
