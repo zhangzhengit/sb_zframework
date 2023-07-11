@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentMap;
 import com.google.common.collect.Maps;
 
 /**
- * 存取 Bean
+ * 存取 Bean。可使用addBean方法手动注入一个bean让容器管理，使用getBean方法获取一个由容器管理的bean
  *
  * @author zhangzhen
  * @date 2023年7月8日
