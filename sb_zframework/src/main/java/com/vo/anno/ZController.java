@@ -16,6 +16,11 @@ import com.vo.enums.BeanModeEnum;
  * @date 2023年6月12日
  *
  */
+// FIXME 2023年7月11日 下午8:40:15 zhanghen:  TODO AOP 自定义注解还只支持 @ZComponent 组件，
+// 还不支持 @ZController ，现在问题： ZClass 使用groovy 动态编译，构造出来的ZClass代理类，复制出原@ZController类
+// 的 @ZRequestMapping注解后，使用java方式获取不到注解
+// 解决方式 1 ：改用java动态编译，在试好多报错
+// 		   2 ： 先支持ZGet 、 ZPost 等简单注解
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
