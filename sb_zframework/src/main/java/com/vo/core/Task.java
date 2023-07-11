@@ -24,10 +24,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.anno.ZControllerInterceptor;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
+import com.vo.aop.InterceptorParameter;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZRequest.RequestLine;
@@ -38,6 +41,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
+import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.votool.common.CR;
@@ -130,14 +134,6 @@ public class Task {
 			final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
 			if (CollUtil.isNotEmpty(methodMap)) {
 				final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
-
-//				new ZResponse(this.socketChannel)
-//					.header(ZRequest.ALLOW, methodString)
-//					.httpStatus(HttpStatus.HTTP_405.getCode())
-//					.contentType(HeaderEnum.JSON.getType())
-//						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-//								+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)))
-//					.write();
 				return new ZResponse(this.socketChannel)
 					.header(ZRequest.ALLOW, methodString)
 					.httpStatus(HttpStatus.HTTP_405.getCode())
@@ -170,9 +166,7 @@ public class Task {
 			return	new ZResponse(this.outputStream, this.socketChannel)
 						.httpStatus(HttpStatus.HTTP_404.getCode())
 						.contentType(DEFAULT_CONTENT_TYPE.getType())
-						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))
-//						.write()
-						;
+						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))	;
 
 		}
 
@@ -192,9 +186,7 @@ public class Task {
 			return new ZResponse(this.outputStream, this.socketChannel)
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)))
-//					.write()
-					;
+					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
 
 		} finally {
 			this.close();
@@ -250,9 +242,7 @@ public class Task {
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")))
-//					.write()
-					;
+					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")));
 
 			return response;
 		}
@@ -260,17 +250,38 @@ public class Task {
 		this.setZRequestAndZResponse(arraygP, request);
 
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			method.invoke(zController, arraygP);
-			// 在此自动response.write，接口中ZResponse参数可以省去.write()
+			final Set<ZControllerInterceptor> zciSet = ZControllerInterceptorScanner.get();
+			if (zciSet.isEmpty()) {
+				method.invoke(zController, arraygP);
+			} else {
+				final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
+						method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
+						Lists.newArrayList(arraygP), zController);
+				zciSet.forEach(zci -> zci.before(interceptorParameter));
+				for (final ZControllerInterceptor zciObject : zciSet) {
+					zciObject.around(interceptorParameter, null);
+				}
+				zciSet.forEach(zci -> zci.after(interceptorParameter));
+			}
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
-//			if (!response.getWrite().get()) {
-//				response.write();
-//			}
-
 			return response;
 		}
 
-		final Object r = method.invoke(zController, arraygP);
+		Object r = null;
+		final Set<ZControllerInterceptor> zciSet = ZControllerInterceptorScanner.get();
+		if (!zciSet.isEmpty()) {
+			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
+					method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
+					Lists.newArrayList(arraygP), zController);
+			zciSet.forEach(zci -> zci.before(interceptorParameter));
+			for (final ZControllerInterceptor zciObject : zciSet) {
+				r = zciObject.around(interceptorParameter, null);
+			}
+			zciSet.forEach(zci -> zci.after(interceptorParameter));
+		} else {
+			r = method.invoke(zController, arraygP);
+		}
+
 		// 响应
 		if (isMethodAnnotationPresentZHtml(method)) {
 			final String ss = String.valueOf(r);
@@ -287,55 +298,37 @@ public class Task {
 						&& request.isSupportGZIP()) {
 					final byte[] compress = ZGzip.compress(html);
 
-					return new ZResponse(this.outputStream, this.socketChannel)
-						.contentType(HeaderEnum.HTML.getType())
-						.header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-						.body(compress)
-//						.write()
-						;
-				} else {
-					return 	new ZResponse(this.outputStream, this.socketChannel)
-						.contentType(HeaderEnum.HTML.getType())
-						.body(html)
-//						.write()
-						;
+					return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.HTML.getType())
+							.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
 				}
+
+				return new ZResponse(this.outputStream, this.socketChannel)
+						.contentType(HeaderEnum.HTML.getType()).body(html);
 
 			} catch (final Exception e) {
 				e.printStackTrace();
 				return new ZResponse(this.outputStream, this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR))
-//					.write()
-					;
-			}
-		} else {
-			final String json = JSON.toJSONString(r);
-			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-			if (serverConfiguration.getGzipEnable()
-					&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
-					&& request.isSupportGZIP()
-					) {
-				final byte[] compress = ZGzip.compress(json);
-
-				return 	new ZResponse(this.outputStream, this.socketChannel)
-					 .header(StaticController.CONTENT_ENCODING,ZRequest.GZIP)
-					 .contentType(DEFAULT_CONTENT_TYPE.getType())
-					 .body(compress)
-//					 .write()
-					 ;
-
-			} else {
-
-				return  new ZResponse(this.outputStream, this.socketChannel)
-					 .contentType(DEFAULT_CONTENT_TYPE.getType())
-					 .body(json)
-//					 .write()
-					 ;
+					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
 			}
 		}
 
+		final String json = JSON.toJSONString(r);
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		if (serverConfiguration.getGzipEnable()
+				&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
+				&& request.isSupportGZIP()) {
+			final byte[] compress = ZGzip.compress(json);
+
+			return new ZResponse(this.outputStream, this.socketChannel)
+					.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP)
+					.contentType(DEFAULT_CONTENT_TYPE.getType()).body(compress);
+
+		}
+
+		return new ZResponse(this.outputStream, this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType())
+				.body(json);
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,
