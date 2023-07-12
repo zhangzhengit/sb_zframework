@@ -167,3 +167,5 @@
 	ZControllerInterceptor 接口，实现此接口拦截 @ZController 里面的接口方法.
 								
 		
+	手动注册接口，ZControllerMap.put
+		@see 接口注释
