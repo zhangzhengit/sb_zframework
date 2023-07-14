@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import cn.hutool.core.collection.CollUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -61,7 +62,12 @@ public class ZTemplate {
 	public static String parseIf(String r) {
 		final ZTEnum SWITCH = ZTEnum.SWITCH;
 		int from = 0;
-		for (final Entry<String, Object> entry : ZModel.get().entrySet()) {
+		final Map<String, Object> map = ZModel.get();
+		if (CollUtil.isEmpty(map)) {
+			return r;
+		}
+
+		for (final Entry<String, Object> entry : map.entrySet()) {
 			final String k = SWITCH.generateKeyword(entry.getKey());
 
 			final int r1 = r.indexOf('<' + k,from);
@@ -104,7 +110,13 @@ public class ZTemplate {
 	private static String parseList(String r) {
 		final ZTEnum list = ZTEnum.LIST;
 		int from = 0;
-		for (final Entry<String, Object> entry : ZModel.get().entrySet()) {
+		final Map<String, Object> map = ZModel.get();
+
+		if (CollUtil.isEmpty(map)) {
+			return r;
+		}
+
+		for (final Entry<String, Object> entry : map.entrySet()) {
 			final String k = list.generateKeyword(entry.getKey());
 //			System.out.println("list-k = " + k);
 
@@ -154,6 +166,10 @@ public class ZTemplate {
 	private static String parseValue(String string) {
 		final ZTEnum value = ZTEnum.VALUE;
 		final Map<String, Object> map = ZModel.get();
+		if (CollUtil.isEmpty(map)) {
+			return string;
+		}
+
 		final Set<Entry<String, Object>> es = map.entrySet();
 		for (final Entry<String, Object> entry : es) {
 			final String k = value.generateMathchKeyword(entry.getKey());
