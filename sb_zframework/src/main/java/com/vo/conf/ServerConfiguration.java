@@ -64,6 +64,8 @@ public class ServerConfiguration {
 //	@ZMin(min = 0)
 	@ZMin(min = 1)
 	@ZMax(max = 52000000)
+	// FIXME 2023年7月17日 下午9:33:16 zhanghen: TODO debug min=0的情况下并且qps配置为0，调用接口
+	// while socketChannel.write 报错问题
 	private Integer qps;
 
 	/**
