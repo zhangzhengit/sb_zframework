@@ -44,6 +44,12 @@ public @interface ZRequestMapping {
 	 */
 	MethodEnum method() default MethodEnum.GET;
 
-	int qps() default 520;
+	/**
+	 * 此方法QPS限制
+	 *
+	 * @return
+	 *
+	 */
+	int qps();
 
 }

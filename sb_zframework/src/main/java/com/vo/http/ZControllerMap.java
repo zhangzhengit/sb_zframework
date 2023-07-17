@@ -22,6 +22,7 @@ import cn.hutool.core.util.StrUtil;
 public class ZControllerMap {
 	static final HashBasedTable<MethodEnum, String, Method> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
+	static final HashBasedTable<String, String, Integer> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
 	static final HashSet<String> mappingSet = Sets.newHashSet();
@@ -55,6 +56,32 @@ public class ZControllerMap {
 			}
 			methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
 		}
+		//
+
+		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
+		if (zqpsl != null) {
+			final ZQPSLimitationEnum type = zqpsl.type();
+			if (type == null) {
+				throw new IllegalArgumentException(
+						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
+			}
+			final int qps = zqpsl.qps();
+			if (qps <= 0) {
+				throw new IllegalArgumentException(
+						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
+			}
+			if (qps > zrp.qps()) {
+				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
+						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
+			}
+
+			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
+		}
+	}
+
+	public static Integer getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
+		final Integer qps = methodZQPSLimitationTable.get(controllerName, methodName);
+		return qps;
 	}
 
 	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {

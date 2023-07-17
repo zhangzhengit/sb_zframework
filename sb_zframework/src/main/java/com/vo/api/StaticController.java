@@ -27,7 +27,7 @@ public class StaticController {
 	public static final String CONTENT_ENCODING = "Content-Encoding";
 
 	@ZRequestMapping(mapping = { "/favicon\\.ico", "/.+\\.js$", "/.+\\.jpg$", "/.+\\.mp3$", "/.+\\.mp4$", "/.+\\.pdf$",
-			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true })
+			"/.+\\.gif$", "/.+\\.doc$" }, isRegex = { true, true, true, true, true, true, true, true }, qps = 10000)
 
 	public void staticResources(final ZResponse response,final ZRequest request) {
 
@@ -51,7 +51,7 @@ public class StaticController {
 //		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
 	}
 
-	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true })
+	@ZRequestMapping(mapping = { "/.+\\.css$" }, isRegex = { true }, qps = 10000)
 	public void css(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());
@@ -100,7 +100,7 @@ public class StaticController {
 	 * @param request
 	 *
 	 */
-	@ZRequestMapping(mapping = { "/.+\\.html$" }, isRegex = { true })
+	@ZRequestMapping(mapping = { "/.+\\.html$" }, isRegex = { true }, qps = 10000)
 	public void html(final ZResponse response,final ZRequest request) {
 
 		final String resourceName = String.valueOf(ZMappingRegex.getAndRemove());

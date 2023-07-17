@@ -17,7 +17,7 @@ import com.vo.http.ZRequestMapping;
 public class AdminController {
 
 
-	@ZRequestMapping(mapping = { "/admin" })
+	@ZRequestMapping(mapping = { "/admin" }, qps = 1000)
 	public String adminIndex() {
 		return "";
 	}
