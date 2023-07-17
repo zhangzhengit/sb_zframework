@@ -253,6 +253,7 @@ public class Task {
 		final String keyword = controllerName + method.getName() + "@ZQPSLimitation" + request.getSession().getId();
 		System.out.println("ZQPS-keyword = " + keyword);
 		if ((zqps != null) && !ZServer.Counter.allow(keyword, zqps)) {
+			// FIXME 2023年7月17日 下午9:26:19 zhanghen: 加入判断 @ZQPSL.type
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_403.getCode())
 					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出ZQPS限制，请稍后再试")));
