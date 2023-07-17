@@ -27,6 +27,7 @@ import com.vo.core.ZServer.Counter;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.http.HttpStatus;
+import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
 import cn.hutool.core.util.StrUtil;
@@ -225,55 +226,62 @@ public class NioLongConnectionServer {
 
 				ZServer.ZE.executeInQueue(() -> {
 					synchronized (socketChannel) {
-						if(socketChannel.isOpen()) {
-
-							final Task task = new Task(socketChannel);
-							final ZRequest zRequest = task.handleRead(requestString);
-
-							final String connection = zRequest.getHeader(CONNECTION);
-							final boolean keepAlive = StrUtil.isNotEmpty(connection)
-									&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
-											|| connection.toLowerCase()
-													.contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
-
-							// 解析请求时，无匹配的Method
-							if (zRequest.getRequestLine().getMethodEnum() == null) {
-								final MethodEnum[] values = MethodEnum.values();
-								final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
-								new ZResponse(socketChannel)
-									.header(ZRequest.ALLOW, methodString)
-									.httpStatus(HttpStatus.HTTP_405.getCode())
-									.contentType(HeaderEnum.JSON.getType())
-									.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
-									.write();
-							} else {
-								final ZResponse response = task.invoke(zRequest);
-								if (response != null && !response.getWrite().get()) {
-									// 在此自动write，接口中可以不调用write
-									response.header(SERVER, Z_SERVER);
-									if (keepAlive) {
-										response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-									}
-									response.write();
-								}
-							}
-
-							if (keepAlive) {
-								SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
-							} else {
-								try {
-									socketChannel.close();
-								} catch (final IOException e) {
-									e.printStackTrace();
-								}
-							}
-
+						if (socketChannel.isOpen()) {
+							NioLongConnectionServer.response(key, socketChannel, requestString);
 						}
 					}
 
-
 				});
 
+			}
+		}
+	}
+
+	private static void response(final SelectionKey key, final SocketChannel socketChannel, final String requestString) {
+
+		final Task task = new Task(socketChannel);
+
+		final ZRequest zRequest = task.handleRead(requestString);
+
+		final String connection = zRequest.getHeader(CONNECTION);
+		final boolean keepAlive = StrUtil.isNotEmpty(connection)
+				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+						|| connection.toLowerCase()
+								.contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+
+		// 解析请求时，无匹配的Method
+		if (zRequest.getRequestLine().getMethodEnum() == null) {
+			final MethodEnum[] values = MethodEnum.values();
+			final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+			new ZResponse(socketChannel)
+				.header(ZRequest.ALLOW, methodString)
+				.httpStatus(HttpStatus.HTTP_405.getCode())
+				.contentType(HeaderEnum.JSON.getType())
+				.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
+				.write();
+		} else {
+			final ZResponse response = task.invoke(zRequest);
+			if (response != null && !response.getWrite().get()) {
+				// 在此自动write，接口中可以不调用write
+				response.header(SERVER, Z_SERVER);
+				final ZSession session = zRequest.getSession();
+				final ZCookie cookie = new ZCookie(ZRequest.Z_SESSION_ID, session.getId()).path("/")
+						.httpOnly(true);
+				response.cookie(cookie);
+				if (keepAlive) {
+					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+				}
+				response.write();
+			}
+		}
+
+		if (keepAlive) {
+			SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+		} else {
+			try {
+				socketChannel.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -287,6 +295,5 @@ public class NioLongConnectionServer {
 		private SelectionKey selectionKey;
 
 	}
-
 
 }
