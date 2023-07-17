@@ -32,6 +32,10 @@ public @interface ZQPSLimitation {
 	 * @return
 	 *
 	 */
+	// FIXME 2023年7月17日 下午9:18:10 zhanghen: TODO ，考虑不支持cookie的http客户端怎么办
+	// 其不会带上Set-Cookie响应头中的ZSESSIONID，ZQPSLimitationEnum.ZSESSIONID 限制对其无效，
+	// 因为 request.getSession中找不到带来的Cookie则会自动生成新的ZSESSIONID，所以会每次都放行,
+	// 只能靠 @ZRequestMapping.qps 接口总QPS来限制.
 	ZQPSLimitationEnum type();
 
 }
