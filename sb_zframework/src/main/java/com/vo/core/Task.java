@@ -251,7 +251,7 @@ public class Task {
 				method.getName());
 
 		final String keyword = controllerName + method.getName() + "@ZQPSLimitation" + request.getSession().getId();
-		System.out.println("ZQPS-keyword = " + keyword);
+//		System.out.println("ZQPS-keyword = " + keyword);
 		if ((zqps != null) && !ZServer.Counter.allow(keyword, zqps)) {
 			// FIXME 2023年7月17日 下午9:26:19 zhanghen: 加入判断 @ZQPSL.type
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
