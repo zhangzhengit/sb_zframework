@@ -64,7 +64,7 @@ public class ServerConfiguration {
 //	@ZMin(min = 0)
 	@ZMin(min = 1)
 	@ZMax(max = 52000000)
-	private Integer concurrentQuantity;
+	private Integer qps;
 
 	/**
 	 * 是否启用内置的 StaticController,

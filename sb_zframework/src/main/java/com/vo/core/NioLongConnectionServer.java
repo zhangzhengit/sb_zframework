@@ -112,13 +112,13 @@ public class NioLongConnectionServer {
 				if (key.isAcceptable()) {
 					handleAccept(key, selector);
 				} else if (key.isReadable()) {
-					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getConcurrentQuantity())) {
+					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 						this.handleRead(key);
 					} else {
 						new ZResponse((SocketChannel) key.channel())
 							.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
+							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getQps())))
 							.write();
 					}
 				}
