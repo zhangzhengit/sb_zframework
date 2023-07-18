@@ -30,6 +30,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -264,14 +265,16 @@ public class NioLongConnectionServer {
 			if (response != null && !response.getWrite().get()) {
 				// 在此自动write，接口中可以不调用write
 				response.header(SERVER, Z_SERVER);
-				final ZSession session = zRequest.getSession();
-				final ZCookie cookie =
-						new ZCookie(ZRequest.Z_SESSION_ID, session.getId())
+
+				if (ArrayUtil.isEmpty(zRequest.getCookies())) {
+					final ZSession session = zRequest.getSession();
+					final ZCookie cookie =
+							new ZCookie(ZRequest.Z_SESSION_ID, session.getId())
 							.path("/")
 							.httpOnly(true);
-				// FIXME 2023年7月18日 下午12:48:08 zhanghen: TODO 不要每次都Set-Cookie，
-				// 只在request中无Cookie时才Set-Cookie
-				response.cookie(cookie);
+					response.cookie(cookie);
+				}
+
 				if (keepAlive) {
 					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
 				}
