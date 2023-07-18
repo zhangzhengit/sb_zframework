@@ -265,8 +265,10 @@ public class NioLongConnectionServer {
 				// 在此自动write，接口中可以不调用write
 				response.header(SERVER, Z_SERVER);
 				final ZSession session = zRequest.getSession();
-				final ZCookie cookie = new ZCookie(ZRequest.Z_SESSION_ID, session.getId()).path("/")
-						.httpOnly(true);
+				final ZCookie cookie =
+						new ZCookie(ZRequest.Z_SESSION_ID, session.getId())
+							.path("/")
+							.httpOnly(true);
 				// FIXME 2023年7月18日 下午12:48:08 zhanghen: TODO 不要每次都Set-Cookie，
 				// 只在request中无Cookie时才Set-Cookie
 				response.cookie(cookie);

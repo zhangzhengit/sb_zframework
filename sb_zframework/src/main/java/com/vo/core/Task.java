@@ -20,12 +20,10 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZControllerInterceptor;
 import com.vo.anno.ZRequestBody;
@@ -73,7 +71,7 @@ public class Task {
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
 	public static final String NEW_LINE = "\r\n";
-
+	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -473,10 +471,10 @@ public class Task {
 		}
 	}
 
-	static Map<Object, Object> cacheMap = new WeakHashMap<>(1024, 1F);
+
 	public static Boolean isMethodAnnotationPresentZHtml(final Method method) {
 		final String name = method.getName();
-		final Boolean boolean1 = (Boolean) cacheMap.get(name);
+		final Boolean boolean1 = (Boolean) CACHE_MAP.get(name);
 		if (boolean1 != null) {
 			return boolean1;
 		}
@@ -484,13 +482,13 @@ public class Task {
 		synchronized (name) {
 
 			final boolean annotationPresent = method.isAnnotationPresent(ZHtml.class);
-			cacheMap.put(name, annotationPresent);
+			CACHE_MAP.put(name, annotationPresent);
 			return annotationPresent;
 		}
 	}
 
-	private static final ConcurrentMap<Object, Object> CACHE_MAP = Maps.newConcurrentMap();
 	public static ZRequest parseRequest(final ZRequest request) {
+
 		final Object v = CACHE_MAP.get(request);
 		if (v != null) {
 			return (ZRequest) v;
@@ -505,6 +503,7 @@ public class Task {
 			CACHE_MAP.put(request, v2);
 			return v2;
 		}
+
 	}
 
 	private static ZRequest parseRequest0(final ZRequest request) {
