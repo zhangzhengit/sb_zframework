@@ -41,6 +41,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
+import com.vo.http.ZQPSLimitation;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
@@ -247,17 +248,28 @@ public class Task {
 		}
 
 		// 是否超过 ZQPSLimitation.qps
-		final Integer zqps = ZControllerMap.getZQPSLimitationByControllerNameAndMethodName(controllerName,
+		final ZQPSLimitation zqpsLimitation = ZControllerMap.getZQPSLimitationByControllerNameAndMethodName(controllerName,
 				method.getName());
+		if (zqpsLimitation != null) {
 
-		final String keyword = controllerName + method.getName() + "@ZQPSLimitation" + request.getSession().getId();
-//		System.out.println("ZQPS-keyword = " + keyword);
-		if ((zqps != null) && !ZServer.Counter.allow(keyword, zqps)) {
-			// FIXME 2023年7月17日 下午9:26:19 zhanghen: 加入判断 @ZQPSL.type
-			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
-			response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出ZQPS限制，请稍后再试")));
-			return response;
+			switch (zqpsLimitation.type()) {
+			case ZSESSIONID:
+				final String keyword = controllerName
+					+ "@" + method.getName()
+					+ "@ZQPSLimitation" + '_'
+					+ request.getSession().getId();
+				if (!ZServer.Counter.allow(keyword, zqpsLimitation.qps())) {
+					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+					response.contentType(HeaderEnum.JSON.getType())
+							.httpStatus(HttpStatus.HTTP_403.getCode())
+							.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出ZQPS限制，请稍后再试")));
+					return response;
+				}
+				break;
+
+			default:
+				break;
+			}
 		}
 
 		this.setZRequestAndZResponse(arraygP, request);

@@ -22,7 +22,7 @@ import cn.hutool.core.util.StrUtil;
 public class ZControllerMap {
 	static final HashBasedTable<MethodEnum, String, Method> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
-	static final HashBasedTable<String, String, Integer> methodZQPSLimitationTable = HashBasedTable.create();
+	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
 	static final HashSet<String> mappingSet = Sets.newHashSet();
@@ -47,16 +47,15 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		final ZRequestMapping zrp = method.getAnnotation(ZRequestMapping.class);
-		if (zrp != null) {
-			final int qps = zrp.qps();
+		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
+		if (requestMapping != null) {
+			final int qps = requestMapping.qps();
 			if (qps <= 0) {
 				throw new IllegalArgumentException(
 						"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);
 			}
 			methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
 		}
-		//
 
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
@@ -70,18 +69,18 @@ public class ZControllerMap {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
 			}
-			if (qps > zrp.qps()) {
+			if (qps > requestMapping.qps()) {
 				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
 						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
 			}
 
-			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
+			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), zqpsl);
 		}
 	}
 
-	public static Integer getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
-		final Integer qps = methodZQPSLimitationTable.get(controllerName, methodName);
-		return qps;
+	public static ZQPSLimitation getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
+		final ZQPSLimitation zqpsLimitation = methodZQPSLimitationTable.get(controllerName, methodName);
+		return zqpsLimitation;
 	}
 
 	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {
