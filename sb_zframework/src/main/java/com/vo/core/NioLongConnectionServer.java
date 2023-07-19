@@ -116,10 +116,11 @@ public class NioLongConnectionServer {
 					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 						this.handleRead(key);
 					} else {
+						final String message = "服务器访问频繁，请稍后再试";
 						new ZResponse((SocketChannel) key.channel())
 							.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getQps())))
+							.body(JSON.toJSONString(CR.error(message)))
 							.write();
 					}
 				}

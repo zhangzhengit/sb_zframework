@@ -237,10 +237,12 @@ public class Task {
 		// 是否超过 ZRequestMapping.qps
 		if (!ZServer.Counter.allow(controllerName + method.getName(), qps)) {
 
+			final String message = "访问频繁，请稍后再试";
+
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")));
+					.body(JSON.toJSONString(CR.error(message)));
 
 			return response;
 		}
@@ -257,10 +259,13 @@ public class Task {
 					+ "@ZQPSLimitation" + '_'
 					+ request.getSession().getId();
 				if (!ZServer.Counter.allow(keyword, zqpsLimitation.qps())) {
+
+					final String message = "接口访问频繁，请稍后再试";
+
 					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 					response.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出ZQPS限制，请稍后再试")));
+							.body(JSON.toJSONString(CR.error(message)));
 					return response;
 				}
 				break;
