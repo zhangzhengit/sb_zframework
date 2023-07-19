@@ -45,7 +45,7 @@ public class StaticController {
 		}
 
 		final byte[] loadByteArray = ResourcesLoader.loadStaticResourceByteArray(resourceName);
-
+		// FIXME 2023年7月19日 下午8:20:39 zhanghen: TODO 改为和Socket 一样，一边读取一边写入到OutStream
 		response.contentType(cte.getType()).body(loadByteArray);
 
 //		ResourcesLoader.writeResourceToOutputStreamThenClose(resourceName, cte, response);
