@@ -263,13 +263,14 @@ public class NioLongConnectionServer {
 		} else {
 			final ZResponse response = task.invoke(zRequest);
 			if (response != null && !response.getWrite().get()) {
-				// 在此自动write，接口中可以不调用write
+
 				response.header(SERVER, Z_SERVER);
 
-				if (ArrayUtil.isEmpty(zRequest.getCookies())) {
-					final ZSession session = zRequest.getSession();
+				final ZSession sessionFALSE = zRequest.getSession(false);
+				if (sessionFALSE == null) {
+					final ZSession sessionTRUE = zRequest.getSession(true);
 					final ZCookie cookie =
-							new ZCookie(ZRequest.Z_SESSION_ID, session.getId())
+							new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
 							.path("/")
 							.httpOnly(true);
 					response.cookie(cookie);
@@ -278,6 +279,8 @@ public class NioLongConnectionServer {
 				if (keepAlive) {
 					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
 				}
+
+				// 在此自动write，接口中可以不调用write
 				response.write();
 			}
 		}
