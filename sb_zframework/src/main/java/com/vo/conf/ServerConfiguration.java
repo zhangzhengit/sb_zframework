@@ -36,6 +36,12 @@ public class ServerConfiguration {
 	@ZNotNull
 	private Boolean sslEnable;
 
+	/**
+	 * server的name，用于响应头中的Server字段
+	 */
+	@ZNotNull
+	private String name;
+
 	@ZNotNull
 	private String sslKeyStore;
 

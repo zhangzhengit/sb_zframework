@@ -45,12 +45,10 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
-
-
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	public static final String Z_SERVER = ZContext.getBean(ServerConfiguration.class).getName();
 	public static final String SERVER = "Server";
-	public static final String Z_SERVER = "zserver";
 	public static final String CONNECTION = "Connection";
 
 	/**
