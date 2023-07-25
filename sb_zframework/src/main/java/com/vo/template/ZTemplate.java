@@ -39,9 +39,9 @@ import lombok.NoArgsConstructor;
 // FIXME 2023年7月19日 下午9:24:22 zhanghen: TODO 加入 @value[user.name]这种形式，可以从对象取字段值，而不是简单取值
 public class ZTemplate {
 
-	public static void main(final String[] args) {
-		test1();
-	}
+//	public static void main(final String[] args) {
+//		test1();
+//	}
 
 	private static void test1() {
 		System.out.println(
