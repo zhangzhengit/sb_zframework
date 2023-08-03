@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -181,16 +184,35 @@ public class Task {
 			return re;
 
 		} catch (final InvocationTargetException | IllegalAccessException e) {
+			final String message = gExceptionMessage(e);
 			e.printStackTrace();
+
+
 			return new ZResponse(this.outputStream, this.socketChannel)
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
+//					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
+					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR  + " : " + message)));
 
 		} finally {
 			this.close();
 		}
 
+	}
+
+	public static String gExceptionMessage(final Throwable e) {
+
+		if (Objects.isNull(e)) {
+			return "";
+		}
+
+		final StringWriter stringWriter = new StringWriter();
+		final PrintWriter writer = new PrintWriter(stringWriter);
+		e.printStackTrace(writer);
+
+		final String eMessage = stringWriter.toString();
+
+		return eMessage;
 	}
 
 	private void close() {
