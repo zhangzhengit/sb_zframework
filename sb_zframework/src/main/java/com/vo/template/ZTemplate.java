@@ -11,19 +11,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
-
-import javax.print.attribute.standard.Media;
-import javax.swing.filechooser.FileView;
-
-import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cn.hutool.core.collection.CollUtil;
-import groovy.util.FileNameByRegexFinder;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,68 +33,44 @@ import lombok.NoArgsConstructor;
 public class ZTemplate {
 
 //	public static void main(final String[] args) {
-//		test1();
+////		test1();
+//		test_switch_Object1();
 //	}
 
-	private static void test1() {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.test1()");
+	public static void test_switch_Object1() {
+		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "ZTemplate.test_switch_Object1()");
 
-		//		final String htmlContent =
-		//					"<h3>\r\n"
-		//				+ "		if: \r\n"
-		//				+ "		<@switch[i1]>\r\n"
-		//				+ "			<case 1> 	一\r\n"
-		//				+ "			<case 2> 	二\r\n"
-		//				+ "			<case 3> 	三\r\n"
-		//				+ "		</endswitch[i1]>\r\n"
-		//				+ "	</h3>";
+		final String html =
+				"<@list[userList] as u>\r\n"
+				+ "			<tr>\r\n"
+				+ "				<td>@value[u.userName]</td>\r\n"
+				+ "				<td>@value[u.status]</td>\r\n"
+				+ "				\r\n"
+				+ "				<@switch[u.status]> \r\n"
+				+ "					<case 1> 	正常\r\n"
+				+ "					<case 2> 	冻结\r\n"
+				+ "				</endswitch[i1]>\r\n"
+				+ "			</tr>\r\n"
+				+ "		</endlist[userList]>";
 
-				final String htmlContent  =
+		System.out.println("html = \n" + html);
 
-						  " <p class=\"title\">\r\n"
-						+ "		@value[article.title]\r\n"
-						+ "		@value[name]\r\n"
-						+ "		<h4>\r\n"
-						+ "			@value[article.createTime]\r\n"
-						+ "		</h4>\r\n"
-						+ "	</p>";
 
-				final ZModel model = new ZModel();
-		//		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
-		//		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
-		//		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
-		//		model.set("name", "zhangsan");
-		//		model.set("i1", "2");
+		final UserEntity userEntity = new UserEntity();
+		userEntity.setStatus(1);
+		userEntity.setUserName("zhangsan");
 
-				final ArticleEntity articleEntity = new ArticleEntity();
-				articleEntity.setTitle("开心的一天");
-				articleEntity.setCreateTime(new Date());
-				model.set("article", articleEntity);
-				model.set("name", "zhangsan");
+		final ZModel model = new ZModel();
+		model.set("userList", Lists.newArrayList(userEntity));
 
-				final String r = ZTemplate.generate(htmlContent);
+		final String r = ZTemplate.generate(html);
 
-				System.out.println("r = ");
-				System.out.println(r);
-		//
-		////		final String s1 = "@value[articletitle]";
-		//		final String s1 = "@value[article.title]@value[article.createTime]";
-		////		final String s1 = "abc123def456";
-		////		final String regex = "\\d+";
-		//		final String regex = "@value\\[.*?\\]";
-		////	  final String regex = "@value\\[.*?\\..*?\\]";
-		////		"\\A.+?\\."
-		////		final String regex = "@value\\[*\\.+?\\*]";
-		////		final String regex = "@value\\[*.(*)\\]";
-		//
-		//		System.out.println("--------------------------");
-		//		final Pattern pattern = Pattern.compile(regex);
-		//		final Matcher matcher = pattern.matcher(s1);
-		//		while(matcher.find()) {
-		//			System.out.println(matcher.group());
-		//		}
+		System.out.println("r = ");
+		System.out.println(r);
+
 	}
+
 
 	public static String generate(final String htmlContent) {
 
@@ -115,6 +84,9 @@ public class ZTemplate {
 	}
 
 	public static String parseIf(String r) {
+		System.out.println(
+				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.parseIf()");
+
 		final ZTEnum SWITCH = ZTEnum.SWITCH;
 		int from = 0;
 		final Map<String, Object> map = ZModel.get();
@@ -146,6 +118,7 @@ public class ZTemplate {
 
 						final String rx = p.generate();
 
+						System.out.println("rrrr = " + r);
 						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
 								.replace(p.getContent(), rx);
 					} else {
@@ -524,4 +497,65 @@ public class ZTemplate {
 		private String name;
 		private Integer age;
 	}
+
+	private static void test1() {
+		System.out.println(
+				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.test1()");
+
+		//		final String htmlContent =
+		//					"<h3>\r\n"
+		//				+ "		if: \r\n"
+		//				+ "		<@switch[i1]>\r\n"
+		//				+ "			<case 1> 	一\r\n"
+		//				+ "			<case 2> 	二\r\n"
+		//				+ "			<case 3> 	三\r\n"
+		//				+ "		</endswitch[i1]>\r\n"
+		//				+ "	</h3>";
+
+				final String htmlContent  =
+
+						  " <p class=\"title\">\r\n"
+						+ "		@value[article.title]\r\n"
+						+ "		@value[name]\r\n"
+						+ "		<h4>\r\n"
+						+ "			@value[article.createTime]\r\n"
+						+ "		</h4>\r\n"
+						+ "	</p>";
+
+				final ZModel model = new ZModel();
+		//		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
+		//		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
+		//		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
+		//		model.set("name", "zhangsan");
+		//		model.set("i1", "2");
+
+				final ArticleEntity articleEntity = new ArticleEntity();
+				articleEntity.setTitle("开心的一天");
+				articleEntity.setCreateTime(new Date());
+				model.set("article", articleEntity);
+				model.set("name", "zhangsan");
+
+				final String r = ZTemplate.generate(htmlContent);
+
+				System.out.println("r = ");
+				System.out.println(r);
+		//
+		////		final String s1 = "@value[articletitle]";
+		//		final String s1 = "@value[article.title]@value[article.createTime]";
+		////		final String s1 = "abc123def456";
+		////		final String regex = "\\d+";
+		//		final String regex = "@value\\[.*?\\]";
+		////	  final String regex = "@value\\[.*?\\..*?\\]";
+		////		"\\A.+?\\."
+		////		final String regex = "@value\\[*\\.+?\\*]";
+		////		final String regex = "@value\\[*.(*)\\]";
+		//
+		//		System.out.println("--------------------------");
+		//		final Pattern pattern = Pattern.compile(regex);
+		//		final Matcher matcher = pattern.matcher(s1);
+		//		while(matcher.find()) {
+		//			System.out.println(matcher.group());
+		//		}
+	}
+
 }
