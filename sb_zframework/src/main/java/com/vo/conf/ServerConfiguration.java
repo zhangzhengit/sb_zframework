@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
+// FIXME 2023年8月11日 下午7:52:29 zhanghen: TODO 加入字段或新的配置类，支持配置文件中自定义header然后ZResponse自动write，比如CORS问题
 public class ServerConfiguration {
 
 	/**

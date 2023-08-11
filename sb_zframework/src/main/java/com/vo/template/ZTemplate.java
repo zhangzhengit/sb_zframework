@@ -84,8 +84,8 @@ public class ZTemplate {
 	}
 
 	public static String parseIf(String r) {
-		System.out.println(
-				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.parseIf()");
+//		System.out.println(
+//				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.parseIf()");
 
 		final ZTEnum SWITCH = ZTEnum.SWITCH;
 		int from = 0;
@@ -118,7 +118,7 @@ public class ZTemplate {
 
 						final String rx = p.generate();
 
-						System.out.println("rrrr = " + r);
+//						System.out.println("rrrr = " + r);
 						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
 								.replace(p.getContent(), rx);
 					} else {
