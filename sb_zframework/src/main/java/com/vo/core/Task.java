@@ -730,6 +730,7 @@ public class Task {
 					// FORM_DATA 用getType
 				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
 
+					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
 					System.out.println("okContent-Type: multipart/form-data");
 
 					final StringBuilder formBu = new StringBuilder();
