@@ -241,6 +241,12 @@ public class NioLongConnectionServer {
 
 		final Task task = new Task(socketChannel);
 
+		// FIXME 2023年8月11日 下午9:27:23 zhanghen: debug syso requestString
+//		System.out.println("requestString = \n");
+//		System.out.println(requestString);
+//		System.out.println();
+
+
 		final ZRequest zRequest = task.handleRead(requestString);
 
 		final String connection = zRequest.getHeader(CONNECTION);

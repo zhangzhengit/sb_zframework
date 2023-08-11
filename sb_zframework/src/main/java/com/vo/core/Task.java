@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -422,52 +422,85 @@ public class Task {
 				// 到此 肯定是从 paramSet 取值作为参数，如果 paramSet 为空，则说明没传
 				final Set<RequestParam> paramSet = requestLine.getParamSet();
 				if (CollUtil.isEmpty(paramSet)) {
-//					throw new IllegalArgumentException("Param 为空");
-					new ZResponse(this.outputStream, this.socketChannel)
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-							.httpStatus(HttpStatus.HTTP_404.getCode())
-							.body(JSON.toJSONString(CR.error("Param 为空")))
-							.write();
-					 return null;
-				}
 
-				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
-						.findAny();
-				if (!findAny.isPresent()) {
-					new ZResponse(this.outputStream, this.socketChannel)
+
+					// FIXME 2023年8月11日 下午9:48:05 zhanghen: 到此待定： 因为要支持 application/x-www-form-urlencoded ，改为先去body
+					final String body = request.getBody();
+					System.out.println("else-body = " + body);
+
+					final List<FormPair> formPairList = FormPair.parse(body);
+					System.out.println("formPairList = \n");
+					System.out.println(formPairList);
+
+					final Optional<FormPair> findAny = formPairList.stream().filter(rp -> rp.getKey().equals(p.getName()))
+							.findAny();
+
+					System.out.println("findAny = " + findAny);
+					if (!findAny.isPresent()) {
+						new ZResponse(this.outputStream, this.socketChannel)
 							.httpStatus(HttpStatus.HTTP_404.getCode())
 							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
 							.write();
-					return null;
+						return null;
+					}
+
+					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+
+					//					new ZResponse(this.outputStream, this.socketChannel)
+//							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+//							.httpStatus(HttpStatus.HTTP_404.getCode())
+//							.body(JSON.toJSONString(CR.error("Param 为空")))
+//							.write();
+//					 return null;
+
+				} else {
+					final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
+							.findAny();
+					if (!findAny.isPresent()) {
+						new ZResponse(this.outputStream, this.socketChannel)
+							.httpStatus(HttpStatus.HTTP_404.getCode())
+							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
+							.write();
+						return null;
+					}
+
+					// 先看参数类型
+					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+
 				}
 
-				// 先看参数类型
-				if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
-					parametersArray[pI++] = Byte.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
-					parametersArray[pI++] = Short.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
-					parametersArray[pI++] = Integer.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
-					parametersArray[pI++] = Long.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
-					parametersArray[pI++] = Float.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
-					parametersArray[pI++] = Double.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
-					parametersArray[pI++] = Character.valueOf(String.valueOf(findAny.get().getValue()).charAt(0));
-				} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-					parametersArray[pI++] = Boolean.valueOf(String.valueOf(findAny.get().getValue()));
-				} else {
-					parametersArray[pI++] = findAny.get().getValue();
-				}
 
 			}
 
 		}
 
 		return parametersArray;
+	}
+
+	private static int setValue(final Object[] parametersArray, int pI, final Parameter p,
+			final Object value) {
+		if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			parametersArray[pI++] = Byte.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
+			parametersArray[pI++] = Short.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			parametersArray[pI++] = Integer.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
+			parametersArray[pI++] = Long.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
+			parametersArray[pI++] = Float.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
+			parametersArray[pI++] = Double.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+			parametersArray[pI++] = Character.valueOf(String.valueOf(value).charAt(0));
+		} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			parametersArray[pI++] = Boolean.valueOf(String.valueOf(value));
+		} else {
+			parametersArray[pI++] = value;
+		}
+		return pI;
 	}
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine, final String path) {
@@ -658,6 +691,9 @@ public class Task {
 			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
 
 				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
+
+//				System.out.println("contentType = " + contentType);
+
 				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
 						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
 
@@ -666,7 +702,45 @@ public class Task {
 						json.append(x.get(k));
 					}
 					request.setBody(json.toString());
+				} else if (contentType.equalsIgnoreCase(HeaderEnum.URLENCODED.getType())
+						|| contentType.toLowerCase().contains(HeaderEnum.URLENCODED.getType().toLowerCase())) {
+
+//					System.out.println("contentType = " + contentType);
+					System.out.println("OKapplication/x-www-form-urlencoded");
+					// id=200&name=zhangsan 格式
+
+					final StringBuilder formBu = new StringBuilder();
+					for (int k = i + 1; k < x.size(); k++) {
+						formBu.append(x.get(k));
+					}
+
+					if (formBu.length() > 0) {
+						request.setBody(formBu.toString());
+
+						System.out.println("from = " + formBu);
+						final String fr = formBu.toString();
+						final String[] fA = fr.split("&");
+
+						for (final String v : fA) {
+							final String[] vA = v.split("=");
+						}
+
+					}
+
+					// FORM_DATA 用getType
+				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
+
+					System.out.println("okContent-Type: multipart/form-data");
+
+					final StringBuilder formBu = new StringBuilder();
+					for (int k = i + 1; k < x.size(); k++) {
+						formBu.append(x.get(k)).append(Task.NEW_LINE);
+					}
+
+					System.out.println("formBu = " + formBu);
 				}
+
+
 				break;
 			}
 
