@@ -10,7 +10,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.enums.MethodEnum;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
+ * 存取接口方法
  *
  * @author zhangzhen
  * @date 2023年6月28日
@@ -19,17 +22,24 @@ import com.vo.enums.MethodEnum;
 public class ZControllerMap {
 	static final HashBasedTable<MethodEnum, String, Method> methodPathTable = HashBasedTable.create();
 	static final HashBasedTable<String, String, Integer> methodQPSTable = HashBasedTable.create();
+	static final HashBasedTable<String, String, ZQPSLimitation> methodZQPSLimitationTable = HashBasedTable.create();
 	static final HashBasedTable<Method, String, Boolean> methodIsregexTable = HashBasedTable.create();
 	static final HashMap<Method, Object> objectMap = Maps.newHashMap();
 	static final HashSet<String> mappingSet = Sets.newHashSet();
 
+	/**
+	 * 注册一个接口
+	 *
+	 * @param methodEnum 接口请求方法，如： MethodEnum.POST
+	 * @param mapping    匹配路径，如：/index
+	 * @param method     具体的接口方法
+	 * @param object     接口方法所在的对象
+	 * @param isRegex    mapping 是否正则表达式
+	 */
 	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
 			final Object object, final boolean isRegex) {
-		final boolean add = mappingSet.add(mapping);
-		if (!add) {
-			throw new IllegalArgumentException(
-					"接口方法的 mapping值重复, mapping = " + mapping + "\t" + " method = " + method.getName());
-		}
+
+		checkAPI(methodEnum, mapping, method, object);
 
 		methodPathTable.put(methodEnum, mapping, method);
 
@@ -37,15 +47,40 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		final ZRequestMapping zrp = method.getAnnotation(ZRequestMapping.class);
-		if (zrp != null) {
-			final int qps = zrp.qps();
+		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
+		if (requestMapping != null) {
+			final int qps = requestMapping.qps();
 			if (qps <= 0) {
 				throw new IllegalArgumentException(
 						"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);
 			}
 			methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
 		}
+
+		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
+		if (zqpsl != null) {
+			final ZQPSLimitationEnum type = zqpsl.type();
+			if (type == null) {
+				throw new IllegalArgumentException(
+						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
+			}
+			final int qps = zqpsl.qps();
+			if (qps <= 0) {
+				throw new IllegalArgumentException(
+						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
+			}
+			if (qps > requestMapping.qps()) {
+				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
+						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
+			}
+
+			methodZQPSLimitationTable.put(object.getClass().getCanonicalName(), method.getName(), zqpsl);
+		}
+	}
+
+	public static ZQPSLimitation getZQPSLimitationByControllerNameAndMethodName(final String controllerName,final String methodName) {
+		final ZQPSLimitation zqpsLimitation = methodZQPSLimitationTable.get(controllerName, methodName);
+		return zqpsLimitation;
 	}
 
 	public static Integer getQPSByControllerNameAndMethodName(final String controllerName,final String methodName) {
@@ -77,4 +112,31 @@ public class ZControllerMap {
 	public static Boolean getIsregexByMethodEnumAndPath(final Method method, final String path) {
 		return methodIsregexTable.get(method, path);
 	}
+
+	private static void checkAPI(final MethodEnum methodEnum, final String mapping, final Method method,
+			final Object object) {
+		if (methodEnum == null) {
+			throw new IllegalArgumentException(MethodEnum.class.getSimpleName() + " 不能为空");
+		}
+
+		if (StrUtil.isEmpty(mapping)) {
+			throw new IllegalArgumentException("mapping 不能为空");
+		}
+		if (!mapping.startsWith("/")) {
+			throw new IllegalArgumentException("mapping 必须以/开始");
+		}
+		if (method == null) {
+			throw new IllegalArgumentException("method 不能为空");
+		}
+		if (object == null) {
+			throw new IllegalArgumentException("object 不能为空");
+		}
+
+		final boolean add = mappingSet.add(mapping);
+		if (!add) {
+			throw new IllegalArgumentException(
+					"接口方法的 mapping值重复, mapping = " + mapping + "\t" + " method = " + method.getName());
+		}
+	}
+
 }

@@ -104,8 +104,9 @@
 		}
 		
 		支持的模板标签：
-			1 @value[key]
+			1 @value[key] 
 				用于取值，如上接口取name，则声明为 @value[name]，即可在html显示 zhangsan
+			  	或 @value[user.name] 形式，从user对象中取name字段值
 			2 	<@list[userList] as u>
 					<h3>姓名：@value[u.name] | 年龄 @value[u.age]</h3>
 				</endlist[userList]>
@@ -167,3 +168,5 @@
 	ZControllerInterceptor 接口，实现此接口拦截 @ZController 里面的接口方法.
 								
 		
+	手动注册接口，ZControllerMap.put
+		@see 接口注释

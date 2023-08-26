@@ -2,15 +2,21 @@ package com.vo.template;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import cn.hutool.core.collection.CollUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,35 +29,54 @@ import lombok.NoArgsConstructor;
  *
  */
 // FIXME 2023年6月27日 下午10:06:48 zhanghen:  TODO 同一个html中，一个list用多次还是有问题
+// FIXME 2023年7月19日 下午9:24:22 zhanghen: TODO 加入 @value[user.name]这种形式，可以从对象取字段值，而不是简单取值
 public class ZTemplate {
 
 //	public static void main(final String[] args) {
-//		final String htmlContent =
-//					"<h3>\r\n"
-//				+ "		if: \r\n"
-//				+ "		<@switch[i1]>\r\n"
-//				+ "			<case 1> 	一\r\n"
-//				+ "			<case 2> 	二\r\n"
-//				+ "			<case 3> 	三\r\n"
-//				+ "		</endswitch[i1]>\r\n"
-//				+ "	</h3>";
-//
-//		final ZModel model = new ZModel();
-////		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
-////		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
-////		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
-////		model.set("name", "zhangsan");
-//		model.set("i1", "2");
-//
-//		final String r = ZTemplate.generate(htmlContent);
-//
-//		System.out.println("r = ");
-//		System.out.println(r);
+////		test1();
+//		test_switch_Object1();
 //	}
+
+	public static void test_switch_Object1() {
+		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
+				+ "ZTemplate.test_switch_Object1()");
+
+		final String html =
+				"<@list[userList] as u>\r\n"
+				+ "			<tr>\r\n"
+				+ "				<td>@value[u.userName]</td>\r\n"
+				+ "				<td>@value[u.status]</td>\r\n"
+				+ "				\r\n"
+				+ "				<@switch[u.status]> \r\n"
+				+ "					<case 1> 	正常\r\n"
+				+ "					<case 2> 	冻结\r\n"
+				+ "				</endswitch[i1]>\r\n"
+				+ "			</tr>\r\n"
+				+ "		</endlist[userList]>";
+
+		System.out.println("html = \n" + html);
+
+
+		final UserEntity userEntity = new UserEntity();
+		userEntity.setStatus(1);
+		userEntity.setUserName("zhangsan");
+
+		final ZModel model = new ZModel();
+		model.set("userList", Lists.newArrayList(userEntity));
+
+		final String r = ZTemplate.generate(html);
+
+		System.out.println("r = ");
+		System.out.println(r);
+
+	}
+
 
 	public static String generate(final String htmlContent) {
 
-		final String r1 = parseValue(htmlContent);
+		final String r0 = parseValue(htmlContent);
+		final String r1 = parseValue2(r0);
+//		final String r1 = parseValue(htmlContent);
 		final String r2 = parseList(r1);
 		final String r3 = parseIf(r2);
 
@@ -59,9 +84,17 @@ public class ZTemplate {
 	}
 
 	public static String parseIf(String r) {
+//		System.out.println(
+//				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.parseIf()");
+
 		final ZTEnum SWITCH = ZTEnum.SWITCH;
 		int from = 0;
-		for (final Entry<String, Object> entry : ZModel.get().entrySet()) {
+		final Map<String, Object> map = ZModel.get();
+		if (CollUtil.isEmpty(map)) {
+			return r;
+		}
+
+		for (final Entry<String, Object> entry : map.entrySet()) {
 			final String k = SWITCH.generateKeyword(entry.getKey());
 
 			final int r1 = r.indexOf('<' + k,from);
@@ -85,6 +118,7 @@ public class ZTemplate {
 
 						final String rx = p.generate();
 
+//						System.out.println("rrrr = " + r);
 						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
 								.replace(p.getContent(), rx);
 					} else {
@@ -104,7 +138,13 @@ public class ZTemplate {
 	private static String parseList(String r) {
 		final ZTEnum list = ZTEnum.LIST;
 		int from = 0;
-		for (final Entry<String, Object> entry : ZModel.get().entrySet()) {
+		final Map<String, Object> map = ZModel.get();
+
+		if (CollUtil.isEmpty(map)) {
+			return r;
+		}
+
+		for (final Entry<String, Object> entry : map.entrySet()) {
 			final String k = list.generateKeyword(entry.getKey());
 //			System.out.println("list-k = " + k);
 
@@ -151,9 +191,85 @@ public class ZTemplate {
 		return r;
 	}
 
+	private static String parseValue2(final String string) {
+
+		final Map<String, Object> map = ZModel.get();
+		if (CollUtil.isEmpty(map)) {
+			return string;
+		}
+
+		final StringBuilder builder = new StringBuilder(string);
+		final String regex = "@value\\[.*?\\]";
+
+		final Pattern pattern = Pattern.compile(regex);
+		final Matcher matcher = pattern.matcher(string);
+		final ArrayList<String> groupList = Lists.newArrayList();
+		while (matcher.find()) {
+			final String group = matcher.group();
+//			System.out.println("group = " + group);
+			groupList.add(group);
+		}
+//		System.out.println("groupList.size = " + groupList.size());
+//		System.out.println("groupList = " + groupList);
+
+
+		final List<String> valueList = groupList.stream()
+			.map(g -> g.replace("@value[", "").replace("]", ""))
+			.collect(Collectors.toList());
+
+//		System.out.println("valueList = " + valueList);
+
+		for (final String g : valueList) {
+			if (g.contains(".")) {
+				final int i = g.indexOf(".");
+				final String objectname = g.substring(0, i);
+//				System.out.println("objectname = " + objectname);
+				final String fieldName = g.substring(i + 1);
+				final Object v = map.get(objectname);
+				replaceValue(builder, g, fieldName, v);
+			} else {
+				// 已在 parseValue1中处理
+			}
+		}
+
+		return builder.toString();
+	}
+
+	private static void replaceValue(final StringBuilder builder, final String g, final String fieldName,
+			final Object v) {
+		if (v != null) {
+			System.out.println("v = " + v);
+
+			try {
+				final Field fieldV = v.getClass().getDeclaredField(fieldName);
+				fieldV.setAccessible(true);
+				final Object fieldValue = fieldV.get(v);
+				System.out.println("fieldValue = " + fieldValue);
+				if(fieldValue != null) {
+//							builder.re
+					final String gk = "@value[" + g;
+					final int g1 = builder.indexOf(gk);
+					builder.replace(g1, g1 + (gk + "]").length(), String.valueOf(fieldValue));
+
+				}else{
+					// FIXME 2023年7月20日 下午12:19:16 zhanghen: TODO 如果模板值不存在，是抛异常还是忽略？
+				}
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
+					| IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+
 	private static String parseValue(String string) {
 		final ZTEnum value = ZTEnum.VALUE;
 		final Map<String, Object> map = ZModel.get();
+		if (CollUtil.isEmpty(map)) {
+			return string;
+		}
+
+
 		final Set<Entry<String, Object>> es = map.entrySet();
 		for (final Entry<String, Object> entry : es) {
 			final String k = value.generateMathchKeyword(entry.getKey());
@@ -381,4 +497,65 @@ public class ZTemplate {
 		private String name;
 		private Integer age;
 	}
+
+	private static void test1() {
+		System.out.println(
+				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.test1()");
+
+		//		final String htmlContent =
+		//					"<h3>\r\n"
+		//				+ "		if: \r\n"
+		//				+ "		<@switch[i1]>\r\n"
+		//				+ "			<case 1> 	一\r\n"
+		//				+ "			<case 2> 	二\r\n"
+		//				+ "			<case 3> 	三\r\n"
+		//				+ "		</endswitch[i1]>\r\n"
+		//				+ "	</h3>";
+
+				final String htmlContent  =
+
+						  " <p class=\"title\">\r\n"
+						+ "		@value[article.title]\r\n"
+						+ "		@value[name]\r\n"
+						+ "		<h4>\r\n"
+						+ "			@value[article.createTime]\r\n"
+						+ "		</h4>\r\n"
+						+ "	</p>";
+
+				final ZModel model = new ZModel();
+		//		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
+		//		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
+		//		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
+		//		model.set("name", "zhangsan");
+		//		model.set("i1", "2");
+
+				final ArticleEntity articleEntity = new ArticleEntity();
+				articleEntity.setTitle("开心的一天");
+				articleEntity.setCreateTime(new Date());
+				model.set("article", articleEntity);
+				model.set("name", "zhangsan");
+
+				final String r = ZTemplate.generate(htmlContent);
+
+				System.out.println("r = ");
+				System.out.println(r);
+		//
+		////		final String s1 = "@value[articletitle]";
+		//		final String s1 = "@value[article.title]@value[article.createTime]";
+		////		final String s1 = "abc123def456";
+		////		final String regex = "\\d+";
+		//		final String regex = "@value\\[.*?\\]";
+		////	  final String regex = "@value\\[.*?\\..*?\\]";
+		////		"\\A.+?\\."
+		////		final String regex = "@value\\[*\\.+?\\*]";
+		////		final String regex = "@value\\[*.(*)\\]";
+		//
+		//		System.out.println("--------------------------");
+		//		final Pattern pattern = Pattern.compile(regex);
+		//		final Matcher matcher = pattern.matcher(s1);
+		//		while(matcher.find()) {
+		//			System.out.println(matcher.group());
+		//		}
+	}
+
 }

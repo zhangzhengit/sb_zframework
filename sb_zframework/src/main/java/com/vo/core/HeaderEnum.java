@@ -16,6 +16,10 @@ public enum HeaderEnum {
 
 	TEXT("Content-Type: text/plain;charset=UTF-8", "text/plain"),
 
+	FORM_DATA("Content-Type: multipart/form-data", "multipart/form-data"),
+
+	URLENCODED("Content-Type: application/x-www-form-urlencoded", "application/x-www-form-urlencoded"),
+
 	JSON("Content-Type: application/json;charset=UTF-8", "application/json"),
 
 	PDF("Content-Type: application/pdf;", "application/pdf"),

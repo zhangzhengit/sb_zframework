@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -17,15 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZControllerInterceptor;
 import com.vo.anno.ZRequestBody;
@@ -41,6 +42,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
+import com.vo.http.ZQPSLimitation;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
@@ -72,7 +74,7 @@ public class Task {
 	public static final String INTERNAL_SERVER_ERROR = "Internal Server Error";
 	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
 	public static final String NEW_LINE = "\r\n";
-
+	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -182,16 +184,35 @@ public class Task {
 			return re;
 
 		} catch (final InvocationTargetException | IllegalAccessException e) {
+			final String message = gExceptionMessage(e);
 			e.printStackTrace();
+
+
 			return new ZResponse(this.outputStream, this.socketChannel)
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
 					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
+//					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
+					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR  + " : " + message)));
 
 		} finally {
 			this.close();
 		}
 
+	}
+
+	public static String gExceptionMessage(final Throwable e) {
+
+		if (Objects.isNull(e)) {
+			return "";
+		}
+
+		final StringWriter stringWriter = new StringWriter();
+		final PrintWriter writer = new PrintWriter(stringWriter);
+		e.printStackTrace(writer);
+
+		final String eMessage = stringWriter.toString();
+
+		return eMessage;
 	}
 
 	private void close() {
@@ -235,16 +256,45 @@ public class Task {
 
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
+		// 是否超过 ZRequestMapping.qps
+		if (!ZServer.Counter.allow(controllerName + method.getName(), qps)) {
 
-		final boolean allow = ZServer.Counter.allow(controllerName + method.getName(), qps);
-		if (!allow) {
+			final String message = "访问频繁，请稍后再试";
 
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(JSON.toJSONString(CR.error("接口[" + method.getName() + "]超出QPS限制，请稍后再试")));
+					.body(JSON.toJSONString(CR.error(message)));
 
 			return response;
+		}
+
+		// 是否超过 ZQPSLimitation.qps
+		final ZQPSLimitation zqpsLimitation = ZControllerMap.getZQPSLimitationByControllerNameAndMethodName(controllerName,
+				method.getName());
+		if (zqpsLimitation != null) {
+
+			switch (zqpsLimitation.type()) {
+			case ZSESSIONID:
+				final String keyword = controllerName
+					+ "@" + method.getName()
+					+ "@ZQPSLimitation" + '_'
+					+ request.getSession().getId();
+				if (!ZServer.Counter.allow(keyword, zqpsLimitation.qps())) {
+
+					final String message = "接口访问频繁，请稍后再试";
+
+					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+					response.contentType(HeaderEnum.JSON.getType())
+							.httpStatus(HttpStatus.HTTP_403.getCode())
+							.body(JSON.toJSONString(CR.error(message)));
+					return response;
+				}
+				break;
+
+			default:
+				break;
+			}
 		}
 
 		this.setZRequestAndZResponse(arraygP, request);
@@ -372,52 +422,85 @@ public class Task {
 				// 到此 肯定是从 paramSet 取值作为参数，如果 paramSet 为空，则说明没传
 				final Set<RequestParam> paramSet = requestLine.getParamSet();
 				if (CollUtil.isEmpty(paramSet)) {
-//					throw new IllegalArgumentException("Param 为空");
-					new ZResponse(this.outputStream, this.socketChannel)
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-							.httpStatus(HttpStatus.HTTP_404.getCode())
-							.body(JSON.toJSONString(CR.error("Param 为空")))
-							.write();
-					 return null;
-				}
 
-				final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
-						.findAny();
-				if (!findAny.isPresent()) {
-					new ZResponse(this.outputStream, this.socketChannel)
+
+					// FIXME 2023年8月11日 下午9:48:05 zhanghen: 到此待定： 因为要支持 application/x-www-form-urlencoded ，改为先去body
+					final String body = request.getBody();
+					System.out.println("else-body = " + body);
+
+					final List<FormPair> formPairList = FormPair.parse(body);
+					System.out.println("formPairList = \n");
+					System.out.println(formPairList);
+
+					final Optional<FormPair> findAny = formPairList.stream().filter(rp -> rp.getKey().equals(p.getName()))
+							.findAny();
+
+					System.out.println("findAny = " + findAny);
+					if (!findAny.isPresent()) {
+						new ZResponse(this.outputStream, this.socketChannel)
 							.httpStatus(HttpStatus.HTTP_404.getCode())
 							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
 							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
 							.write();
-					return null;
+						return null;
+					}
+
+					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+
+					//					new ZResponse(this.outputStream, this.socketChannel)
+//							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+//							.httpStatus(HttpStatus.HTTP_404.getCode())
+//							.body(JSON.toJSONString(CR.error("Param 为空")))
+//							.write();
+//					 return null;
+
+				} else {
+					final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
+							.findAny();
+					if (!findAny.isPresent()) {
+						new ZResponse(this.outputStream, this.socketChannel)
+							.httpStatus(HttpStatus.HTTP_404.getCode())
+							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
+							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
+							.write();
+						return null;
+					}
+
+					// 先看参数类型
+					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+
 				}
 
-				// 先看参数类型
-				if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
-					parametersArray[pI++] = Byte.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
-					parametersArray[pI++] = Short.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
-					parametersArray[pI++] = Integer.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
-					parametersArray[pI++] = Long.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
-					parametersArray[pI++] = Float.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
-					parametersArray[pI++] = Double.valueOf(String.valueOf(findAny.get().getValue()));
-				} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
-					parametersArray[pI++] = Character.valueOf(String.valueOf(findAny.get().getValue()).charAt(0));
-				} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-					parametersArray[pI++] = Boolean.valueOf(String.valueOf(findAny.get().getValue()));
-				} else {
-					parametersArray[pI++] = findAny.get().getValue();
-				}
 
 			}
 
 		}
 
 		return parametersArray;
+	}
+
+	private static int setValue(final Object[] parametersArray, int pI, final Parameter p,
+			final Object value) {
+		if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			parametersArray[pI++] = Byte.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
+			parametersArray[pI++] = Short.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			parametersArray[pI++] = Integer.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
+			parametersArray[pI++] = Long.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
+			parametersArray[pI++] = Float.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
+			parametersArray[pI++] = Double.valueOf(String.valueOf(value));
+		} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+			parametersArray[pI++] = Character.valueOf(String.valueOf(value).charAt(0));
+		} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			parametersArray[pI++] = Boolean.valueOf(String.valueOf(value));
+		} else {
+			parametersArray[pI++] = value;
+		}
+		return pI;
 	}
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine, final String path) {
@@ -448,10 +531,10 @@ public class Task {
 		}
 	}
 
-	static Map<Object, Object> cacheMap = new WeakHashMap<>(1024, 1F);
+
 	public static Boolean isMethodAnnotationPresentZHtml(final Method method) {
 		final String name = method.getName();
-		final Boolean boolean1 = (Boolean) cacheMap.get(name);
+		final Boolean boolean1 = (Boolean) CACHE_MAP.get(name);
 		if (boolean1 != null) {
 			return boolean1;
 		}
@@ -459,13 +542,13 @@ public class Task {
 		synchronized (name) {
 
 			final boolean annotationPresent = method.isAnnotationPresent(ZHtml.class);
-			cacheMap.put(name, annotationPresent);
+			CACHE_MAP.put(name, annotationPresent);
 			return annotationPresent;
 		}
 	}
 
-	private static final ConcurrentMap<Object, Object> CACHE_MAP = Maps.newConcurrentMap();
 	public static ZRequest parseRequest(final ZRequest request) {
+
 		final Object v = CACHE_MAP.get(request);
 		if (v != null) {
 			return (ZRequest) v;
@@ -480,6 +563,7 @@ public class Task {
 			CACHE_MAP.put(request, v2);
 			return v2;
 		}
+
 	}
 
 	private static ZRequest parseRequest0(final ZRequest request) {
@@ -607,6 +691,9 @@ public class Task {
 			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
 
 				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
+
+//				System.out.println("contentType = " + contentType);
+
 				if (contentType.equalsIgnoreCase(HeaderEnum.JSON.getType())
 						|| contentType.toLowerCase().contains(HeaderEnum.JSON.getType().toLowerCase())) {
 
@@ -615,7 +702,46 @@ public class Task {
 						json.append(x.get(k));
 					}
 					request.setBody(json.toString());
+				} else if (contentType.equalsIgnoreCase(HeaderEnum.URLENCODED.getType())
+						|| contentType.toLowerCase().contains(HeaderEnum.URLENCODED.getType().toLowerCase())) {
+
+//					System.out.println("contentType = " + contentType);
+					System.out.println("OKapplication/x-www-form-urlencoded");
+					// id=200&name=zhangsan 格式
+
+					final StringBuilder formBu = new StringBuilder();
+					for (int k = i + 1; k < x.size(); k++) {
+						formBu.append(x.get(k));
+					}
+
+					if (formBu.length() > 0) {
+						request.setBody(formBu.toString());
+
+						System.out.println("from = " + formBu);
+						final String fr = formBu.toString();
+						final String[] fA = fr.split("&");
+
+						for (final String v : fA) {
+							final String[] vA = v.split("=");
+						}
+
+					}
+
+					// FORM_DATA 用getType
+				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
+
+					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
+					System.out.println("okContent-Type: multipart/form-data");
+
+					final StringBuilder formBu = new StringBuilder();
+					for (int k = i + 1; k < x.size(); k++) {
+						formBu.append(x.get(k)).append(Task.NEW_LINE);
+					}
+
+					System.out.println("formBu = " + formBu);
 				}
+
+
 				break;
 			}
 

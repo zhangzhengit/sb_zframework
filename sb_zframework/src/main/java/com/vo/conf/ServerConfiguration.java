@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
+// FIXME 2023年8月11日 下午7:52:29 zhanghen: TODO 加入字段或新的配置类，支持配置文件中自定义header然后ZResponse自动write，比如CORS问题
 public class ServerConfiguration {
 
 	/**
@@ -35,6 +36,12 @@ public class ServerConfiguration {
 	 */
 	@ZNotNull
 	private Boolean sslEnable;
+
+	/**
+	 * server的name，用于响应头中的Server字段
+	 */
+	@ZNotNull
+	private String name;
 
 	@ZNotNull
 	private String sslKeyStore;
@@ -64,7 +71,9 @@ public class ServerConfiguration {
 //	@ZMin(min = 0)
 	@ZMin(min = 1)
 	@ZMax(max = 52000000)
-	private Integer concurrentQuantity;
+	// FIXME 2023年7月17日 下午9:33:16 zhanghen: TODO debug min=0的情况下并且qps配置为0，调用接口
+	// while socketChannel.write 报错问题
+	private Integer qps;
 
 	/**
 	 * 是否启用内置的 StaticController,

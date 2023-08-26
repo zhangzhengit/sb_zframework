@@ -101,7 +101,7 @@ public class ZServer extends Thread {
 			while (true) {
 				final SSLSocket socket = (SSLSocket) serverSocket.accept();
 
-				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getConcurrentQuantity());
+				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
@@ -109,7 +109,7 @@ public class ZServer extends Thread {
 					response
 							.httpStatus(HttpStatus.HTTP_403.getCode())
 							.contentType(HeaderEnum.JSON.getType())
-							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getConcurrentQuantity())))
+							.body(JSON.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getQps())))
 							.write();
 
 					socket.close();
