@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
+import com.vo.aop.ZAOP;
+import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
@@ -37,6 +39,7 @@ import com.vo.http.ZPut;
 import com.vo.http.ZRequestMapping;
 import com.vo.http.ZTrace;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -83,7 +86,6 @@ public class ZControllerScanner {
 
 			final Method[] ms = cls.getDeclaredMethods();
 			for (final Method method : ms) {
-
 				ZControllerScanner.checkZHtml(method);
 
 				checkNoVoidWithZResponse(method);
@@ -143,11 +145,67 @@ public class ZControllerScanner {
 				if (patch != null) {
 					ZControllerMap.put(MethodEnum.PATCH, patch.path() , method, controllerObject, false);
 				}
+
+				// FIXME 2023年8月30日 下午6:55:14 zhanghen: TODO 查找方法上的自定义A，看A是否被ZIAOP的子类拦截了，如果拦截了，则执行
+				final Annotation[] as = method.getAnnotations();
+				for (final Annotation annotation : as) {
+					final Class<? extends Annotation> aC = annotation.getClass();
+
+					final ServerConfiguration serverConfigurationx = ZContext.getBean(ServerConfiguration.class);
+					final Set<Class<?>> clsSet = ClassMap.scanPackage(serverConfigurationx.getScanPackage());
+
+
+					final List<Class<? extends ZIAOP>> ziaopSubClassList = findZIAOPSubClass(clsSet);
+					final List<Class<? extends ZIAOP>> collect = ziaopSubClassList.stream()
+							.filter(c -> c.getAnnotation(ZAOP.class) != null)
+							.filter(c -> c.getAnnotation(ZAOP.class).interceptType()
+								.getCanonicalName().equals(annotation.annotationType().getCanonicalName())
+							).collect(Collectors.toList());
+
+					if (CollectionUtil.isNotEmpty(collect)) {
+						System.out.println("annotation = " + annotation);
+						System.out.println("clsSet = " + clsSet);
+						System.out.println("collect = " + collect);
+
+						ZControllerMap.putMyAnnotation(method, null, collect);
+					}
+				}
+
+
 			}
 
 		}
 
 		return zcSet;
+	}
+
+	private static List<Class<? extends ZIAOP>> findZIAOPSubClass(final Set<Class<?>> clsSet ) {
+		final List<Class<? extends ZIAOP>> r = Lists.newArrayList();
+		for (final Class<?> cls : clsSet) {
+			final Class<?>[] is = cls.getInterfaces();
+			if (ArrayUtil.isEmpty(is)) {
+				continue;
+			}
+
+			// FIXME 2023年8月30日 下午7:05:10 zhanghen: debug 删除
+//			if (cls.getName().contains("AOP")) {
+//				final int x = 20;
+//			}
+
+			final List<Class<?>> ziaopSubClassList = Lists.newArrayList(is).stream()
+					.filter(i -> i.getCanonicalName().equals(ZIAOP.class.getCanonicalName()))
+					.collect(Collectors.toList());
+			if (CollectionUtil.isNotEmpty(ziaopSubClassList)) {
+				System.out.println("cls = " + cls);
+				System.out.println("ziaopSubClassList = " + ziaopSubClassList);
+
+//				return ziaopSubClassList;
+//				r.addAll(ziaopSubClassList);
+				r.add((Class<? extends ZIAOP>) cls);
+			}
+		}
+
+		return r;
 	}
 
 	private static void checkNoVoidWithZResponse(final Method method) {

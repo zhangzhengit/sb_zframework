@@ -1,13 +1,17 @@
 package com.vo.http;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vo.aop.ZIAOP;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.util.StrUtil;
@@ -139,4 +143,14 @@ public class ZControllerMap {
 		}
 	}
 
+	private static final ConcurrentMap<Method, List<Class<? extends ZIAOP>>> M_A_MAP = Maps.newConcurrentMap();
+
+	public static void putMyAnnotation(final Method method, final Annotation annotation,
+			final List<Class<? extends ZIAOP>> ziaopSubClassList) {
+		M_A_MAP.put(method, ziaopSubClassList);
+	}
+
+	public static List<Class<? extends ZIAOP>> getZIAOPSubClassList(final Method method) {
+		return M_A_MAP.get(method);
+	}
 }

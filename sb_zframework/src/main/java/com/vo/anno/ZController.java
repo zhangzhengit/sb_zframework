@@ -24,6 +24,11 @@ import com.vo.enums.BeanModeEnum;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
+// FIXME 2023年8月30日 下午9:02:42 zhanghen: OK @ZController 可以像 @ZComponent 组件 那样简单加入注解A，然后定义 ZIAOP的子类拦截A来实现AOP了
+// 在Task中method.invoke之前调用了AOP的before、around、after方法实现的
+// 但是 ZIAOP 的方法定义似乎还有问题，因为如果一个method有多个注解
+// 是 把多个注解的逻辑合并到一个AOP类中？并且判断一个method 只能有一个AOP类？似乎不太合理
+
 public @interface ZController {
 
 	/**

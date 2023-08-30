@@ -31,7 +31,9 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZControllerInterceptor;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
+import com.vo.aop.AOPParameter;
 import com.vo.aop.InterceptorParameter;
+import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZRequest.RequestLine;
@@ -302,7 +304,44 @@ public class Task {
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
 			final Set<ZControllerInterceptor> zciSet = ZControllerInterceptorScanner.get();
 			if (zciSet.isEmpty()) {
-				method.invoke(zController, arraygP);
+
+				final List<Class<? extends ZIAOP>> ziaopSubClassList = ZControllerMap.getZIAOPSubClassList(method);
+				if (CollUtil.isNotEmpty(ziaopSubClassList)) {
+					for (final Class<? extends ZIAOP> ziaop : ziaopSubClassList) {
+						try {
+							final ZIAOP newInstance = ziaop.newInstance();
+							final AOPParameter parameter = new AOPParameter();
+							parameter.setIsVOID(true);
+							parameter.setTarget(zController);
+							parameter.setMethodName(method.getName());
+							parameter.setMethod(method);
+							parameter.setParameterList(com.google.common.collect.Lists.newArrayList(arraygP));
+
+							newInstance.before(parameter);
+							newInstance.around(parameter);
+							newInstance.after(parameter);
+
+
+//							final com.vo.aop.AOPParameter parameter = new com.vo.aop.AOPParameter();
+//							parameter.setIsVOID(false);
+//							parameter.setTarget(com.vo.core.ZSingleton.getSingletonByClass(this.getClass().getSuperclass()));
+//							parameter.setMethodName("index");
+//							final java.lang.reflect.Method m = com.vo.aop.ZAOPScaner.cmap.get("com.vo.test.C2@index");
+//							parameter.setMethod(m);
+//							parameter.setParameterList(com.google.common.collect.Lists.newArrayList());
+//							this.ziaop_index.before(parameter);
+//							final Object v = this.ziaop_index.around(parameter);
+//							this.ziaop_index.after(parameter);
+//							return (com.votool.common.CR) v;
+
+						} catch (InstantiationException | IllegalAccessException e) {
+							e.printStackTrace();
+						}
+					}
+				} else {
+					method.invoke(zController, arraygP);
+				}
+
 			} else {
 				final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
 						method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
@@ -329,7 +368,43 @@ public class Task {
 			}
 			zciSet.forEach(zci -> zci.after(interceptorParameter));
 		} else {
-			r = method.invoke(zController, arraygP);
+			final List<Class<? extends ZIAOP>> ziaopSubClassList = ZControllerMap.getZIAOPSubClassList(method);
+			if (CollUtil.isNotEmpty(ziaopSubClassList)) {
+				for (final Class<? extends ZIAOP> ziaop : ziaopSubClassList) {
+					try {
+						final ZIAOP newInstance = ziaop.newInstance();
+						final AOPParameter parameter = new AOPParameter();
+						parameter.setIsVOID(false);
+						parameter.setTarget(zController);
+						parameter.setMethodName(method.getName());
+						parameter.setMethod(method);
+						parameter.setParameterList(com.google.common.collect.Lists.newArrayList(arraygP));
+
+						newInstance.before(parameter);
+						r = newInstance.around(parameter);
+						newInstance.after(parameter);
+
+
+//						final com.vo.aop.AOPParameter parameter = new com.vo.aop.AOPParameter();
+//						parameter.setIsVOID(false);
+//						parameter.setTarget(com.vo.core.ZSingleton.getSingletonByClass(this.getClass().getSuperclass()));
+//						parameter.setMethodName("index");
+//						final java.lang.reflect.Method m = com.vo.aop.ZAOPScaner.cmap.get("com.vo.test.C2@index");
+//						parameter.setMethod(m);
+//						parameter.setParameterList(com.google.common.collect.Lists.newArrayList());
+//						this.ziaop_index.before(parameter);
+//						final Object v = this.ziaop_index.around(parameter);
+//						this.ziaop_index.after(parameter);
+//						return (com.votool.common.CR) v;
+
+					} catch (InstantiationException | IllegalAccessException e) {
+						e.printStackTrace();
+					}
+				}
+			} else {
+//				method.invoke(zController, arraygP);
+				r = method.invoke(zController, arraygP);
+			}
 		}
 
 		// 响应

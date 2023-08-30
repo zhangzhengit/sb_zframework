@@ -17,9 +17,6 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })
-
-// FIXME 2023年8月30日 下午6:22:11 zhanghen: TODO @ZController 里的方法上，加入自定义注解 A
-// 像 test项目中 ZLogAOP 那样来实现AOP
 public @interface ZHtml {
 
 }
