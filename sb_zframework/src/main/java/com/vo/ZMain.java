@@ -35,7 +35,7 @@ public class ZMain {
 
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
-	public static void start(final String packageName,final String[] args) {
+	public static void start(final String packageName,final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.info("zframework开始启动");
 
@@ -51,13 +51,15 @@ public class ZMain {
 		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
 		ZComponentScanner.scanAndCreate();
 
-		// 3 创建 @ZController 对象
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String scanPackage = serverConfiguration.getScanPackage();
-		ZControllerScanner.scanAndCreateObject(scanPackage);
 
-		// 3.1 创建 @ZController 的拦截器对象
-		ZControllerInterceptorScanner.scan();
+		if (httpEnable) {
+			// 3 创建 @ZController 对象
+			ZControllerScanner.scanAndCreateObject(scanPackage);
+			// 3.1 创建 @ZController 的拦截器对象
+			ZControllerInterceptorScanner.scan();
+		}
 
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
 		ZAutowiredScanner.inject(scanPackage, ZComponent.class);
@@ -72,11 +74,13 @@ public class ZMain {
 			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 		}
 
-		final ZServer zs = new ZServer();
-		zs.setName(Z_SERVER_THREAD);
-		zs.start();
+		if (httpEnable) {
+			final ZServer zs = new ZServer();
+			zs.setName(Z_SERVER_THREAD);
+			zs.start();
 
-		ZSessionMap.sessionTimeoutJOB();
+			ZSessionMap.sessionTimeoutJOB();
+		}
 	}
 
 

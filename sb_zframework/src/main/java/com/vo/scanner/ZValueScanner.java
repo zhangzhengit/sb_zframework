@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringJoiner;
@@ -57,6 +58,9 @@ public class ZValueScanner {
 
 		for (final Class<?> cls : clist) {
 			final Object bean = ZContext.getBean(cls.getCanonicalName());
+			if (Objects.isNull(bean)) {
+				continue;
+			}
 
 			final Field[] fields = ReflectUtil.getFields(bean.getClass());
 			for (final Field field : fields) {
