@@ -39,6 +39,7 @@ import com.vo.http.ZPut;
 import com.vo.http.ZRequestMapping;
 import com.vo.http.ZTrace;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
@@ -55,7 +56,7 @@ public class ZControllerScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	@SuppressWarnings("unchecked")
-	public static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZGet.class, ZPost.class,
+	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZGet.class, ZPost.class,
 			ZPut.class, ZDelete.class, ZTrace.class, ZOptions.class, ZHead.class, ZConnect.class, ZPatch.class);
 
 	public static Set<Class<?>> scanAndCreateObject(final String packageName) {
@@ -70,9 +71,8 @@ public class ZControllerScanner {
 			if (Boolean.FALSE.equals(staticControllerEnable)
 				&& cls.getCanonicalName().equals(StaticController.class.getCanonicalName())) {
 
-				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象",
-						StaticController.class.getSimpleName(),StaticController.class.getSimpleName()
-						);
+				ZControllerScanner.LOG.info("[{}] 未启用，不创建[{}]对象", StaticController.class.getSimpleName(),
+						StaticController.class.getSimpleName());
 
 				continue;
 			}
@@ -149,11 +149,9 @@ public class ZControllerScanner {
 				// FIXME 2023年8月30日 下午6:55:14 zhanghen: TODO 查找方法上的自定义A，看A是否被ZIAOP的子类拦截了，如果拦截了，则执行
 				final Annotation[] as = method.getAnnotations();
 				for (final Annotation annotation : as) {
-					final Class<? extends Annotation> aC = annotation.getClass();
 
 					final ServerConfiguration serverConfigurationx = ZContext.getBean(ServerConfiguration.class);
 					final Set<Class<?>> clsSet = ClassMap.scanPackage(serverConfigurationx.getScanPackage());
-
 
 					final List<Class<? extends ZIAOP>> ziaopSubClassList = findZIAOPSubClass(clsSet);
 					final List<Class<? extends ZIAOP>> collect = ziaopSubClassList.stream()
@@ -162,10 +160,10 @@ public class ZControllerScanner {
 								.getCanonicalName().equals(annotation.annotationType().getCanonicalName())
 							).collect(Collectors.toList());
 
-					if (CollectionUtil.isNotEmpty(collect)) {
-						System.out.println("annotation = " + annotation);
-						System.out.println("clsSet = " + clsSet);
-						System.out.println("collect = " + collect);
+					if (CollUtil.isNotEmpty(collect)) {
+//						System.out.println("annotation = " + annotation);
+//						System.out.println("clsSet = " + clsSet);
+//						System.out.println("collect = " + collect);
 
 						ZControllerMap.putMyAnnotation(method, null, collect);
 					}
@@ -195,9 +193,9 @@ public class ZControllerScanner {
 			final List<Class<?>> ziaopSubClassList = Lists.newArrayList(is).stream()
 					.filter(i -> i.getCanonicalName().equals(ZIAOP.class.getCanonicalName()))
 					.collect(Collectors.toList());
-			if (CollectionUtil.isNotEmpty(ziaopSubClassList)) {
-				System.out.println("cls = " + cls);
-				System.out.println("ziaopSubClassList = " + ziaopSubClassList);
+			if (CollUtil.isNotEmpty(ziaopSubClassList)) {
+//				System.out.println("cls = " + cls);
+//				System.out.println("ziaopSubClassList = " + ziaopSubClassList);
 
 //				return ziaopSubClassList;
 //				r.addAll(ziaopSubClassList);
