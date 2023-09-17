@@ -47,9 +47,10 @@ public class NioLongConnectionServer {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String Z_SERVER = ZContext.getBean(ServerConfiguration.class).getName();
-	public static final String SERVER = "Server";
-	public static final String CONNECTION = "Connection";
+	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
+
+	public static final String SERVER_VALUE = ZContext.getBean(ServerConfiguration.class).getName();
+	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
 
 	/**
 	 * 执行长连接超时任务的线程池
@@ -249,7 +250,7 @@ public class NioLongConnectionServer {
 
 		final ZRequest zRequest = task.handleRead(requestString);
 
-		final String connection = zRequest.getHeader(CONNECTION);
+		final String connection = zRequest.getHeader(HttpHeaderEnum.CONNECTION.getValue());
 		final boolean keepAlive = StrUtil.isNotEmpty(connection)
 				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
 						|| connection.toLowerCase()
@@ -269,7 +270,7 @@ public class NioLongConnectionServer {
 			final ZResponse response = task.invoke(zRequest);
 			if (response != null && !response.getWrite().get()) {
 
-				response.header(SERVER, Z_SERVER);
+				response.header(SERVER, SERVER_VALUE);
 
 				final ZSession sessionFALSE = zRequest.getSession(false);
 				if (sessionFALSE == null) {
