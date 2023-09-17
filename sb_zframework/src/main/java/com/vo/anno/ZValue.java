@@ -8,8 +8,11 @@ import java.lang.annotation.Target;
 
 /**
  *
- * 用在字段上，表示此字段值从配置文件中取
+ * 用在字段上，表示此字段值从配置文件中取。
+ * 如下，表示从配置文件中取 a.b 的值赋给String b字段。
  *
+ *  @ZValue(name = "a.b")
+ * 	private String b;
  *
  * @author zhangzhen
  * @date 2023年6月29日
@@ -29,7 +32,7 @@ public @interface ZValue {
 	String name();
 
 	/**
-	 * 是否监听配置文件变动来更新值
+	 * 是否监听配置文件变动来更新值，可选项，默认不监听
 	 *
 	 * @return
 	 *
