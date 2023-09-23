@@ -430,8 +430,9 @@ public class ZTemplate {
 			for (final Entry<String, String> entry : filedMap.entrySet()) {
 				final String fieldName = entry.getKey();
 
+				final Field field = getDF(v, fieldName);
 				try {
-					final Field field = v.getClass().getDeclaredField(fieldName);
+//					final Field field = v.getClass().getDeclaredField(fieldName);
 					field.setAccessible(true);
 					final Object fieldValue = field.get(v);
 //					System.out.println("fieldValue = " + fieldValue);
@@ -442,12 +443,34 @@ public class ZTemplate {
 					cr.set(ccc);
 //					System.out.println("ccc = " + ccc);
 
-				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
+				} catch (SecurityException | IllegalArgumentException
 						| IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
 			r.append(cr.get());
+		}
+
+		private static Field getDF(final Object object, final String fieldName) {
+
+			try {
+				return object.getClass().getDeclaredField(fieldName);
+			} catch (NoSuchFieldException | SecurityException e2) {
+//				e2.printStackTrace();
+
+				 Class superClass = object.getClass().getSuperclass();
+				while (!superClass.getCanonicalName().equals(Object.class.getCanonicalName())) {
+					try {
+						return superClass.getDeclaredField(fieldName);
+					} catch (NoSuchFieldException | SecurityException e) {
+//						e.printStackTrace();
+						superClass = superClass.getSuperclass();
+					}
+
+				}
+			}
+
+			return null;
 		}
 
 		private HashMap<String, String> getFiled() {
