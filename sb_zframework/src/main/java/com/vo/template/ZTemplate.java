@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -238,13 +239,13 @@ public class ZTemplate {
 	private static void replaceValue(final StringBuilder builder, final String g, final String fieldName,
 			final Object v) {
 		if (v != null) {
-			System.out.println("v = " + v);
+//			System.out.println("v = " + v);
 
 			try {
 				final Field fieldV = v.getClass().getDeclaredField(fieldName);
 				fieldV.setAccessible(true);
 				final Object fieldValue = fieldV.get(v);
-				System.out.println("fieldValue = " + fieldValue);
+//				System.out.println("fieldValue = " + fieldValue);
 				if(fieldValue != null) {
 //							builder.re
 					final String gk = "@value[" + g;
@@ -435,11 +436,15 @@ public class ZTemplate {
 //					final Field field = v.getClass().getDeclaredField(fieldName);
 					field.setAccessible(true);
 					final Object fieldValue = field.get(v);
+//					if (fieldValue == null) {
+//						cr.set("");
+//						continue;
+//					}
 //					System.out.println("fieldValue = " + fieldValue);
 //					System.out.println("field = " + entry.getValue());
 
 					final String ccc = cr.get().replace(String.valueOf(entry.getValue()),
-							String.valueOf(fieldValue));
+							String.valueOf(fieldValue == null ? "" : fieldValue));
 					cr.set(ccc);
 //					System.out.println("ccc = " + ccc);
 
