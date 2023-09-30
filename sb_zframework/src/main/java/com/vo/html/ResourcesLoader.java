@@ -19,6 +19,7 @@ import com.vo.ZMain;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
+import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
@@ -35,6 +36,8 @@ import cn.hutool.core.util.StrUtil;
  *
  */
 public class ResourcesLoader {
+
+	private static ServerConfiguration SERVER_CONFIGURATION= ZContext.getBean(ServerConfiguration.class);
 
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
 
@@ -265,6 +268,10 @@ public class ResourcesLoader {
 	}
 
 	public static String loadString(final String name) {
+
+		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
+			return loadSring0(name);
+		}
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.STRING, name);
 		if (v != null) {

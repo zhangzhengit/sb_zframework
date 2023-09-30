@@ -61,6 +61,12 @@ public class ServerConfiguration {
 	private Integer threadCount;
 
 	/**
+	 * 是否启用静态资源的缓存
+	 */
+	@ZNotNull
+	private Boolean staticResourceCacheEnable;
+
+	/**
 	 * 	扫描的包配置，如：com.vo
 	 */
 	@ZNotNull
