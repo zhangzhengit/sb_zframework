@@ -130,8 +130,6 @@ public class ZTemplate {
 			template.process(dataModel, writer); // 渲染模板
 
 			final String output = writer.toString(); // 获取渲染后的字符串输出
-			System.out.println("freemarker-output ==============================");
-			System.out.println(output);
 			return output;
 		} catch (IOException | TemplateException e) {
 			e.printStackTrace();
