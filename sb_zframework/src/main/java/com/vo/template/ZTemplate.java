@@ -1,5 +1,7 @@
 package com.vo.template;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +19,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,13 +33,30 @@ import lombok.NoArgsConstructor;
  * @date 2023年6月27日
  *
  */
-// FIXME 2023年6月27日 下午10:06:48 zhanghen:  TODO 同一个html中，一个list用多次还是有问题
-// FIXME 2023年7月19日 下午9:24:22 zhanghen: TODO 加入 @value[user.name]这种形式，可以从对象取字段值，而不是简单取值
+// XXX 2023年9月30日 下午9:46:31 zhanghen: 自定义模板太复杂，改用freemarker
 public class ZTemplate {
+
+	private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
 
 //	public static void main(final String[] args) {
 ////		test1();
-//		test_switch_Object1();
+////		test_switch_Object1();
+//		final String string
+//					="		<#list nodeList as n>"
+//		 		+ "	   		 <tr>"
+//		 		+ "				<td>${n.nickName}</td>"
+//		 		+ "			</tr>"
+//		 		+ "		</#list>";
+//
+//
+//		final NodeStatusDTO statusDTO = new NodeStatusDTO();
+//		statusDTO.setNodeStatus(1);
+//		statusDTO.setNickName("zhangsan");
+//
+//		final ZModel model = new ZModel();
+//		model.set("nodeList", Lists.newArrayList(statusDTO));
+//
+//		freemarker(string);
 //	}
 
 	public static void test_switch_Object1() {
@@ -75,13 +96,48 @@ public class ZTemplate {
 
 	public static String generate(final String htmlContent) {
 
-		final String r0 = parseValue(htmlContent);
-		final String r1 = parseValue2(r0);
-//		final String r1 = parseValue(htmlContent);
-		final String r2 = parseList(r1);
-		final String r3 = parseIf(r2);
+		final String freemarker = freemarker(htmlContent);
+		return freemarker;
 
-		return r3;
+		// 1 自定义的简单模板
+//		final String r0 = parseValue(htmlContent);
+//		final String r1 = parseValue2(r0);
+////		final String r1 = parseValue(htmlContent);
+//		final String r2 = parseList(r1);
+//		final String r3 = parseIf(r2);
+//
+//		return r3;
+	}
+
+	private static String freemarker(final String templateString) {
+
+//		cfg.setClassForTemplateLoading(ZTemplate.class, "/"); // 设置模板文件所在目录
+
+		try {
+//			final Template template = cfg.getTemplate("list.ftl"); // 加载模板文件
+			final Template template = new Template("template-" + templateString.hashCode(), templateString, CFG);
+
+			final StringWriter writer = new StringWriter();
+
+//			final ArrayList<NodeStatusDTO> nodeStatusList = Lists.newArrayList(new NodeStatusDTO(1));
+
+			final Map<String, Object> dataModel = ZModel.get();
+//			final Map<String, Object> dataModel = new HashMap<>();
+//			final int i1 = 3; // 设置变量的值
+
+//			dataModel.put("nodeStatusList", nodeStatusList); // 将变量添加到数据模型中
+
+			template.process(dataModel, writer); // 渲染模板
+
+			final String output = writer.toString(); // 获取渲染后的字符串输出
+			System.out.println("freemarker-output ==============================");
+			System.out.println(output);
+			return output;
+		} catch (IOException | TemplateException e) {
+			e.printStackTrace();
+		}
+
+		return templateString;
 	}
 
 	public static String parseIf(String r) {

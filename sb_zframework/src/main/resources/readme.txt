@@ -103,23 +103,7 @@
 			return "index.html"; 
 		}
 		
-		支持的模板标签：
-			1 @value[key] 
-				用于取值，如上接口取name，则声明为 @value[name]，即可在html显示 zhangsan
-			  	或 @value[user.name] 形式，从user对象中取name字段值
-			2 	<@list[userList] as u>
-					<h3>姓名：@value[u.name] | 年龄 @value[u.age]</h3>
-				</endlist[userList]>
-				用于遍历一个Iterable对象或数组，如上代码表示：
-					遍历一个userList，别名为u，循环生成h3标签，里面内容为 [姓名:zhangsan | 年龄 : 200] 的形式
-			3 	<@switch[i1]>
-					<case 1> 	一
-					<case 2> 	二
-					<case 3> 	三
-				</endswitch[i1]>
-				
-				用于判断一个值，如上代码表示：
-					if == 1则展示[一],if == 2则展示[二],if == 3则展示[三].
+		模板：freemarker。支持在html中正常写freemarker标签。
 				
 	内置静态资源接口：StaticController，内置三个正则表达式接口，价值的静态资源放在 ServerConfiguration.staticPrefix 目录中 
 		

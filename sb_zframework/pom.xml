@@ -21,6 +21,10 @@
 
 	<dependencies>
 
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+		</dependency>
 
 		<!--FIXME 替换掉 fastjson -->
 		<dependency>
