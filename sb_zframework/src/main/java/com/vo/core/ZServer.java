@@ -27,6 +27,8 @@ import com.votool.common.CR;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
 
+import cn.hutool.core.util.StrUtil;
+
 /**
  *
  *
@@ -55,12 +57,16 @@ public class ZServer extends Thread {
 	public void run() {
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (serverConfiguration.getSslEnable()) {
-			LOG.info("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
+			LOG.trace("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
 			ZServer.startSSLServer();
 		} else {
-			LOG.info("启动Server,port={}", serverConfiguration.getPort());
+			final Integer port = SERVER_CONFIGURATION.getPort();
+			final String serverPortProperty = System.getProperty("server.port");
+			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? port : Integer.valueOf(serverPortProperty);
+
+			LOG.trace("启动Server,port={}", serverPort);
 			final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
-			nioLongConnectionServer.startNIOServer();
+			nioLongConnectionServer.startNIOServer(serverPort);
 		}
 	}
 

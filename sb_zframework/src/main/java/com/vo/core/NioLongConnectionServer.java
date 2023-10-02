@@ -68,11 +68,11 @@ public class NioLongConnectionServer {
 
 	private static final int BUFFER_SIZE = 1024 * 100;
 
-	public void startNIOServer() {
+	public void startNIOServer(final Integer serverPort) {
 
 		keepAliveTimeoutJOB();
 
-		LOG.trace("zNIOServer开始启动,serverPort={}",SERVER_CONFIGURATION.getPort());
+		LOG.trace("zNIOServer开始启动,serverPort={}",serverPort);
 
 		// 创建ServerSocketChannel
 		Selector selector = null;
@@ -80,16 +80,18 @@ public class NioLongConnectionServer {
 		try {
 			serverSocketChannel = ServerSocketChannel.open();
 			serverSocketChannel.configureBlocking(false);
-			serverSocketChannel.bind(new InetSocketAddress(SERVER_CONFIGURATION.getPort()));
+			serverSocketChannel.bind(new InetSocketAddress(serverPort));
 
 			// 创建Selector
 			selector = Selector.open();
 			serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 		} catch (final IOException e) {
 			e.printStackTrace();
+			LOG.error("启动失败,程序即将退出,serverPort={}", serverPort);
+			System.exit(0);
 		}
 
-		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", SERVER_CONFIGURATION.getPort());
+		LOG.trace("zNIOServer启动成功，等待连接,serverPort={}", serverPort);
 
 		while (true) {
 			try {

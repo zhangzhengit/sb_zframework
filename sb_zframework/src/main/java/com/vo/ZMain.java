@@ -37,7 +37,7 @@ public class ZMain {
 
 	public static void start(final String packageName,final boolean httpEnable, final String[] args) {
 
-		ZMain.LOG.info("zframework开始启动");
+		ZMain.LOG.trace("zframework开始启动");
 
 		// 0 读取 @ZConfigurationProperties 配置，创建配置类
 		ZConfigurationPropertiesScanner.scanAndCreate(packageName);

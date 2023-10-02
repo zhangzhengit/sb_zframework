@@ -8,6 +8,10 @@
 	 按1 2 3 4查找，最后没找到则提示 [找不到配置文件]
 	 
 	 配置内容见：ServerConfiguration
+	 
+	# 启动方式：
+		java -jar -Dserver.port=7777 app.jar 
+		可使用 server.port 参数执行启动的http端口，此参数优先于配置文件的server.port
 		
 	# 注解式声明Component、Controller
 	
