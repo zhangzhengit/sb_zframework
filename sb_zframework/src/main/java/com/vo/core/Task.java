@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -46,6 +47,7 @@ import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
 import com.vo.http.ZQPSLimitation;
 import com.vo.scanner.ZControllerInterceptorScanner;
+import com.vo.scanner.ZValidator;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.votool.common.CR;
@@ -491,6 +493,9 @@ public class Task {
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
 				final String body = request.getBody();
 				final Object object = JSON.parseObject(body, p.getType());
+
+				Task.checkZValidated(p, object);
+
 				parametersArray[pI++] = object;
 			} else {
 
@@ -552,6 +557,19 @@ public class Task {
 		}
 
 		return parametersArray;
+	}
+
+	private static void checkZValidated(final Parameter p, final Object object) {
+		if (!p.isAnnotationPresent(ZValidated.class)) {
+			return;
+		}
+
+		final Class<?> type = p.getType();
+		final Field[] fields = type.getDeclaredFields();
+		for (final Field field : fields) {
+			ZValidator.validatedAll(object, field);
+		}
+
 	}
 
 	private static int setValue(final Object[] parametersArray, int pI, final Parameter p,

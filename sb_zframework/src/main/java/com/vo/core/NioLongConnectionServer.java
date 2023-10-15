@@ -269,27 +269,41 @@ public class NioLongConnectionServer {
 				.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
 				.write();
 		} else {
-			final ZResponse response = task.invoke(zRequest);
-			if (response != null && !response.getWrite().get()) {
+			try {
+				final ZResponse response = task.invoke(zRequest);
+				if (response != null && !response.getWrite().get()) {
 
-				response.header(SERVER, SERVER_VALUE);
+					response.header(SERVER, SERVER_VALUE);
 
-				final ZSession sessionFALSE = zRequest.getSession(false);
-				if (sessionFALSE == null) {
-					final ZSession sessionTRUE = zRequest.getSession(true);
-					final ZCookie cookie =
-							new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
-							.path("/")
-							.httpOnly(true);
-					response.cookie(cookie);
+					final ZSession sessionFALSE = zRequest.getSession(false);
+					if (sessionFALSE == null) {
+						final ZSession sessionTRUE = zRequest.getSession(true);
+						final ZCookie cookie =
+								new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
+								.path("/")
+								.httpOnly(true);
+						response.cookie(cookie);
+					}
+
+					if (keepAlive) {
+						response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+					}
+
+					// 在此自动write，接口中可以不调用write
+					response.write();
 				}
+			} catch (final Exception e2) {
+				e2.printStackTrace();
 
-				if (keepAlive) {
-					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-				}
+				// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
+				final String message = Task.gExceptionMessage(e2);
 
-				// 在此自动write，接口中可以不调用write
-				response.write();
+				new ZResponse(socketChannel)
+						.httpStatus(HttpStatus.HTTP_500.getCode())
+						.contentType(HeaderEnum.JSON.getType())
+						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_500.getCode(), "服务器错误：" +message)))
+						.write();
+
 			}
 		}
 
