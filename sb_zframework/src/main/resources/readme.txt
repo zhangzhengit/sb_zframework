@@ -158,3 +158,13 @@
 		
 	手动注册接口，ZControllerMap.put
 		@see 接口注释
+		
+	@ZValidated :
+		用法如下：用在接口方法的参数上，表示校验参数对象里的ZNotNull等注解
+		
+		public CR buildstart(@ZRequestBody @ZValidated final BuildDTO buildDTO) {
+			// ............
+			// ............
+			return CR.ok();
+		}
+		
