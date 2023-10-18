@@ -293,15 +293,19 @@ public class NioLongConnectionServer {
 					response.write();
 				}
 			} catch (final Exception e2) {
-				e2.printStackTrace();
 
 				// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
 				final String message = Task.gExceptionMessage(e2);
 
+				LOG.error("执行错误,message={}", message);
+
+				// XXX message是根据\r\n换行的很多行，只取第一行
+				final String[] ma = message.split(Task.NEW_LINE);
 				new ZResponse(socketChannel)
 						.httpStatus(HttpStatus.HTTP_500.getCode())
 						.contentType(HeaderEnum.JSON.getType())
-						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_500.getCode(), "服务器错误：" +message)))
+						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_500.getCode(),
+								"服务器错误：" + ma[0])))
 						.write();
 
 			}
