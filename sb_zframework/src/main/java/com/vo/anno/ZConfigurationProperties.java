@@ -25,7 +25,7 @@ import com.vo.enums.BeanModeEnum;
  *
  * 	会先进行匹配	orderCount
  * 	无则继续匹配	order.count
- *
+ *	仍无并且字段存在 @ZNotNull 则抛异常提示 xx不能为null
  *
  * @author zhangzhen
  * @date 2023年6月12日

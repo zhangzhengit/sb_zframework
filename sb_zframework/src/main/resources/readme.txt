@@ -20,12 +20,20 @@
 		优先按java驼峰式命名匹配，找不到则按[orderCount]转为[order.count]来匹配
 			
 			prefix 属性：表示匹配的zframework.properties 中的前缀
-		
-			@ZMax 表示此配置字段的最大值不能大于多少
-			@ZMin 表示此配置字段的最小值不能小于多少
-			@ZNotEmtpy 表示此配置字段不能是empty
-			@ZNotNull 表示此配置字段不能是null
-			@ZStartWith 表示此配置字段必须以特定值开头
+			
+		支持的字段类型：@see ZConfigurationProperties 
+			List 类型：支持配置为空，如:
+				private List<String> list;
+				配置：
+				xx.list[0]=A
+				xx.list[2]=C
+				等同于
+				private List<String> list = {A,null,C};
+				配置中不存在1，代码中list 1的位置为null
+			
+			Set 类型：使用LinkedHashSet支持按 0 1 2 3 顺序来配置值
+			
+		支持在字段上使用校验注解：@see # 校验注解
 		
 	@ZValue
 		用于组件的字段上，表示此字段取值自配置文件,如：
@@ -33,7 +41,6 @@
 		String name;
 		表示 String类型的name字段，取值自配置文件中的name。listenForChanges = true 表示name字段实时读取配置文件
 		变动并且更新字段值.
-		
 		
 	@ZComponent 
 		用于声明一个通用组件
@@ -54,6 +61,20 @@
 				表示此参数作为一个http参数,如 @ZRequestParam String name		
 			@ZRequestBody 
 				表示此参数是一个请求体
+				支持在此注解标记的参数对象上使用 @ZValidated 来启用校验注解：@see 校验注解
+				如：
+				public CR buildstart(@ZRequestBody @ZValidated final BuildDTO buildDTO) {
+					// ............
+					// ............
+					return CR.ok();
+				}
+				BuildDTO 类有字段：
+				
+				@ZNotNull
+				private String name;
+				
+				加入@ZValidated注解，则会校验buildDTO对象的name字段值不能为null，不加则不校验
+				
 			@ZRequestHeader 
 				表示此参数是一个request.header
 			ZRequest
@@ -150,7 +171,7 @@
 		1、配置文件添加如下内容：
 			async.thread.count=12
 			async.thread.name.prefix=zasync-Thread-
-		2、在模板方法上加入 @ZAsync，支持调用即可
+		2、在目标方法A上加入 @ZAsync，直接调用A即可
 		
 	
 	ZControllerInterceptor 接口，实现此接口拦截 @ZController 里面的接口方法.
@@ -160,7 +181,7 @@
 		@see 接口注释
 		
 	@ZValidated :
-		用法如下：用在接口方法的参数上，表示校验参数对象里的ZNotNull等注解
+		用法如下：用在接口方法的参数上，表示校验参数对象里的 @see # 校验注解：
 		
 		public CR buildstart(@ZRequestBody @ZValidated final BuildDTO buildDTO) {
 			// ............
@@ -168,3 +189,35 @@
 			return CR.ok();
 		}
 		
+	# 自定义响应头,添加如下配置即可,
+		server.responseHeaders.key1=value1
+		server.responseHeaders.key2=value2
+		server.responseHeaders.key3=value3
+		如：解决CORS问题配置如下
+		server.responseHeaders.Access-Control-Allow-Origin=*
+	
+	# 校验注解：
+		@ZMax 表示此配置字段的最大值不能大于多少,支持 extends Number 的类型
+		@ZMin 表示此配置字段的最小值不能小于多少,支持 extends Number 的类型
+		@ZNotEmtpy 表示此配置字段不能是empty,支持类型：String、List、Set、Map，都是使用isEmpty来判断
+		@ZNotNull 表示此配置字段不能是null,支持所有类型
+		@ZStartWith 表示此配置字段必须以特定值开头,支持String类型
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
