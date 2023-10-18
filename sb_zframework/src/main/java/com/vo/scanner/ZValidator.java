@@ -3,6 +3,10 @@ package com.vo.scanner;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -183,18 +187,34 @@ public interface ZValidator {
 				throw new IllegalArgumentException(format);
 			}
 
-			final String v2 = String.valueOf(value);
-			if (v2.isEmpty()) {
-				final String message = ZNotEmtpy.MESSAGE;
-				final String t = object.getClass().getSimpleName() + "." + field.getName();
-				final String format = String.format(message, t);
-				throw new IllegalArgumentException(format);
+			if (value instanceof List || value instanceof Set) {
+				final Collection collection = (Collection) value;
+				if (collection.isEmpty()) {
+					throwZNotEmptyError(object, field);
+				}
+			} else if (value instanceof Map) {
+				final Map map = (Map) value;
+				if (map.isEmpty()) {
+					throwZNotEmptyError(object, field);
+				}
+			} else if (value instanceof String) {
+				final String string = (String) value;
+				if (string.isEmpty()) {
+					throwZNotEmptyError(object, field);
+				}
 			}
 
 		} catch (final IllegalAccessException e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static void throwZNotEmptyError(final Object object, final Field field) {
+		final String message = ZNotEmtpy.MESSAGE;
+		final String t = object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t);
+		throw new IllegalArgumentException(format);
 	}
 
 	public static void validatedZMax(final Object object, final Field field) {
@@ -260,10 +280,10 @@ public interface ZValidator {
 	}
 
 	public static void validatedAll(final Object object, final Field field) {
+		validatedZNotNull(object, field);
+		validatedZNotEmpty(object, field);
 		validatedZMin(object, field);
 		validatedZMax(object, field);
-		validatedZNotEmpty(object, field);
-		validatedZNotNull(object, field);
 		validatedZStartWith(object, field);
 
 	}

@@ -8,7 +8,8 @@ import java.lang.annotation.Target;
 
 /**
  *
- * 放在字段上，表示此字段必须以指定的值开始
+ * 放在字段上，表示此字段必须以指定的值开始。
+ * 支持String类型。
  *
  * @author zhangzhen
  * @date 2023年6月29日

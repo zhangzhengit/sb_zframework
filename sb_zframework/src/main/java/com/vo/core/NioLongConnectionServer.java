@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -30,6 +31,7 @@ import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
@@ -287,6 +289,14 @@ public class NioLongConnectionServer {
 
 					if (keepAlive) {
 						response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+					}
+
+					final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
+					if (CollUtil.isNotEmpty(responseHeaders)) {
+						final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
+						for (final Entry<String, String> entry : entrySet) {
+							response.header(entry.getKey(), entry.getValue());
+						}
 					}
 
 					// 在此自动write，接口中可以不调用write

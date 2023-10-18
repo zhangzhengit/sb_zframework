@@ -8,7 +8,8 @@ import java.lang.annotation.Target;
 
 /**
  *
- * 放在字段上，表示此字段不能为empty
+ * 放在字段上，表示此字段不能为empty。
+ * 可用于String、Collection(Set和List)、Map类型，都是使用isEmpty判断
  *
  * @author zhangzhen
  * @date 2023年6月29日

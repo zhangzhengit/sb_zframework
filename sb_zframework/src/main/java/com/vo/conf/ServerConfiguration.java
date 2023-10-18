@@ -1,5 +1,7 @@
 package com.vo.conf;
 
+import java.util.Map;
+
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
@@ -21,7 +23,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
-// FIXME 2023年8月11日 下午7:52:29 zhanghen: TODO 加入字段或新的配置类，支持配置文件中自定义header然后ZResponse自动write，比如CORS问题
 public class ServerConfiguration {
 
 	/**
@@ -140,6 +141,12 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	// FIXME 2023年7月2日 上午1:31:33 zhanghen: gzipMinLength这个值用上
 	private Integer gzipMinLength;
+
+	/**
+	 * 支持的自定义响应头header，如：解决CORS问题，配置如下：
+	 * server.responseHeaders.Access-Control-Allow-Origin=*
+	 */
+	private Map<String, String> responseHeaders;
 
 	public boolean gzipContains(final String contentType) {
 		final String[] a = this.getGzipContentType();
