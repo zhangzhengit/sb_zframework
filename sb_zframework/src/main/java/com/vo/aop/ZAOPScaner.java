@@ -104,17 +104,13 @@ public class ZAOPScaner {
 					final Annotation[] fas = f.getAnnotations();
 					if (fas != null) {
 						for (final Annotation a : fas) {
-							final String value = getAnnoName(a);
-
-//							StrUtil.rep
-							final String r2 = replaceLast(a.toString(), value, "\"" + value + "\"");
-//							final String replace = a.toString().replace(value, "\"" + value + "\"");
+							final String value = getAnnoName(a).replaceAll("\"", "");
+							final String as = a.toString().replace("\"\"", "");
+							final String r2 = replaceLast(as, value, "\"" + value + "\"");
 							zf.addAnno(r2);
 						}
 					}
-
 					proxyZClass.addField(zf);
-					final String string = zf.toString();
 				} catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
 					e.printStackTrace();
 				}
@@ -287,6 +283,8 @@ public class ZAOPScaner {
 		return table;
 	}
 
+
+
 	/**
 	 * 把string中最后面的一个replace替换为target
 	 *
@@ -297,10 +295,23 @@ public class ZAOPScaner {
 	 * @return
 	 *
 	 */
-	public static String replaceLast(final String string, final String replace, final String target) {
+	private static String replaceLast(final String string, final String replace, final String target) {
+
+		if (org.springframework.util.StringUtils.isEmpty(replace)) {
+			return string;
+		}
+
+		if ("".equals(replace.trim())) {
+			return string;
+		}
 
 		final int i = string.lastIndexOf(replace);
 		if (i < 0) {
+			return string;
+		}
+
+		final int i2 = string.lastIndexOf(target);
+		if (i2 > 0) {
 			return string;
 		}
 
