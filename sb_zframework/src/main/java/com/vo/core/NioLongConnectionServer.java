@@ -32,7 +32,6 @@ import com.vo.http.ZCookie;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -315,7 +314,8 @@ public class NioLongConnectionServer {
 						.httpStatus(HttpStatus.HTTP_500.getCode())
 						.contentType(HeaderEnum.JSON.getType())
 						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_500.getCode(),
-								"服务器错误：" + ma[0])))
+//								"服务器错误：" + ma[0])))
+									"服务器错误：" + findCausedby(message))))
 						.write();
 
 			}
@@ -330,6 +330,16 @@ public class NioLongConnectionServer {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private static String findCausedby(final String errorMessage) {
+		final String[] ma = errorMessage.split(Task.NEW_LINE);
+		for (final String s : ma) {
+			if(s.startsWith("Caused by")) {
+				return s;
+			}
+		}
+		return errorMessage;
 	}
 
 	@Data

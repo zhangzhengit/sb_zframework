@@ -122,9 +122,11 @@ public class Task {
 	 *
 	 * @param request 请求体
 	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request) {
+	public ZResponse invoke(final ZRequest request) throws IllegalAccessException, InvocationTargetException {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
@@ -187,16 +189,16 @@ public class Task {
 			final ZResponse re = this.invokeAndResponse(method, p, zController, request);
 			return re;
 
-		} catch (final InvocationTargetException | IllegalAccessException e) {
-			final String message = gExceptionMessage(e);
-			e.printStackTrace();
-
-
-			return new ZResponse(this.outputStream, this.socketChannel)
-					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-//					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
-					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR  + " : " + message)));
+//		} catch (final InvocationTargetException | IllegalAccessException e) {
+//			final String message = gExceptionMessage(e);
+//			e.printStackTrace();
+//
+//
+//			return new ZResponse(this.outputStream, this.socketChannel)
+//					.contentType(DEFAULT_CONTENT_TYPE.getType())
+//					.httpStatus(HttpStatus.HTTP_500.getCode())
+////					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
+//					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR  + " : " + message)));
 
 		} finally {
 			this.close();

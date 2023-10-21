@@ -5,6 +5,7 @@ package com.vo.core;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -125,7 +126,13 @@ public class ZServer extends Thread {
 						// FIXME 2023年7月4日 上午10:26:22 zhanghen: 用TaskNIO
 						final Task task = new Task(socket);
 						final ZRequest request = task.readAndParse();
-						task.invoke(request);
+						try {
+							// FIXME 2023年10月21日 下午7:46:20 zhanghen: ssl暂不支持了，
+							// 修改此处，或者改用nio ssl server
+							task.invoke(request);
+						} catch (IllegalAccessException | InvocationTargetException e) {
+							e.printStackTrace();
+						}
 					});
 				}
 

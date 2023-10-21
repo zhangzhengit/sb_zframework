@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
+import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
 import com.vo.core.ZLog2;
@@ -27,7 +28,9 @@ import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
+import com.vo.core.ZValidated;
 import com.vo.scanner.ClassMap;
+import com.vo.scanner.ZValidator;
 
 import cn.hutool.core.collection.CollectionUtil;
 
@@ -66,7 +69,7 @@ public class ZAOPScaner {
 		}
 	}
 
- public	static Map<String, ZClass> scanAndGenerateProxyClass1() {
+	public	static Map<String, ZClass> scanAndGenerateProxyClass1() {
 
 		final Map<String, ZClass> map = Maps.newHashMap();
 		final Set<Class<?>> cs = scanPackage_COM();
@@ -82,12 +85,12 @@ public class ZAOPScaner {
 			proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getCanonicalName()));
 
 			final Method[] mss = cls.getDeclaredMethods();
+
 			final HashSet<ZMethod> zms = Sets.newHashSet();
 			for (final Method m : mss) {
-
-				gZMethod(table, cls, proxyZClass, zms, m);
-
+				addZMethod(table, cls, proxyZClass, zms, m);
 			}
+
 			proxyZClass.setMethodSet(zms);
 			final Field[] fs = cls.getDeclaredFields();
 
@@ -153,17 +156,17 @@ public class ZAOPScaner {
 		return nameBuilder.toString();
 	}
 
-	private static void gZMethod(final HashBasedTable<Class, Method, Class<?>> table, final Class cls,
+	private static void addZMethod(final HashBasedTable<Class, Method, Class<?>> table, final Class cls,
 			final ZClass proxyZClass, final HashSet<ZMethod> zms, final Method m) {
-		final ZMethod zm = ZMethod.copyFromMethod(m);
-//		System.out.println("zm = " + zm);
-		zm.setgReturn(false);
+
 		final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
 		final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
 		final Class<?> returnType = m.getReturnType();
 
 		final Map<Method, Class<?>> row = table.row(cls);
-		if(row.containsKey(m)) {
+
+		// 如果：此方法有自定义注解并且有拦截此注解的AOP类
+		if (row.containsKey(m)) {
 
 			final ZMethod copyZAOPMethod = ZMethod.copyFromMethod(m);
 
@@ -186,15 +189,40 @@ public class ZAOPScaner {
 			zms.add(copyZAOPMethod);
 
 		} else {
+			// 无自定义注解的情况：
+			// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
+			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+				final String insertBody =
+						"if (zvdto.getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
+						+  "for (final " + Field.class.getCanonicalName() + " field : zvdto.getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+						+  		 ZValidator.class.getCanonicalName() + ".validatedAll(zvdto, field);"  + Task.NEW_LINE
+						+   "}" + Task.NEW_LINE
+						+ "}";
 
-			final String body =
-					"void".equals(returnType.getName())
-					?
-					"super." + m.getName() + "(" + a + ");"
-					:
-					"return super." + m.getName() + "(" + a + ");";
-			zm.setBody(body);
-			zms.add(zm);
+				final String body =
+						"void".equals(returnType.getName())
+						? "super." + m.getName() + "(" + a + ");"
+						: "return super." + m.getName() + "(" + a + ");";
+
+				final ZMethod zm = ZMethod.copyFromMethod(m);
+				zm.setgReturn(false);
+				zm.setBody(insertBody  + Task.NEW_LINE + body);
+
+				zms.add(zm);
+
+			} else {
+
+				final String body =
+						  "void".equals(returnType.getName())
+						? "super." + m.getName() + "(" + a + ");"
+						: "return super." + m.getName() + "(" + a + ");";
+
+				final ZMethod zm = ZMethod.copyFromMethod(m);
+				zm.setgReturn(false);
+				zm.setBody(body);
+
+				zms.add(zm);
+			}
 		}
 	}
 
