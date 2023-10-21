@@ -43,6 +43,8 @@ import cn.hutool.core.collection.CollectionUtil;
  */
 public class ZAOPScaner {
 
+	public static final String VOID = "void";
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 	public static final String PROXY_ZCLASS_NAME_SUFFIX = "_ProxyZclass";
 	public static final ConcurrentMap<String, Map<String, ZClass>> zcMap = Maps.newConcurrentMap();
@@ -200,7 +202,7 @@ public class ZAOPScaner {
 						+ "}";
 
 				final String body =
-						"void".equals(returnType.getName())
+						VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
 						: "return super." + m.getName() + "(" + a + ");";
 
@@ -213,7 +215,7 @@ public class ZAOPScaner {
 			} else {
 
 				final String body =
-						  "void".equals(returnType.getName())
+						  VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
 						: "return super." + m.getName() + "(" + a + ");";
 
@@ -228,7 +230,7 @@ public class ZAOPScaner {
 
 	private static String gZMethodBody(final Method m, final String a, final String nnn, final String returnTypeT) {
 		final String body =
-				"void".equals(returnTypeT)
+				VOID.equals(returnTypeT)
 				?
 				"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
 			  + "parameter.setIsVOID(true);" + "\n\t"

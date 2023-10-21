@@ -86,7 +86,7 @@ public class ZComponentScanner {
 								+ "}";
 
 						final String body =
-								"void".equals(returnType.getName())
+								ZAOPScaner.VOID.equals(returnType.getName())
 								? "super." + m.getName() + "(" + a + ");"
 								: "return super." + m.getName() + "(" + a + ");";
 
@@ -99,7 +99,7 @@ public class ZComponentScanner {
 					} else {
 
 						final String body =
-								  "void".equals(returnType.getName())
+								ZAOPScaner.VOID.equals(returnType.getName())
 								? "super." + m.getName() + "(" + a + ");"
 								: "return super." + m.getName() + "(" + a + ");";
 
