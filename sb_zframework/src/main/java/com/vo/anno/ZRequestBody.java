@@ -17,6 +17,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.PARAMETER })
 public @interface ZRequestBody {
-	// FIXME 2023年9月24日 下午4:13:34 zhanghen:  TODO ZNotNull 等检验，加入用于此注释标记的类上
 
 }
