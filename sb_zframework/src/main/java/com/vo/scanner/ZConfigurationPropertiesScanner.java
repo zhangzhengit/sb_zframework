@@ -165,7 +165,7 @@ public class ZConfigurationPropertiesScanner {
 				list.add(p.getString(xa));
 			} else {
 				// 为空也add null，占一个位置，为了这种需求：
-				// [0]=A [1]=C 就是不配置第二个位置让其为空，
+				// [0]=A [2]=C 就是不配置第二个位置让其为空，
 				// 这样取的时候list.get(1) 取得的第二个就是null
 				list.add(null);
 			}
