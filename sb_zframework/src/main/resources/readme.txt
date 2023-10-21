@@ -181,13 +181,20 @@
 		@see 接口注释
 		
 	@ZValidated :
-		用法如下：用在接口方法的参数上，表示校验参数对象里的 @see # 校验注解：
-		
-		public CR buildstart(@ZRequestBody @ZValidated final BuildDTO buildDTO) {
-			// ............
-			// ............
-			return CR.ok();
-		}
+		用法如下：
+			1、用在接口方法的参数上，表示校验参数对象里的 @see # 校验注解：
+				public CR buildstart(@ZRequestBody @ZValidated final BuildDTO buildDTO) {
+					// ............
+					// ............
+					return CR.ok();
+				}
+			2、用在 @ZComponent 类的方法的参数对象上，如：
+				public void zv(final ZVDTO zvdto) {
+					// ............
+				}	
+				ZVDTO 类上加入@ZValidated注解，在接口方法中调用zv方法时则会
+				自动校验ZVDTO里带有 @see # 校验注解 的字段
+			
 		
 	# 自定义响应头,添加如下配置即可,
 		server.responseHeaders.key1=value1
