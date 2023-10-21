@@ -23,7 +23,7 @@ import com.vo.validator.ZStartWith;
  * @date 2023年10月15日
  *
  */
-public interface ZValidator {
+public class ZValidator {
 
 	public static void validatedZNotNull(final Object object, final Field field) {
 		final ZNotNull nn = field.getAnnotation(ZNotNull.class);
