@@ -46,6 +46,10 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+	private static final String AT = "at";
+
+	private static final String CAUSED_BY = "Caused by";
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
@@ -335,8 +339,17 @@ public class NioLongConnectionServer {
 	private static String findCausedby(final String errorMessage) {
 		final String[] ma = errorMessage.split(Task.NEW_LINE);
 		for (final String s : ma) {
-			if(s.startsWith("Caused by")) {
+			if(s.startsWith(CAUSED_BY)) {
 				return s;
+			}
+		}
+
+		final int start = errorMessage.indexOf(CAUSED_BY);
+		if (start > -1) {
+			final int end = errorMessage.indexOf(AT, start);
+			if (end > start) {
+				final String e = errorMessage.substring(start, end);
+				return e;
 			}
 		}
 		return errorMessage;
