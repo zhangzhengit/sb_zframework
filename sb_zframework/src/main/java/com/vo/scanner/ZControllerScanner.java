@@ -185,20 +185,10 @@ public class ZControllerScanner {
 				continue;
 			}
 
-			// FIXME 2023年8月30日 下午7:05:10 zhanghen: debug 删除
-//			if (cls.getName().contains("AOP")) {
-//				final int x = 20;
-//			}
-
 			final List<Class<?>> ziaopSubClassList = Lists.newArrayList(is).stream()
 					.filter(i -> i.getCanonicalName().equals(ZIAOP.class.getCanonicalName()))
 					.collect(Collectors.toList());
 			if (CollUtil.isNotEmpty(ziaopSubClassList)) {
-//				System.out.println("cls = " + cls);
-//				System.out.println("ziaopSubClassList = " + ziaopSubClassList);
-
-//				return ziaopSubClassList;
-//				r.addAll(ziaopSubClassList);
 				r.add((Class<? extends ZIAOP>) cls);
 			}
 		}
