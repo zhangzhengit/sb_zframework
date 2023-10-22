@@ -41,6 +41,7 @@
 		String name;
 		表示 String类型的name字段，取值自配置文件中的name。listenForChanges = true 表示name字段实时读取配置文件
 		变动并且更新字段值.
+		配置文件的K优先于代码中的初始值。
 		
 	@ZComponent 
 		用于声明一个通用组件
