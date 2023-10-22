@@ -498,14 +498,14 @@ public class Task {
 							.filter(rp -> rp.getName().equals(p.getName()))
 							.findAny();
 					if (!findAny.isPresent()) {
-						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
 					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 				} else {
 					final String body = request.getBody();
 					if (StrUtil.isEmpty(body)) {
-						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
 					final List<FormPair> formPairList = FormPair.parse(body);
@@ -515,7 +515,7 @@ public class Task {
 							.findAny();
 
 					if (!findAny.isPresent()) {
-						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
 					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());

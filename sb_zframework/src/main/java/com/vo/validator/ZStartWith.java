@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
  *
  * 放在字段上，表示此字段必须以指定的值开始。
  * 支持String类型。
+ * 此注解自动包含了 @ZNotNull 和 @ZNotEmpty 注解的功能
  *
  * @author zhangzhen
  * @date 2023年6月29日

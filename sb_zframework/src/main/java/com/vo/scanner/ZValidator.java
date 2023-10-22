@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.omg.PortableServer.POAPackage.ObjectAlreadyActiveHelper;
+
+import com.vo.core.ValidatedException;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
@@ -36,21 +39,7 @@ public class ZValidator {
 			return;
 		}
 
-		final String message = ZNotNull.MESSAGE;
-		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t);
-		throw new IllegalArgumentException(format);
-	}
-
-	static Object getFieldValue(final Object object, final Field field) {
-		try {
-			field.setAccessible(true);
-			final Object v = field.get(object);
-			return v;
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return null;
+		throwZNotNullException(object, field);
 	}
 
 	public static void validatedZStartWith(final Object object, final Field field) {
@@ -60,21 +49,21 @@ public class ZValidator {
 		}
 
 		final Class<?> type = field.getType();
-		if(!type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			throw new IllegalArgumentException("@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
+		if (!type.getCanonicalName().equals(String.class.getCanonicalName())) {
+			throw new ValidatedException(
+					"@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
 		}
 
-		field.setAccessible(true);
 		try {
+			field.setAccessible(true);
 			final Object value = field.get(object);
 			if (value == null) {
-				throw new IllegalArgumentException(
-						"@" + ZStartWith.class.getSimpleName() + " 字段[" + field.getName() + "]不能为null");
+				throwZNotNullException(object, field);
 			}
+
 			final String v2 = String.valueOf(value);
 			if (v2.isEmpty()) {
-				throw new IllegalArgumentException(
-						"@" + ZStartWith.class.getSimpleName() + " 字段[" + field.getName() + "]不能为empty");
+				throwZNotEmptyException(object, field);
 			}
 
 			final String prefix = startWidh.prefix();
@@ -86,7 +75,7 @@ public class ZValidator {
 
 				final String format = String.format(message, t, prefix);
 
-				throw new IllegalArgumentException(format);
+				throw new ValidatedException(format);
 			}
 
 		} catch (final IllegalAccessException e) {
@@ -108,19 +97,19 @@ public class ZValidator {
 			final String canonicalName = minFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
 				if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
-					throwZMinMessage(object, field, min, minFiledValue);
+					throwZMinMessage(object, field, (byte) min, minFiledValue);
 				}
 			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
 				if (Short.valueOf(String.valueOf(minFiledValue)) < min) {
-					throwZMinMessage(object, field, min, minFiledValue);
+					throwZMinMessage(object, field, (short) min, minFiledValue);
 				}
 			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
 				if (Integer.valueOf(String.valueOf(minFiledValue)) < min) {
-					throwZMinMessage(object, field, min, minFiledValue);
+					throwZMinMessage(object, field, (int) min, minFiledValue);
 				}
 			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
 				if (Long.valueOf(String.valueOf(minFiledValue)) < min) {
-					throwZMinMessage(object, field, min, minFiledValue);
+					throwZMinMessage(object, field, (long) min, minFiledValue);
 				}
 			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
 				if (Float.valueOf(String.valueOf(minFiledValue)) < min) {
@@ -156,20 +145,6 @@ public class ZValidator {
 
 	}
 
-	static void throwZMaxMessage(final Object object, final Field field, final double max, final Object maxFiledValue) {
-		final String message = ZMax.MESSAGE;
-		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t, max, maxFiledValue);
-		throw new IllegalArgumentException(format);
-	}
-
-	static void throwZMinMessage(final Object object, final Field field, final double min, final Object minFiledValue) {
-		final String message = ZMin.MESSAGE;
-		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t, min, minFiledValue);
-		throw new IllegalArgumentException(format);
-	}
-
 	public static void validatedZNotEmpty(final Object object, final Field field) {
 		final ZNotEmtpy nn = field.getAnnotation(ZNotEmtpy.class);
 		if (nn == null) {
@@ -180,27 +155,22 @@ public class ZValidator {
 		try {
 			final Object value = field.get(object);
 			if (value == null) {
-				// 用 @ZNotNull的提示信息
-				final String message = ZNotNull.MESSAGE;
-				final String t = object.getClass().getSimpleName() + "." + field.getName();
-				final String format = String.format(message, t);
-				throw new IllegalArgumentException(format);
+				throwZNotNullException(object, field);
 			}
 
 			if (value instanceof List || value instanceof Set) {
-				final Collection collection = (Collection) value;
-				if (collection.isEmpty()) {
-					throwZNotEmptyError(object, field);
+				if (((Collection) value).isEmpty()) {
+					throwZNotEmptyException(object, field);
 				}
 			} else if (value instanceof Map) {
-				final Map map = (Map) value;
-				if (map.isEmpty()) {
-					throwZNotEmptyError(object, field);
+				if (((Map) value).isEmpty()) {
+					throwZNotEmptyException(object, field);
 				}
 			} else if (value instanceof String) {
+				// 此处不内联，防止自动保存 两个条件放在了一个if里，导致后续添加else分支时混乱
 				final String string = (String) value;
 				if (string.isEmpty()) {
-					throwZNotEmptyError(object, field);
+					throwZNotEmptyException(object, field);
 				}
 			}
 
@@ -210,11 +180,11 @@ public class ZValidator {
 
 	}
 
-	public static void throwZNotEmptyError(final Object object, final Field field) {
+	private static void throwZNotEmptyException(final Object object, final Field field) {
 		final String message = ZNotEmtpy.MESSAGE;
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
 		final String format = String.format(message, t);
-		throw new IllegalArgumentException(format);
+		throw new ValidatedException(format);
 	}
 
 	public static void validatedZMax(final Object object, final Field field) {
@@ -231,19 +201,19 @@ public class ZValidator {
 			final String canonicalName = minFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
 				if (Byte.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, (byte) max, minFiledValue);
 				}
 			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
 				if (Short.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, (short) max, minFiledValue);
 				}
 			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
 				if (Integer.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, (int) max, minFiledValue);
 				}
 			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
 				if (Long.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, (long) max, minFiledValue);
 				}
 			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
 				if (Float.valueOf(String.valueOf(minFiledValue)) > max) {
@@ -286,6 +256,40 @@ public class ZValidator {
 		validatedZMax(object, field);
 		validatedZStartWith(object, field);
 
+	}
+
+	static Object getFieldValue(final Object object, final Field field) {
+		try {
+			field.setAccessible(true);
+			final Object v = field.get(object);
+			return v;
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private static void throwZMinMessage(final Object object, final Field field, final Object min,
+			final Object minFiledValue) {
+		final String message = ZMin.MESSAGE;
+		final String t = object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t, min, minFiledValue);
+		throw new ValidatedException(format);
+	}
+
+
+	private static void throwZNotNullException(final Object object, final Field field) {
+		final String message = ZNotNull.MESSAGE;
+		final String t = object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t);
+		throw new ValidatedException(format);
+	}
+
+	private static void throwZMaxMessage(final Object object, final Field field, final Object max, final Object maxFiledValue) {
+		final String message = ZMax.MESSAGE;
+		final String t = object.getClass().getSimpleName() + "." + field.getName();
+		final String format = String.format(message, t, max, maxFiledValue);
+		throw new ValidatedException(format);
 	}
 
 }

@@ -48,7 +48,7 @@ public class NioLongConnectionServer {
 
 	private static final String AT = "at";
 
-	private static final String CAUSED_BY = "Caused by";
+	private static final String CAUSED_BY = "Caused by: ";
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
@@ -305,21 +305,18 @@ public class NioLongConnectionServer {
 					// 在此自动write，接口中可以不调用write
 					response.write();
 				}
-			} catch (final Exception e2) {
+			} catch (final Exception e) {
 
 				// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
-				final String message = Task.gExceptionMessage(e2);
+				final String message = Task.gExceptionMessage(e);
 
 				LOG.error("执行错误,message={}", message);
 
-				// XXX message是根据\r\n换行的很多行，只取第一行
-				final String[] ma = message.split(Task.NEW_LINE);
 				new ZResponse(socketChannel)
 						.httpStatus(HttpStatus.HTTP_500.getCode())
 						.contentType(HeaderEnum.JSON.getType())
-						.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_500.getCode(),
-//								"服务器错误：" + ma[0])))
-									"服务器错误：" + findCausedby(message))))
+						.body(JSON.toJSONString(
+								CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
 						.write();
 
 			}
@@ -336,13 +333,15 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private static String findCausedby(final String errorMessage) {
-		// FIXME 2023年10月22日 下午4:56:14 zhanghen: TODO 定义一个zf专用的异常类，
-		// 在此先判断是否此类的异常，是则取得message，否则继续走下面代码
+	private static String findCausedby(final Exception e, final String errorMessage) {
+		if (e instanceof ZFException) {
+			return ((ZFException) e).getMessage();
+		}
+
 		final String[] ma = errorMessage.split(Task.NEW_LINE);
 		for (final String s : ma) {
 			if(s.startsWith(CAUSED_BY)) {
-				return s;
+				return s.substring(s.indexOf(CAUSED_BY) + CAUSED_BY.length());
 			}
 		}
 
@@ -350,8 +349,8 @@ public class NioLongConnectionServer {
 		if (start > -1) {
 			final int end = errorMessage.indexOf(AT, start);
 			if (end > start) {
-				final String e = errorMessage.substring(start, end);
-				return e;
+				final String e1 = errorMessage.substring(start + CAUSED_BY.length(), end);
+				return e1;
 			}
 		}
 		return errorMessage;

@@ -36,27 +36,25 @@ public class FormPair {
 	 */
 	public static List<FormPair> parse(final String body) {
 		if (StrUtil.isEmpty(body)) {
-			throw new IllegalArgumentException("body 不能为空");
+			throw new FormPairParseException("body 不能为空");
 		}
 
 		final String[] fa = body.split("&");
 		if (ArrayUtil.isEmpty(fa)) {
-			throw new IllegalArgumentException("body 必须含有&");
+			throw new FormPairParseException("body 必须含有&");
 		}
 
 		final ArrayList<FormPair> l = Lists.newArrayList();
 		for (final String f : fa) {
 			final String[] f2 = f.split("=");
 			if (ArrayUtil.isEmpty(f2)) {
-				throw new IllegalArgumentException("k-v对缺失, value = " + f);
+				throw new FormPairParseException("k-v对缺失, value = " + f);
 			}
 
 			if (f2.length != 2) {
-				throw new IllegalArgumentException("k-v对格式错误, value = " + f);
+				throw new FormPairParseException("k-v对格式错误, value = " + f);
 			}
 
-//			System.out.println("k = " + f2[0]);
-//			System.out.println("v = " + f2[1]);
 			l.add(new FormPair(f2[0], f2[1]));
 		}
 
