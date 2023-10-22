@@ -410,7 +410,7 @@ public class Task {
 
 				final String htmlContent = ResourcesLoader.loadStaticResourceString(htmlName);
 
-				final String html = ZTemplate.generate(htmlContent);
+				final String html = ZTemplate.freemarker(htmlContent);
 
 				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 				if (serverConfiguration.getGzipEnable()

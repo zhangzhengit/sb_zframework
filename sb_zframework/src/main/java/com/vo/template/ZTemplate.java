@@ -27,109 +27,35 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Z模板，定义一组用于html中的标签，用java解析后，输出html内容
+ * freemarker模板工具类
  *
  * @author zhangzhen
  * @date 2023年6月27日
  *
  */
-// XXX 2023年9月30日 下午9:46:31 zhanghen: 自定义模板太复杂，改用freemarker
 public class ZTemplate {
 
 	private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
 
-//	public static void main(final String[] args) {
-////		test1();
-////		test_switch_Object1();
-//		final String string
-//					="		<#list nodeList as n>"
-//		 		+ "	   		 <tr>"
-//		 		+ "				<td>${n.nickName}</td>"
-//		 		+ "			</tr>"
-//		 		+ "		</#list>";
-//
-//
-//		final NodeStatusDTO statusDTO = new NodeStatusDTO();
-//		statusDTO.setNodeStatus(1);
-//		statusDTO.setNickName("zhangsan");
-//
-//		final ZModel model = new ZModel();
-//		model.set("nodeList", Lists.newArrayList(statusDTO));
-//
-//		freemarker(string);
-//	}
-
-	public static void test_switch_Object1() {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZTemplate.test_switch_Object1()");
-
-		final String html =
-				"<@list[userList] as u>\r\n"
-				+ "			<tr>\r\n"
-				+ "				<td>@value[u.userName]</td>\r\n"
-				+ "				<td>@value[u.status]</td>\r\n"
-				+ "				\r\n"
-				+ "				<@switch[u.status]> \r\n"
-				+ "					<case 1> 	正常\r\n"
-				+ "					<case 2> 	冻结\r\n"
-				+ "				</endswitch[i1]>\r\n"
-				+ "			</tr>\r\n"
-				+ "		</endlist[userList]>";
-
-		System.out.println("html = \n" + html);
-
-
-		final UserEntity userEntity = new UserEntity();
-		userEntity.setStatus(1);
-		userEntity.setUserName("zhangsan");
-
-		final ZModel model = new ZModel();
-		model.set("userList", Lists.newArrayList(userEntity));
-
-		final String r = ZTemplate.generate(html);
-
-		System.out.println("r = ");
-		System.out.println(r);
-
+	/**
+	 * 从一个带有freemarker标签的html文档的字符串形式，处理其中的freemarker标签，而生成一个完整的可以被浏览器直接解析的html文档。
+	 *
+	 * @param htmlContent
+	 * @return
+	 *
+	 */
+	public static String freemarker(final String htmlContent) {
+		return freemarker0(htmlContent);
 	}
 
-
-	public static String generate(final String htmlContent) {
-
-		final String freemarker = freemarker(htmlContent);
-		return freemarker;
-
-		// 1 自定义的简单模板
-//		final String r0 = parseValue(htmlContent);
-//		final String r1 = parseValue2(r0);
-////		final String r1 = parseValue(htmlContent);
-//		final String r2 = parseList(r1);
-//		final String r3 = parseIf(r2);
-//
-//		return r3;
-	}
-
-	private static String freemarker(final String templateString) {
-
-//		cfg.setClassForTemplateLoading(ZTemplate.class, "/"); // 设置模板文件所在目录
+	private static String freemarker0(final String templateString) {
 
 		try {
-//			final Template template = cfg.getTemplate("list.ftl"); // 加载模板文件
 			final Template template = new Template("template-" + templateString.hashCode(), templateString, CFG);
-
 			final StringWriter writer = new StringWriter();
-
-//			final ArrayList<NodeStatusDTO> nodeStatusList = Lists.newArrayList(new NodeStatusDTO(1));
-
 			final Map<String, Object> dataModel = ZModel.get();
-//			final Map<String, Object> dataModel = new HashMap<>();
-//			final int i1 = 3; // 设置变量的值
-
-//			dataModel.put("nodeStatusList", nodeStatusList); // 将变量添加到数据模型中
-
-			template.process(dataModel, writer); // 渲染模板
-
-			final String output = writer.toString(); // 获取渲染后的字符串输出
+			template.process(dataModel, writer);
+			final String output = writer.toString();
 			return output;
 		} catch (IOException | TemplateException e) {
 			e.printStackTrace();
@@ -139,8 +65,6 @@ public class ZTemplate {
 	}
 
 	public static String parseIf(String r) {
-//		System.out.println(
-//				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.parseIf()");
 
 		final ZTEnum SWITCH = ZTEnum.SWITCH;
 		int from = 0;
@@ -152,7 +76,7 @@ public class ZTemplate {
 		for (final Entry<String, Object> entry : map.entrySet()) {
 			final String k = SWITCH.generateKeyword(entry.getKey());
 
-			final int r1 = r.indexOf('<' + k,from);
+			final int r1 = r.indexOf('<' + k, from);
 			if (r1 > -1) {
 				final int end1 = r.indexOf('>', r1);
 				if (end1 > r1) {
@@ -174,8 +98,7 @@ public class ZTemplate {
 						final String rx = p.generate();
 
 //						System.out.println("rrrr = " + r);
-						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
-								.replace(p.getContent(), rx);
+						r = r.replace(p.getStart(), "").replace(p.getEnd(), "").replace(p.getContent(), rx);
 					} else {
 						throw new IllegalArgumentException(SWITCH.getValue() + " 标签没有正确关闭");
 					}
@@ -203,7 +126,7 @@ public class ZTemplate {
 			final String k = list.generateKeyword(entry.getKey());
 //			System.out.println("list-k = " + k);
 
-			final int r1 = r.indexOf('<' + k,from);
+			final int r1 = r.indexOf('<' + k, from);
 			if (r1 > -1) {
 				final int end1 = r.indexOf('>', r1);
 				if (end1 > r1) {
@@ -229,8 +152,7 @@ public class ZTemplate {
 //						System.out.println(p);
 						final String rx = p.generate();
 
-						r = r.replace(p.getStart(), "").replace(p.getEnd(), "")
-								.replace(p.getContent(), rx);
+						r = r.replace(p.getStart(), "").replace(p.getEnd(), "").replace(p.getContent(), rx);
 //						System.out.println("rrrrr = " + r);
 					} else {
 						throw new IllegalArgumentException(ZTEnum.LIST.getValue() + " 标签没有正确关闭");
@@ -267,10 +189,8 @@ public class ZTemplate {
 //		System.out.println("groupList.size = " + groupList.size());
 //		System.out.println("groupList = " + groupList);
 
-
-		final List<String> valueList = groupList.stream()
-			.map(g -> g.replace("@value[", "").replace("]", ""))
-			.collect(Collectors.toList());
+		final List<String> valueList = groupList.stream().map(g -> g.replace("@value[", "").replace("]", ""))
+				.collect(Collectors.toList());
 
 //		System.out.println("valueList = " + valueList);
 
@@ -300,22 +220,20 @@ public class ZTemplate {
 				fieldV.setAccessible(true);
 				final Object fieldValue = fieldV.get(v);
 //				System.out.println("fieldValue = " + fieldValue);
-				if(fieldValue != null) {
+				if (fieldValue != null) {
 //							builder.re
 					final String gk = "@value[" + g;
 					final int g1 = builder.indexOf(gk);
 					builder.replace(g1, g1 + (gk + "]").length(), String.valueOf(fieldValue));
 
-				}else{
+				} else {
 					// FIXME 2023年7月20日 下午12:19:16 zhanghen: TODO 如果模板值不存在，是抛异常还是忽略？
 				}
-			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
-					| IllegalAccessException e) {
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
 		}
 	}
-
 
 	private static String parseValue(String string) {
 		final ZTEnum value = ZTEnum.VALUE;
@@ -323,7 +241,6 @@ public class ZTemplate {
 		if (CollUtil.isEmpty(map)) {
 			return string;
 		}
-
 
 		final Set<Entry<String, Object>> es = map.entrySet();
 		for (final Entry<String, Object> entry : es) {
@@ -345,6 +262,7 @@ public class ZTemplate {
 		private String end;
 
 		private Object value;
+
 		public String generate() {
 			final String keyword = this.start.replace("<@switch[", "").replace("]>", "");
 			int from = 0;
@@ -379,7 +297,6 @@ public class ZTemplate {
 
 				from += i + "<case".length();
 			}
-
 
 			return r.toString();
 		}
@@ -502,8 +419,7 @@ public class ZTemplate {
 					cr.set(ccc);
 //					System.out.println("ccc = " + ccc);
 
-				} catch (SecurityException | IllegalArgumentException
-						| IllegalAccessException e) {
+				} catch (SecurityException | IllegalArgumentException | IllegalAccessException e) {
 					e.printStackTrace();
 				}
 			}
@@ -517,7 +433,7 @@ public class ZTemplate {
 			} catch (NoSuchFieldException | SecurityException e2) {
 //				e2.printStackTrace();
 
-				 Class superClass = object.getClass().getSuperclass();
+				Class superClass = object.getClass().getSuperclass();
 				while (!superClass.getCanonicalName().equals(Object.class.getCanonicalName())) {
 					try {
 						return superClass.getDeclaredField(fieldName);
@@ -559,7 +475,7 @@ public class ZTemplate {
 
 								from += sss.length();
 							}
-						}else {
+						} else {
 							break;
 						}
 					}
@@ -584,60 +500,55 @@ public class ZTemplate {
 		System.out.println(
 				java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t" + "ZTemplate.test1()");
 
-		//		final String htmlContent =
-		//					"<h3>\r\n"
-		//				+ "		if: \r\n"
-		//				+ "		<@switch[i1]>\r\n"
-		//				+ "			<case 1> 	一\r\n"
-		//				+ "			<case 2> 	二\r\n"
-		//				+ "			<case 3> 	三\r\n"
-		//				+ "		</endswitch[i1]>\r\n"
-		//				+ "	</h3>";
+		// final String htmlContent =
+		// "<h3>\r\n"
+		// + " if: \r\n"
+		// + " <@switch[i1]>\r\n"
+		// + " <case 1> 一\r\n"
+		// + " <case 2> 二\r\n"
+		// + " <case 3> 三\r\n"
+		// + " </endswitch[i1]>\r\n"
+		// + " </h3>";
 
-				final String htmlContent  =
+		final String htmlContent =
 
-						  " <p class=\"title\">\r\n"
-						+ "		@value[article.title]\r\n"
-						+ "		@value[name]\r\n"
-						+ "		<h4>\r\n"
-						+ "			@value[article.createTime]\r\n"
-						+ "		</h4>\r\n"
-						+ "	</p>";
+				" <p class=\"title\">\r\n" + "		@value[article.title]\r\n" + "		@value[name]\r\n"
+						+ "		<h4>\r\n" + "			@value[article.createTime]\r\n" + "		</h4>\r\n" + "	</p>";
 
-				final ZModel model = new ZModel();
-		//		model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
-		//		model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
-		//		model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
-		//		model.set("name", "zhangsan");
-		//		model.set("i1", "2");
+		final ZModel model = new ZModel();
+		// model.set("list1", Lists.newArrayList(new ZTemplate.User("测试1", 1111)));
+		// model.set("list2", Lists.newArrayList(new ZTemplate.User("测试2", 2222)));
+		// model.set("list3", Lists.newArrayList(new ZTemplate.User("测试3", 3333)));
+		// model.set("name", "zhangsan");
+		// model.set("i1", "2");
 
-				final ArticleEntity articleEntity = new ArticleEntity();
-				articleEntity.setTitle("开心的一天");
-				articleEntity.setCreateTime(new Date());
-				model.set("article", articleEntity);
-				model.set("name", "zhangsan");
+		final ArticleEntity articleEntity = new ArticleEntity();
+		articleEntity.setTitle("开心的一天");
+		articleEntity.setCreateTime(new Date());
+		model.set("article", articleEntity);
+		model.set("name", "zhangsan");
 
-				final String r = ZTemplate.generate(htmlContent);
+		final String r = ZTemplate.freemarker(htmlContent);
 
-				System.out.println("r = ");
-				System.out.println(r);
+		System.out.println("r = ");
+		System.out.println(r);
 		//
-		////		final String s1 = "@value[articletitle]";
-		//		final String s1 = "@value[article.title]@value[article.createTime]";
-		////		final String s1 = "abc123def456";
-		////		final String regex = "\\d+";
-		//		final String regex = "@value\\[.*?\\]";
-		////	  final String regex = "@value\\[.*?\\..*?\\]";
-		////		"\\A.+?\\."
-		////		final String regex = "@value\\[*\\.+?\\*]";
-		////		final String regex = "@value\\[*.(*)\\]";
+		//// final String s1 = "@value[articletitle]";
+		// final String s1 = "@value[article.title]@value[article.createTime]";
+		//// final String s1 = "abc123def456";
+		//// final String regex = "\\d+";
+		// final String regex = "@value\\[.*?\\]";
+		//// final String regex = "@value\\[.*?\\..*?\\]";
+		//// "\\A.+?\\."
+		//// final String regex = "@value\\[*\\.+?\\*]";
+		//// final String regex = "@value\\[*.(*)\\]";
 		//
-		//		System.out.println("--------------------------");
-		//		final Pattern pattern = Pattern.compile(regex);
-		//		final Matcher matcher = pattern.matcher(s1);
-		//		while(matcher.find()) {
-		//			System.out.println(matcher.group());
-		//		}
+		// System.out.println("--------------------------");
+		// final Pattern pattern = Pattern.compile(regex);
+		// final Matcher matcher = pattern.matcher(s1);
+		// while(matcher.find()) {
+		// System.out.println(matcher.group());
+		// }
 	}
 
 }
