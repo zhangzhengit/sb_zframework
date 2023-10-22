@@ -31,8 +31,6 @@ import cn.hutool.core.io.IoUtil;
  * @date 2023年7月5日
  *
  */
-// FIXME 2023年7月5日 下午3:26:18 zhanghen: TODO @ZValue 已通过加属性listenForChanges 实现实时更新，继续做 @ZConfigurationProperties
-// 或者 不做 @ZConfigurationProperties 的实时更新，因为这大概率可能是基础配置，如端口号等等，如需实时更新，则直接用 @ZValue 算了
 public class ZPropertiesListener {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
