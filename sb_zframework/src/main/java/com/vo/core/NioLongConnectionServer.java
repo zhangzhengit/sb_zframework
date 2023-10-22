@@ -337,6 +337,8 @@ public class NioLongConnectionServer {
 	}
 
 	private static String findCausedby(final String errorMessage) {
+		// FIXME 2023年10月22日 下午4:56:14 zhanghen: TODO 定义一个zf专用的异常类，
+		// 在此先判断是否此类的异常，是则取得message，否则继续走下面代码
 		final String[] ma = errorMessage.split(Task.NEW_LINE);
 		for (final String s : ma) {
 			if(s.startsWith(CAUSED_BY)) {

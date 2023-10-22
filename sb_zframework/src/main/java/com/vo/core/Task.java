@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
@@ -46,6 +47,7 @@ import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
 import com.vo.http.ZQPSLimitation;
+import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZValidator;
 import com.vo.template.ZModel;
@@ -134,52 +136,14 @@ public class Task {
 		}
 
 		final String path = requestLine.getPath();
-
 		final Method method = ZControllerMap.getMethodByMethodEnumAndPath(requestLine.getMethodEnum(), path);
 
 		// 查找对应的控制器来处理
 		if (method == null) {
-			final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
-			if (CollUtil.isNotEmpty(methodMap)) {
-				final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
-				return new ZResponse(this.socketChannel)
-					.header(ZRequest.ALLOW, methodString)
-					.httpStatus(HttpStatus.HTTP_405.getCode())
-					.contentType(HeaderEnum.JSON.getType())
-					.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-							+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)));
-
-			}
-
-			final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
-			final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
-			for (final Entry<String, Method> entry : entrySet) {
-				final Method methodTarget = entry.getValue();
-				final String requestMapping = entry.getKey();
-				if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
-
-					final Object object = ZControllerMap.getObjectByMethod(methodTarget);
-					final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
-					try {
-						ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
-						final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
-						return invokeAndResponse;
-					} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			// 无匹配的正则表达式接口，返回404
-			return	new ZResponse(this.outputStream, this.socketChannel)
-						.httpStatus(HttpStatus.HTTP_404.getCode())
-						.contentType(DEFAULT_CONTENT_TYPE.getType())
-						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))	;
-
+			return this.handleNoMethodMatche(request, requestLine, path);
 		}
 
 		try {
-
 			final Object[] p = this.generateParameters(method, request, requestLine, path);
 			if (p == null) {
 				return null;
@@ -188,22 +152,49 @@ public class Task {
 			final Object zController = ZControllerMap.getObjectByMethod(method);
 			final ZResponse re = this.invokeAndResponse(method, p, zController, request);
 			return re;
-
-//		} catch (final InvocationTargetException | IllegalAccessException e) {
-//			final String message = gExceptionMessage(e);
-//			e.printStackTrace();
-//
-//
-//			return new ZResponse(this.outputStream, this.socketChannel)
-//					.contentType(DEFAULT_CONTENT_TYPE.getType())
-//					.httpStatus(HttpStatus.HTTP_500.getCode())
-////					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR)));
-//					.body(JSON.toJSONString(CR.error(INTERNAL_SERVER_ERROR  + " : " + message)));
-
 		} finally {
 			this.close();
 		}
 
+	}
+
+	private ZResponse handleNoMethodMatche(final ZRequest request, final RequestLine requestLine, final String path) {
+		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
+		if (CollUtil.isNotEmpty(methodMap)) {
+			final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+			return new ZResponse(this.socketChannel)
+				.header(ZRequest.ALLOW, methodString)
+				.httpStatus(HttpStatus.HTTP_405.getCode())
+				.contentType(HeaderEnum.JSON.getType())
+				.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+						+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)));
+
+		}
+
+		final Map<String, Method> rowMap = ZControllerMap.getByMethodEnum(requestLine.getMethodEnum());
+		final Set<Entry<String, Method>> entrySet = rowMap.entrySet();
+		for (final Entry<String, Method> entry : entrySet) {
+			final Method methodTarget = entry.getValue();
+			final String requestMapping = entry.getKey();
+			if (Boolean.TRUE.equals(ZControllerMap.getIsregexByMethodEnumAndPath(methodTarget, requestMapping)) &&path.matches(requestMapping)) {
+
+				final Object object = ZControllerMap.getObjectByMethod(methodTarget);
+				final Object[] arraygP = this.generateParameters(methodTarget, request, requestLine, path);
+				try {
+					ZMappingRegex.set(URLDecoder.decode(path, DEFAULT_CHARSET_NAME));
+					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
+					return invokeAndResponse;
+				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		// 无匹配的正则表达式接口，返回404
+		return	new ZResponse(this.outputStream, this.socketChannel)
+					.httpStatus(HttpStatus.HTTP_404.getCode())
+					.contentType(DEFAULT_CONTENT_TYPE.getType())
+					.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))	;
 	}
 
 	public static String gExceptionMessage(final Throwable e) {
@@ -499,60 +490,36 @@ public class Task {
 				Task.checkZValidated(p, object);
 
 				parametersArray[pI++] = object;
-			} else {
 
-				// 到此 肯定是从 paramSet 取值作为参数，如果 paramSet 为空，则说明没传
+			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
 				final Set<RequestParam> paramSet = requestLine.getParamSet();
-				if (CollUtil.isEmpty(paramSet)) {
+				if (CollUtil.isNotEmpty(paramSet)) {
+					final Optional<RequestParam> findAny = paramSet.stream()
+							.filter(rp -> rp.getName().equals(p.getName()))
+							.findAny();
+					if (!findAny.isPresent()) {
+						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+					}
 
-
-					// FIXME 2023年8月11日 下午9:48:05 zhanghen: 到此待定： 因为要支持 application/x-www-form-urlencoded ，改为先去body
+					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+				} else {
 					final String body = request.getBody();
-					System.out.println("else-body = " + body);
+					if (StrUtil.isEmpty(body)) {
+						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+					}
 
 					final List<FormPair> formPairList = FormPair.parse(body);
-					System.out.println("formPairList = \n");
-					System.out.println(formPairList);
 
-					final Optional<FormPair> findAny = formPairList.stream().filter(rp -> rp.getKey().equals(p.getName()))
+					final Optional<FormPair> findAny = formPairList.stream()
+							.filter(rp -> rp.getKey().equals(p.getName()))
 							.findAny();
 
-					System.out.println("findAny = " + findAny);
 					if (!findAny.isPresent()) {
-						new ZResponse(this.outputStream, this.socketChannel)
-							.httpStatus(HttpStatus.HTTP_404.getCode())
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
-							.write();
-						return null;
+						throw new IllegalArgumentException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
 
 					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
-
-					//					new ZResponse(this.outputStream, this.socketChannel)
-//							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-//							.httpStatus(HttpStatus.HTTP_404.getCode())
-//							.body(JSON.toJSONString(CR.error("Param 为空")))
-//							.write();
-//					 return null;
-
-				} else {
-					final Optional<RequestParam> findAny = paramSet.stream().filter(rp -> rp.getName().equals(p.getName()))
-							.findAny();
-					if (!findAny.isPresent()) {
-						new ZResponse(this.outputStream, this.socketChannel)
-							.httpStatus(HttpStatus.HTTP_404.getCode())
-							.contentType(Task.DEFAULT_CONTENT_TYPE.getType())
-							.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的参数[" + p.getName() + "]不存在")))
-							.write();
-						return null;
-					}
-
-					// 先看参数类型
-					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
-
 				}
-
 
 			}
 
@@ -574,28 +541,30 @@ public class Task {
 
 	}
 
-	private static int setValue(final Object[] parametersArray, int pI, final Parameter p,
-			final Object value) {
+	private static int setValue(final Object[] parametersArray, final int pI, final Parameter p, final Object value) {
+
+		final AtomicInteger nI = new AtomicInteger(pI);
 		if (p.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
-			parametersArray[pI++] = Byte.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Byte.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
-			parametersArray[pI++] = Short.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Short.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
-			parametersArray[pI++] = Integer.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Integer.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
-			parametersArray[pI++] = Long.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Long.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
-			parametersArray[pI++] = Float.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Float.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
-			parametersArray[pI++] = Double.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Double.valueOf(String.valueOf(value));
 		} else if (p.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
-			parametersArray[pI++] = Character.valueOf(String.valueOf(value).charAt(0));
+			parametersArray[nI.getAndIncrement()] = Character.valueOf(String.valueOf(value).charAt(0));
 		} else if (p.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-			parametersArray[pI++] = Boolean.valueOf(String.valueOf(value));
+			parametersArray[nI.getAndIncrement()] = Boolean.valueOf(String.valueOf(value));
 		} else {
-			parametersArray[pI++] = value;
+			parametersArray[nI.getAndIncrement()] = value;
 		}
-		return pI;
+
+		return nI.get();
 	}
 
 	private Object[] generateParameters(final Method method, final ZRequest request, final RequestLine requestLine, final String path) {
