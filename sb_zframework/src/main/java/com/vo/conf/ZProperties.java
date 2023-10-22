@@ -1,6 +1,14 @@
 package com.vo.conf;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -22,8 +30,9 @@ public class ZProperties {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final ThreadLocal<String> PROPERTIESCONFIGURATION_ENCODING = new ThreadLocal<>();
+	private static final Charset ISO88591 = StandardCharsets.ISO_8859_1;
 
+	public static final ThreadLocal<String> PROPERTIESCONFIGURATION_ENCODING = new ThreadLocal<>();
 
 	public static final String PROPERTIES_NAME = "zframework.properties";
 
@@ -65,12 +74,40 @@ public class ZProperties {
 		final String path = propertiesConfiguration.getPath();
 		System.out.println("path = " + path);
 
+		up(propertiesConfiguration, path);
+
 		PROPERTIESCONFIGURATION_ENCODING.set(propertiesConfiguration.getEncoding());
 		System.out.println("propertiesConfiguration-encoding = " + propertiesConfiguration.getEncoding());
 
 		ZPropertiesListener.listen(path);
 
 		P = propertiesConfiguration;
+	}
+
+	/**
+	 *  问题：a.b=这是配置文件里配置的 这个配置使用PropertiesConfiguration获取的结果是=，仅一个=符号。
+	 *  所以使用此方法，先使用java.util.Properties.load 配置文件，然后add到PropertiesConfiguration里面。
+	 *
+	 * @param propertiesConfiguration
+	 * @param path
+	 *
+	 */
+	private static void up(final PropertiesConfiguration propertiesConfiguration, final String path) {
+		final Properties properties = new Properties();
+
+		try (final FileInputStream fileInputStream = new FileInputStream(path);
+				final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, ISO88591);
+				final BufferedReader bufferedReader = new BufferedReader(inputStreamReader);) {
+			properties.load(bufferedReader);
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+
+		propertiesConfiguration.clear();
+		final Set<Object> ks = properties.keySet();
+		for (final Object k : ks) {
+			propertiesConfiguration.addProperty(String.valueOf(k), properties.get(k));
+		}
 	}
 
 }
