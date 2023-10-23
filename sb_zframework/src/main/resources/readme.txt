@@ -1,5 +1,6 @@
 # 使用说明
-	# 配置文件: zframework.properties
+	# 配置文件: zframework.properties 支持零配置启动，配置类 @see ServerConfiguration 其中默认值。
+	 如需自定义配置项，在zframework.properties中覆盖即可，如：server.port=8888 即可覆盖掉默认值80
 	 查找顺序从先到后如下：
 	 	1 jar文件同目录下
 	 	2 jar文件下config下
@@ -7,7 +8,27 @@
 	 	4 IDE中 src/main/resources/config目录下
 	 按1 2 3 4查找，最后没找到则提示 [找不到配置文件]
 	 
-	 配置内容见：ServerConfiguration
+	# 新建工程A
+		1、A引入 依赖
+			<dependency>
+				<groupId>com.vo</groupId>
+				<artifactId>sb_zframework</artifactId>
+				<version>1.0-SNAPSHOT</version>
+			</dependency>
+		2、新建A工程的启动类AMain：
+			
+			public class AMain {
+			
+				public static void main(final String[] args) {
+					final String scanPackageName = "com.vo";
+					ZApplication.run(scanPackageName, true, args);
+				}
+		
+			}
+			
+			即可。com.vo为AMain所在包名。
+			注意：AMain必须在顶级包下，其他包名必须以AMain所在包名为前缀，如：
+				com.vo.api、com.vo.repository等
 	 
 	# 启动方式：
 		java -jar -Dserver.port=7777 app.jar 

@@ -3,6 +3,7 @@ package com.vo.conf;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
+import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 import com.vo.validator.ZStartWith;
 
@@ -23,10 +24,10 @@ import lombok.NoArgsConstructor;
 @ZConfigurationProperties(prefix = "admin")
 public class AdminConfiguration {
 
-	@ZNotNull
-	private String userName;
+	@ZNotEmtpy
+	private String userName = "admin";
 
-	@ZNotNull
-	private String password;
+	@ZNotEmtpy
+	private String password = "admin";
 
 }

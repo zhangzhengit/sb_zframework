@@ -1,8 +1,11 @@
 package com.vo;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import com.vo.conf.ServerConfiguration;
+import com.vo.conf.ZProperties;
+import com.vo.core.StartupException;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 
@@ -19,7 +22,7 @@ import cn.hutool.core.util.StrUtil;
 public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-
+	
 	/**
 	 * 启动程序
 	 *
@@ -31,6 +34,19 @@ public class ZApplication {
 
 		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageName, httpEnable,
 				Arrays.toString(args));
+
+		try {
+			final String packageName = g();
+			if (!Objects.equals(scanPackageName, packageName)) {
+				throw new StartupException(
+						"scanPackageName必须与启动类所在包名一致。当前scanPackageName=" + scanPackageName + ",启动类所在包名=" + packageName);
+			}
+		} catch (final Exception e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+
+		ZProperties.getInstance().addProperty("server.scanPackage", scanPackageName);
 
 		if (StrUtil.isEmpty(scanPackageName)) {
 			throw new IllegalArgumentException("启动出错,scanPackageName 不能为空");
@@ -53,6 +69,29 @@ public class ZApplication {
 						maxMemory / 1024/1024,
 						serverConfiguration
 					);
+	}
+
+
+	private static String g() {
+		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
+		// 写死3
+		final int s = 3;
+		final StackTraceElement stackTraceElement = st[s];
+		final String className = stackTraceElement.getClassName();
+
+		final int i = className.lastIndexOf(".");
+		if (i < 0) {
+			throw new StartupException("获取程序启动类所在包名异常，请确认启动类所在包名形式为A.B，如：com.vo");
+		}
+
+		final String packageName = className.substring(0, i);
+		System.out.println("packageName = " + packageName);
+		final String regex = "\\w+\\.\\w+";
+		if (packageName.matches(regex)) {
+			return packageName;
+		}
+
+		throw new StartupException("获取程序启动类所在包名异常，当前包名为" + packageName + "，请确认启动类所在包名形式为A.B，如：com.vo");
 	}
 
 }

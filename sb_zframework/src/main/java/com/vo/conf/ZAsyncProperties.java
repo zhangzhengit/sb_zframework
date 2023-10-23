@@ -3,6 +3,7 @@ package com.vo.conf;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
+import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
 import lombok.AllArgsConstructor;
@@ -28,12 +29,13 @@ public class ZAsyncProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer threadCount;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 10;
 
 	/**
 	 * 线程名称前缀
 	 */
 	@ZNotNull
-	private String threadNamePrefix;
+	@ZNotEmtpy
+	private String threadNamePrefix = "zasync-Thread-";
 
 }

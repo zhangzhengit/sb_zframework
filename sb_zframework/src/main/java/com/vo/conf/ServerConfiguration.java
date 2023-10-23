@@ -30,27 +30,28 @@ public class ServerConfiguration {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	private Integer port;
+	private Integer port = 80;
 
-	/**
-	 * 是否开启SSL
-	 */
-	@ZNotNull
-	private Boolean sslEnable;
 
 	/**
 	 * server的name，用于响应头中的Server字段
 	 */
 	@ZNotNull
-	private String name;
+	private String name = "ZServer";
 
+	/**
+	 * 是否开启SSL
+	 */
 	@ZNotNull
+	private Boolean sslEnable = false;
+
+//	@ZNotNull
 	private String sslKeyStore;
 
-	@ZNotNull
+//	@ZNotNull
 	private String sslPassword;
 
-	@ZNotNull
+//	@ZNotNull
 	private String sslType;
 
 	/**
@@ -59,19 +60,19 @@ public class ServerConfiguration {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer threadCount;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 10;
 
 	/**
 	 * 是否启用静态资源的缓存
 	 */
 	@ZNotNull
-	private Boolean staticResourceCacheEnable;
+	private Boolean staticResourceCacheEnable = true;
 
 	/**
-	 * 	扫描的包配置，如：com.vo
+	 * 扫描的包配置，如：com.vo
 	 */
 	@ZNotNull
-	private String scanPackage;
+	private String scanPackage = "com.vo";
 
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
@@ -80,7 +81,7 @@ public class ServerConfiguration {
 	@ZMax(max = 52000000)
 	// FIXME 2023年7月17日 下午9:33:16 zhanghen: TODO debug min=0的情况下并且qps配置为0，调用接口
 	// while socketChannel.write 报错问题
-	private Integer qps;
+	private Integer qps = 10000 * 10;
 
 	/**
 	 * 是否启用内置的 StaticController,
@@ -88,7 +89,8 @@ public class ServerConfiguration {
 	 * 静态资源
 	 */
 	@ZNotNull
-	private Boolean staticControllerEnable;
+	private Boolean staticControllerEnable = true;
+
 	/**
 	 * 长连接超时时间，一个长连接超过此时间则关闭，单位：秒
 	 */
@@ -96,7 +98,7 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	@ZMax(max = 86400)
 	// FIXME 2023年7月4日 下午6:57:06 zhanghen: TODO 改为：从连接最后一次活动开始计时，超过此值再关闭
-	private Integer keepAliveTimeout;
+	private Integer keepAliveTimeout = 60 * 10;
 
 	/**
 	 * session超时秒数，超时此值则销毁session
@@ -104,7 +106,7 @@ public class ServerConfiguration {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Long sessionTimeout;
+	private Long sessionTimeout = 60 * 60 * 24 * 10L;
 
 	/**
 	 * 配置硬盘上的资源目录，如：E\\x
@@ -120,19 +122,19 @@ public class ServerConfiguration {
 	 */
 	@ZNotNull
 	@ZStartWith(prefix = "/")
-	private String staticPrefix;
+	private String staticPrefix = "/static";
 
 	/**
 	 * 是否开启gzip压缩
 	 */
 	@ZNotNull
-	private Boolean gzipEnable;
+	private Boolean gzipEnable = true;
 
 	/**
 	 * 开启gzip的content-type,如需配置多个，则用,隔开，如： text/html,text/css
 	 */
 	@ZNotNull
-	private String gzipTypes;
+	private String gzipTypes = "text/html,text/css,application/json";
 
 	/**
 	 * 资源大于多少KB才启用gzip压缩
@@ -140,7 +142,7 @@ public class ServerConfiguration {
 	@ZNotNull
 	@ZMin(min = 1)
 	// FIXME 2023年7月2日 上午1:31:33 zhanghen: gzipMinLength这个值用上
-	private Integer gzipMinLength;
+	private Integer gzipMinLength = 1;
 
 	/**
 	 * 支持的自定义响应头header，如：解决CORS问题，配置如下：
