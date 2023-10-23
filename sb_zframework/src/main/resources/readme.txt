@@ -65,7 +65,7 @@
 		配置文件的K优先于代码中的初始值。
 		
 	@ZComponent 
-		用于声明一个通用组件
+		用于声明一个通用组件，让容器自动管理，带此注解的对象，都可以使用 @ZAutowired 注解来自动注入
 		
 	@ZController 
 		用于声明一个http接口类
@@ -106,7 +106,10 @@
 				
 				
 	@ZAutowired
-		用于自动注入一个由容器管理的对象
+		用于自动注入一个由容器管理的对象，包括：
+		1、@ZComponent 		声明的 
+		2、@ZBean 			声明的
+		3、ZContext.add 		方法手动注入的
 		
 	AOP 使用步骤：
 	
@@ -190,7 +193,7 @@
 			
 	@ZAsync 
 		用在方法上，表示此方法异步执行，使用说明：
-		1、配置文件添加如下内容：
+		1、[可选项]配置文件添加如下内容：
 			async.thread.count=12
 			async.thread.name.prefix=zasync-Thread-
 		2、在目标方法A上加入 @ZAsync，直接调用A即可
@@ -231,19 +234,6 @@
 		@ZNotEmtpy 表示此配置字段不能是empty,支持类型：String、List、Set、Map，都是使用isEmpty来判断
 		@ZNotNull 表示此配置字段不能是null,支持所有类型
 		@ZStartWith 表示此配置字段必须以特定值开头,支持String类型
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
