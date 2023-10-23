@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 import com.vo.enums.BeanModeEnum;
+import com.vo.validator.ZMin;
 
 /**
  *
@@ -25,7 +26,11 @@ import com.vo.enums.BeanModeEnum;
  *
  * 	会先进行匹配	orderCount
  * 	无则继续匹配	order.count
- *	仍无并且字段存在 @ZNotNull 则抛异常提示 xx不能为null
+ *	仍无的情况：
+ *		1、字段带有校验注解并且初始化符合校验规则，则提示校验信息：
+ *			如：@ZNotNull private Integer a;  会提示 ZNotNull.MESSAGE
+ *			   @ZMin(min = 5) private Integer a = 1;  会提示 ZMin.MESSAGE
+ *      2、字符不带有校验注解，则初始化默认为什么都可以
  *
  * @author zhangzhen
  * @date 2023年6月12日
