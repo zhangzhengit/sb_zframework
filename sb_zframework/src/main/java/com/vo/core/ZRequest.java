@@ -53,6 +53,11 @@ public class ZRequest {
 	// -------------------------------------------------------------------------------------------------
 	private List<String> lineList = Lists.newArrayList();
 
+	/**
+	 * http完整的请求信息
+	 */
+	private byte[] originalRequestBytes;
+
 	private String body;
 	private RequestLine requestLine;
 

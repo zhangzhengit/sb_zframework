@@ -467,19 +467,14 @@ public class Task {
 				final String name = a.value();
 				final String headerValue = requestLine.getHeaderMap().get(name);
 				if ((headerValue == null) && a.required()) {
-					new ZResponse(this.outputStream, this.socketChannel)
-						.httpStatus(HttpStatus.HTTP_404.getCode())
-						.contentType(DEFAULT_CONTENT_TYPE.getType())
-						.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法[" + path + "]的header[" + name + "]不存在")))
-						.write();
-					return null;
+					throw new FormPairParseException("请求方法[" + path + "]的header[" + p.getName() + "]不存在");
 				}
 				parametersArray[pI++] = headerValue;
 			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
 			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
-				final ZResponse hResponse = new ZResponse(this.outputStream, this.socketChannel);
-				parametersArray[pI++] = hResponse;
+				final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
+				parametersArray[pI++] = response;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
 				parametersArray[pI++] = model;
@@ -507,13 +502,17 @@ public class Task {
 					if (StrUtil.isEmpty(body)) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
+					final byte[] originalRequestBytes = request.getOriginalRequestBytes();
 
-					final List<FormPair> formPairList = FormPair.parse(body);
+					final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
+					if (CollUtil.isEmpty(fdList)) {
+						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+					}
 
-					final Optional<FormPair> findAny = formPairList.stream()
-							.filter(rp -> rp.getKey().equals(p.getName()))
+					final Optional<FormData> findAny = fdList.stream()
+							.filter(f -> StrUtil.isEmpty(f.getFileName()))
+							.filter(f -> f.getName().equals(p.getName()))
 							.findAny();
-
 					if (!findAny.isPresent()) {
 						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
 					}
@@ -521,6 +520,33 @@ public class Task {
 					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
 				}
 
+			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
+				// FIXME 2023年10月26日 下午9:28:39 zhanghen: 写这里
+				final String body = request.getBody();
+				if (StrUtil.isEmpty(body)) {
+					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				}
+				final byte[] originalRequestBytes = request.getOriginalRequestBytes();
+
+				final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
+				if (CollUtil.isEmpty(fdList)) {
+					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				}
+
+				final Optional<FormData> findAny = fdList.stream()
+						.filter(f -> StrUtil.isNotEmpty(f.getFileName()))
+						.filter(f -> f.getName().equals(p.getName()))
+						.findAny();
+				if (!findAny.isPresent()) {
+					throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+				}
+
+				final ZMultipartFile file = new ZMultipartFile (findAny.get().getName(),
+						findAny.get().getFileName(),
+						findAny.get().getValue().getBytes(NioLongConnectionServer.CHARSET),
+						findAny.get().getContentType(), null);
+
+				pI = Task.setValue(parametersArray, pI, p, file);
 			}
 
 		}
@@ -731,7 +757,7 @@ public class Task {
 	private static void paserHeader(final ZRequest request, final ZRequest.RequestLine requestLine) {
 		final List<String> x = request.getLineList();
 		final HashMap<String, String> hm = new HashMap<>(16, 1F);
-		for (int i = 1; i < x.size(); i++) {
+		for (int i = x.size() - 1; i > 0; i--) {
 			final String l = x.get(i);
 			if (EMPTY_STRING.equals(l)) {
 				continue;
@@ -741,6 +767,7 @@ public class Task {
 			if (k > -1) {
 				final String key = l.substring(0, k).trim();
 				final String value = l.substring(k + 1).trim();
+
 				hm.put(key, value);
 			}
 		}
@@ -795,14 +822,25 @@ public class Task {
 				} else if (contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
 
 					// FIXME 2023年8月11日 下午10:19:34 zhanghen: TODO 继续支持 multipart/form-data
-					System.out.println("okContent-Type: multipart/form-data");
+//					System.out.println("okContent-Type: multipart/form-data");
 
+					final ArrayList<String> body = Lists.newArrayList();
 					final StringBuilder formBu = new StringBuilder();
 					for (int k = i + 1; k < x.size(); k++) {
 						formBu.append(x.get(k)).append(Task.NEW_LINE);
+						body.add(x.get(k));
 					}
 
-					System.out.println("formBu = " + formBu);
+
+					request.setBody(formBu.toString());
+//					System.out.println("formBu = \n" + formBu);
+
+					final List<FormData> formList = FormData.parseFormData(body.toArray(new String[0]), body.get(0));
+//					System.out.println("---------formList.size = " + formList.size());
+					for (final FormData form: formList) {
+//						System.out.println(form);
+					}
+//					System.out.println("---------formList.size = " + formList.size());
 				}
 
 

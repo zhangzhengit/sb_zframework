@@ -19,10 +19,16 @@ import cn.hutool.core.util.StrUtil;
  * @date 2023年6月19日
  *
  */
+// FIXME 2023年10月23日 下午10:11:08 zhanghen: 测试遇到的问题：
+/*
+ * 1 linux ab 命令  http://192.168.1.14/form?name=A&id=1  测试如下方法，取不到id参数。其不支持get请求对参数进行编码
+ *
+ */
+
 public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
-	
+
 	/**
 	 * 启动程序
 	 *

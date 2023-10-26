@@ -1,6 +1,9 @@
 package com.vo.core;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -8,7 +11,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -46,6 +49,10 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+//	public static final Charset CHARSET = Charset.defaultCharset();
+//	public static final Charset CHARSET = Charset.forName("UTF-8");
+	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
+
 	private static final String AT = "at";
 
 	private static final String CAUSED_BY = "Caused by: ";
@@ -71,7 +78,9 @@ public class NioLongConnectionServer {
 
 	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 
-	private static final int BUFFER_SIZE = 1024 * 100;
+//	private static final int BUFFER_SIZE = Integer.MAX_VALUE - 2000;
+//	private static final int BUFFER_SIZE = 1024 * 44;
+	private static final int BUFFER_SIZE = 1024;
 
 	public void startNIOServer(final Integer serverPort) {
 
@@ -121,6 +130,7 @@ public class NioLongConnectionServer {
 				} else if (key.isReadable()) {
 					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 						this.handleRead(key);
+//						this.handleRead2(key);
 					} else {
 						final String message = "服务器访问频繁，请稍后再试";
 						new ZResponse((SocketChannel) key.channel())
@@ -198,16 +208,50 @@ public class NioLongConnectionServer {
 
 	}
 
+	private void handleRead2(final SelectionKey key) {
+		final SocketChannel socketChannel = (SocketChannel) key.channel();
+		try {
+			socketChannel.configureBlocking(false);
+			final InputStream inputStream = socketChannel.socket().getInputStream();
+			final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+			while (true) {
+				final String line = reader.readLine();
+				if (line == null) {
+					break;
+				}
+				System.out.println(line);
+			}
+			System.out.println();
+
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	private void handleRead(final SelectionKey key) {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		if (!socketChannel.isOpen()) {
 			return;
 		}
 
-		int bytesRead = -4;
-		final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+		int bytesRead = 0;
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
+		final ZArray array = new ZArray();
 		try {
-			bytesRead = socketChannel.read(buffer);
+			while (true) {
+				final int tR = socketChannel.read(byteBuffer);
+				if (tR <= 0) {
+					break;
+				}
+				bytesRead += tR;
+
+				final int position = byteBuffer.position();
+				byteBuffer.flip();
+				array.add(byteBuffer.array(), 0, position);
+				byteBuffer.clear();
+			}
+
 		} catch (final IOException e) {
 			return;
 		}
@@ -216,36 +260,35 @@ public class NioLongConnectionServer {
 			try {
 				socketChannel.close();
 				key.cancel();
-//				System.out.println("bytesRead == -1 | socketChannel.close();");
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
 			return;
 		}
 
-		if (bytesRead > 0) {
-			buffer.flip();
-			final byte[] requestData = new byte[buffer.remaining()];
-			buffer.get(requestData);
+		if ((bytesRead > 0) && socketChannel.isOpen()) {
 
-			final String requestString = new String(requestData, StandardCharsets.UTF_8);
+			ZServer.ZE.executeInQueue(() -> {
+				synchronized (socketChannel) {
+					final byte[] requestData = array.get();
 
-			if (socketChannel.isOpen()) {
+					final String requestString = new String(requestData,CHARSET);
 
-				ZServer.ZE.executeInQueue(() -> {
-					synchronized (socketChannel) {
-						if (socketChannel.isOpen()) {
-							NioLongConnectionServer.response(key, socketChannel, requestString);
-						}
+					final Task task = new Task(socketChannel);
+					final ZRequest request = task.handleRead(requestString);
+					request.setOriginalRequestBytes(requestData);
+					if (socketChannel.isOpen()) {
+						NioLongConnectionServer.response(key, socketChannel, requestString, request);
 					}
+				}
 
-				});
+			});
 
-			}
 		}
 	}
 
-	private static void response(final SelectionKey key, final SocketChannel socketChannel, final String requestString) {
+
+	private static void response(final SelectionKey key, final SocketChannel socketChannel, final String requestString, final ZRequest request) {
 
 		final Task task = new Task(socketChannel);
 
@@ -255,7 +298,8 @@ public class NioLongConnectionServer {
 //		System.out.println();
 
 
-		final ZRequest zRequest = task.handleRead(requestString);
+		final ZRequest zRequest = request;
+//		final ZRequest zRequest = task.handleRead(requestString);
 
 		final String connection = zRequest.getHeader(HttpHeaderEnum.CONNECTION.getValue());
 		final boolean keepAlive = StrUtil.isNotEmpty(connection)
