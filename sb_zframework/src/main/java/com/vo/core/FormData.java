@@ -36,6 +36,7 @@ public class FormData {
 
 	public String getValue() {
 
+		// FIXME 2023年10月26日 下午10:14:11 zhanghen: TODO debug from=3时，有时 origin 只有2?是没读取到完整的请求
 		final int from = StrUtil.isEmpty(this.getContentType()) ? 2 : 3;
 		final String[] ss = Arrays.copyOfRange(this.origin, from, this.origin.length);
 		final StringBuilder builder = new StringBuilder();
