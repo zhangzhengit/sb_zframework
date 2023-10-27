@@ -236,7 +236,9 @@
 		@ZStartWith 表示此配置字段必须以特定值开头,支持String类型
 	
 	
-	
+	@ZSynchronously：
+		用在方法上，key=参数名 或 参数名.字段名
+		AOP实现为：相同key值的调用，使用同一个线程排队执行
 	
 	
 	
