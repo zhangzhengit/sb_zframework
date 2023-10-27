@@ -36,11 +36,11 @@ public class FormData {
 
 	public String getValue() {
 
-		// FIXME 2023年10月26日 下午10:14:11 zhanghen: TODO debug from=3时，有时 origin 只有2?是没读取到完整的请求
 		final int from = StrUtil.isEmpty(this.getContentType()) ? 2 : 3;
+
 		final String[] ss = Arrays.copyOfRange(this.origin, from, this.origin.length);
 		final StringBuilder builder = new StringBuilder();
-		for(int i = 0;i<ss.length;i++) {
+		for (int i = 0; i < ss.length; i++) {
 			final String x = ss[i];
 			builder.append(x.trim());
 			if (i < ss.length - 1) {
@@ -105,12 +105,8 @@ public class FormData {
 		return false;
 	}
 
-	public static void parseFormData1(final String[] body,final String reqeustString) {
-		final String boundary = getBoundary(reqeustString, body);
-		parseFormData(body, boundary);
-	}
-
 	public static List<FormData> parseFormData(final byte[] ba) {
+
 		final String requestString = new String(ba, NioLongConnectionServer.CHARSET);
 		final String[] sp = requestString.split(Task.NEW_LINE);
 
@@ -120,9 +116,6 @@ public class FormData {
 		return parseFormData;
 	}
 
-	public static void parseFormData(final java.util.List<String> list, final String boundary) {
-		parseFormData(list.toArray(new String[0]), boundary);
-	}
 
 	/**
 	 * 从form-data的body中解析出 K、V、filename等

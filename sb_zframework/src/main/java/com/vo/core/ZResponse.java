@@ -189,12 +189,11 @@ public class ZResponse {
 	private void writeSocketChannel() {
 		try {
 			final ByteBuffer buffer = this.fillByteBuffer();
-			while (buffer.remaining() > 0) {
+			while (buffer.remaining() > 0 && this.socketChannel.isOpen()) {
 				this.socketChannel.write(buffer);
 			}
-
 		} catch (final IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 	}
 

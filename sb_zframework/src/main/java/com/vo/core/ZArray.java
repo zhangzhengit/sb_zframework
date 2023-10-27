@@ -30,9 +30,21 @@ public class ZArray {
 
 	private final AtomicReference<byte[]> ar = new AtomicReference<>(new byte[] {});
 
+	public ZArray() {
+
+	}
+
+	public ZArray(final byte[] ba) {
+		this.ar.set(ba);
+	}
+
 	public byte[] add(final byte[] ba, final int from, final int to) {
 		final byte[] add = Arrays.copyOfRange(ba, from, to);
-		this.ar.set(ArrayUtil.addAll(this.ar.get(), add));
+		if (this.ar.get().length <= 0) {
+			this.ar.set(add);
+		} else {
+			this.ar.set(ArrayUtil.addAll(this.ar.get(), add));
+		}
 		return this.ar.get();
 	}
 
@@ -66,6 +78,10 @@ public class ZArray {
 
 	public byte[] get() {
 		return this.ar.get();
+	}
+
+	public void clear() {
+		this.ar.set(new byte[0]);
 	}
 
 }

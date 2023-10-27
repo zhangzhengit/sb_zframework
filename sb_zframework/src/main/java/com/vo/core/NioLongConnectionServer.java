@@ -1,9 +1,6 @@
 package com.vo.core;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -13,6 +10,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +48,8 @@ import lombok.NoArgsConstructor;
 public class NioLongConnectionServer {
 
 //	public static final Charset CHARSET = Charset.defaultCharset();
-//	public static final Charset CHARSET = Charset.forName("UTF-8");
-	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
+	public static final Charset CHARSET = Charset.forName("UTF-8");
+//	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
 
 	private static final String AT = "at";
 
@@ -78,9 +76,7 @@ public class NioLongConnectionServer {
 
 	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 
-//	private static final int BUFFER_SIZE = Integer.MAX_VALUE - 2000;
-//	private static final int BUFFER_SIZE = 1024 * 44;
-	private static final int BUFFER_SIZE = 1024;
+	private static final int BUFFER_SIZE = SERVER_CONFIGURATION.getByteBufferSize();
 
 	public void startNIOServer(final Integer serverPort) {
 
@@ -130,7 +126,6 @@ public class NioLongConnectionServer {
 				} else if (key.isReadable()) {
 					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 						this.handleRead(key);
-//						this.handleRead2(key);
 					} else {
 						final String message = "服务器访问频繁，请稍后再试";
 						new ZResponse((SocketChannel) key.channel())
@@ -200,33 +195,7 @@ public class NioLongConnectionServer {
 		} catch (final ClosedChannelException e) {
 			e.printStackTrace();
 		}
-//		try {
-////			System.out.println("新连接： " + socketChannel.getRemoteAddress());
-//		} catch (final IOException e) {
-//			e.printStackTrace();
-//		}
 
-	}
-
-	private void handleRead2(final SelectionKey key) {
-		final SocketChannel socketChannel = (SocketChannel) key.channel();
-		try {
-			socketChannel.configureBlocking(false);
-			final InputStream inputStream = socketChannel.socket().getInputStream();
-			final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-			while (true) {
-				final String line = reader.readLine();
-				if (line == null) {
-					break;
-				}
-				System.out.println(line);
-			}
-			System.out.println();
-
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private void handleRead(final SelectionKey key) {
@@ -235,135 +204,176 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-		int bytesRead = 0;
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
-		final ZArray array = new ZArray();
-		try {
-			while (true) {
-				final int tR = socketChannel.read(byteBuffer);
-				if (tR <= 0) {
-					break;
-				}
-				bytesRead += tR;
-
-				final int position = byteBuffer.position();
-				byteBuffer.flip();
-				array.add(byteBuffer.array(), 0, position);
-				byteBuffer.clear();
-			}
-
-		} catch (final IOException e) {
-			return;
-		}
-
-		if (bytesRead == -1) {
+		int bytesRead = 0;
+		ZArray array = null;
+		boolean readFirst = true;
+		while (true) {
+			int tR = 0;
 			try {
-				socketChannel.close();
-				key.cancel();
+				tR = socketChannel.read(byteBuffer);
 			} catch (final IOException e) {
-				e.printStackTrace();
+				this.socketChannelCloseAndKeyCancel(key, socketChannel);
+				break;
 			}
+			bytesRead += tR;
+			if (tR <= 0) {
+				break;
+			}
+
+			if (tR <= -1) {
+				break;
+			}
+
+			if (readFirst && tR < BUFFER_SIZE) {
+				array = new ZArray(Arrays.copyOfRange(byteBuffer.array(), 0, tR));
+				break;
+			}
+
+			readFirst = false;
+			if (array == null) {
+				array = new ZArray();
+			}
+
+			final int position = byteBuffer.position();
+			byteBuffer.flip();
+
+			array.add(byteBuffer.array(), 0, position);
+
+			if (!readFirst && tR < BUFFER_SIZE) {
+				break;
+			}
+
+			byteBuffer.clear();
+		}
+
+		if (bytesRead <= 0) {
+			this.socketChannelCloseAndKeyCancel(key, socketChannel);
+		}
+
+		if (!socketChannel.isOpen()) {
 			return;
 		}
 
-		if ((bytesRead > 0) && socketChannel.isOpen()) {
+		this.responseAsync(key, socketChannel, array.get());
+	}
 
-			ZServer.ZE.executeInQueue(() -> {
-				synchronized (socketChannel) {
-					final byte[] requestData = array.get();
+	private void responseAsync(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
+		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(key, socketChannel, requestData));
+	}
 
-					final String requestString = new String(requestData,CHARSET);
+	private static void response(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
+		synchronized (socketChannel) {
 
-					final Task task = new Task(socketChannel);
-					final ZRequest request = task.handleRead(requestString);
-					request.setOriginalRequestBytes(requestData);
-					if (socketChannel.isOpen()) {
-						NioLongConnectionServer.response(key, socketChannel, requestString, request);
-					}
+//				System.out.println("requestData.length = " + requestData.length);
+			final String requestString = new String(requestData, CHARSET);
+//				System.out.println("requestString = \n" + requestString);
+
+			final Task task = new Task(socketChannel);
+			try {
+				final ZRequest request = task.handleRead(requestString);
+				request.setOriginalRequestBytes(requestData);
+				if (socketChannel.isOpen()) {
+					NioLongConnectionServer.response(key, socketChannel, request, task);
 				}
 
-			});
+			} catch (final Exception e) {
+				// FIXME 2023年10月27日 下午9:54:50 zhanghen: XXX postman form-data上传文件，一次请求会分两次发送？
+				// 导致 FormData.parse 解析出错。在此提示出来
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("task.handleRead异常,message={}", message);
+				new ZResponse(socketChannel)
+					.httpStatus(HttpStatus.HTTP_500.getCode())
+					.contentType(HeaderEnum.JSON.getType())
+					.body(JSON.toJSONString(
+							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
+					.write();
+			}
 
 		}
 	}
 
+	void n() {
 
-	private static void response(final SelectionKey key, final SocketChannel socketChannel, final String requestString, final ZRequest request) {
+	}
 
-		final Task task = new Task(socketChannel);
+	private void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+		try {
+			socketChannel.close();
+			key.cancel();
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-		// FIXME 2023年8月11日 下午9:27:23 zhanghen: debug syso requestString
-//		System.out.println("requestString = \n");
-//		System.out.println(requestString);
-//		System.out.println();
 
-
-		final ZRequest zRequest = request;
-//		final ZRequest zRequest = task.handleRead(requestString);
-
-		final String connection = zRequest.getHeader(HttpHeaderEnum.CONNECTION.getValue());
-		final boolean keepAlive = StrUtil.isNotEmpty(connection)
-				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
-						|| connection.toLowerCase()
-								.contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
+	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
+			final Task task) {
 
 		// 解析请求时，无匹配的Method
-		if (zRequest.getRequestLine().getMethodEnum() == null) {
+		if (request.getRequestLine().getMethodEnum() == null) {
 			final MethodEnum[] values = MethodEnum.values();
 			final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+			final CR<Object> error = CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage());
 			new ZResponse(socketChannel)
 				.header(ZRequest.ALLOW, methodString)
 				.httpStatus(HttpStatus.HTTP_405.getCode())
 				.contentType(HeaderEnum.JSON.getType())
-				.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage())))
+				.body(JSON.toJSONString(error))
 				.write();
-		} else {
-			try {
-				final ZResponse response = task.invoke(zRequest);
-				if (response != null && !response.getWrite().get()) {
+			return;
+		}
 
-					response.header(SERVER, SERVER_VALUE);
+		final String connection = request.getHeader(HttpHeaderEnum.CONNECTION.getValue());
+		final boolean keepAlive = StrUtil.isNotEmpty(connection)
+				&& (connection.equalsIgnoreCase(ConnectionEnum.KEEP_ALIVE.getValue())
+						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
 
-					final ZSession sessionFALSE = zRequest.getSession(false);
-					if (sessionFALSE == null) {
-						final ZSession sessionTRUE = zRequest.getSession(true);
-						final ZCookie cookie =
-								new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
-								.path("/")
-								.httpOnly(true);
-						response.cookie(cookie);
-					}
+		try {
+			final ZResponse response = task.invoke(request);
+			if (response != null && !response.getWrite().get()) {
 
-					if (keepAlive) {
-						response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-					}
+				response.header(SERVER, SERVER_VALUE);
 
-					final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
-					if (CollUtil.isNotEmpty(responseHeaders)) {
-						final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
-						for (final Entry<String, String> entry : entrySet) {
-							response.header(entry.getKey(), entry.getValue());
-						}
-					}
-
-					// 在此自动write，接口中可以不调用write
-					response.write();
+				final ZSession sessionFALSE = request.getSession(false);
+				if (sessionFALSE == null) {
+					final ZSession sessionTRUE = request.getSession(true);
+					final ZCookie cookie =
+							new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
+							.path("/")
+							.httpOnly(true);
+					response.cookie(cookie);
 				}
-			} catch (final Exception e) {
 
-				// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
-				final String message = Task.gExceptionMessage(e);
+				if (keepAlive) {
+					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+				}
 
-				LOG.error("执行错误,message={}", message);
+				final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
+				if (CollUtil.isNotEmpty(responseHeaders)) {
+					final Set<Entry<String, String>> entrySet = responseHeaders.entrySet();
+					for (final Entry<String, String> entry : entrySet) {
+						response.header(entry.getKey(), entry.getValue());
+					}
+				}
 
-				new ZResponse(socketChannel)
-						.httpStatus(HttpStatus.HTTP_500.getCode())
-						.contentType(HeaderEnum.JSON.getType())
-						.body(JSON.toJSONString(
-								CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
-						.write();
-
+				// 在此自动write，接口中可以不调用write
+				response.write();
 			}
+		} catch (final Exception e) {
+
+			// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
+			final String message = Task.gExceptionMessage(e);
+
+			LOG.error("执行错误,message={}", message);
+
+			new ZResponse(socketChannel)
+					.httpStatus(HttpStatus.HTTP_500.getCode())
+					.contentType(HeaderEnum.JSON.getType())
+					.body(JSON.toJSONString(
+							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
+					.write();
+
 		}
 
 		if (keepAlive) {

@@ -40,6 +40,14 @@ public class ServerConfiguration {
 	private String name = "ZServer";
 
 	/**
+	 * 读取http请求的ByteBuffer的容量大小
+	 */
+	@ZNotNull
+	@ZMin(min = 1)
+	@ZMax(max = 500000)
+	private Integer byteBufferSize = 1024 * 2;
+
+	/**
 	 * 是否开启SSL
 	 */
 	@ZNotNull
@@ -81,7 +89,7 @@ public class ServerConfiguration {
 	@ZMax(max = 52000000)
 	// FIXME 2023年7月17日 下午9:33:16 zhanghen: TODO debug min=0的情况下并且qps配置为0，调用接口
 	// while socketChannel.write 报错问题
-	private Integer qps = 10000 * 10;
+	private Integer qps = 10000 * 102;
 
 	/**
 	 * 是否启用内置的 StaticController,
