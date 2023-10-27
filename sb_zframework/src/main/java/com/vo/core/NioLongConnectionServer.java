@@ -272,7 +272,8 @@ public class NioLongConnectionServer {
 			final Task task = new Task(socketChannel);
 			try {
 				final ZRequest request = task.handleRead(requestString);
-				request.setOriginalRequestBytes(requestData);
+// FIXME 2023年10月27日 下午11:14:12 zhanghen: 	setOriginalRequestBytes方法会导致qps降低，没用到先注释
+//				request.setOriginalRequestBytes(requestData);
 				if (socketChannel.isOpen()) {
 					NioLongConnectionServer.response(key, socketChannel, request, task);
 				}
