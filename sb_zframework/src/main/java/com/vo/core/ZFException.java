@@ -13,12 +13,18 @@ import lombok.NoArgsConstructor;
  *
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 class ZFException extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
 
 	private String message;
+
+	public ZFException() {
+
+	}
+
+	public ZFException(final String message) {
+		this.message = message;
+	}
 
 }

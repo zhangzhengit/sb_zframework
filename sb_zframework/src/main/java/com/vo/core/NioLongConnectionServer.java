@@ -47,15 +47,12 @@ import lombok.NoArgsConstructor;
  */
 public class NioLongConnectionServer {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+
 //	public static final Charset CHARSET = Charset.defaultCharset();
 	public static final Charset CHARSET = Charset.forName("UTF-8");
 //	public static final Charset CHARSET = Charset.forName("ISO-8859-1");
 
-	private static final String AT = "at";
-
-	private static final String CAUSED_BY = "Caused by: ";
-
-	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
@@ -288,7 +285,7 @@ public class NioLongConnectionServer {
 				// 导致 FormData.parse 解析出错。在此提示出来
 				final String message = Task.gExceptionMessage(e);
 				LOG.error("task.handleRead异常,message={}", message);
-				final String findCausedby = findCausedby(e, message);
+				final String findCausedby = findCausedby(e);
 				new ZResponse(socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(HeaderEnum.JSON.getType())
@@ -369,7 +366,7 @@ public class NioLongConnectionServer {
 
 			LOG.error("执行错误,message={}", message);
 
-			final String findCausedby = findCausedby(e, message);
+			final String findCausedby = findCausedby(e);
 			new ZResponse(socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(HeaderEnum.JSON.getType())
@@ -390,29 +387,8 @@ public class NioLongConnectionServer {
 		}
 	}
 
-
-
-	public static String findCausedby(final Exception e, final String errorMessage) {
-		if (e instanceof ZFException) {
-			return ((ZFException) e).getMessage();
-		}
-
-		final String[] ma = errorMessage.split(Task.NEW_LINE);
-		for (final String s : ma) {
-			if(s.startsWith(CAUSED_BY)) {
-				return s.substring(s.indexOf(CAUSED_BY) + CAUSED_BY.length());
-			}
-		}
-
-		final int start = errorMessage.indexOf(CAUSED_BY);
-		if (start > -1) {
-			final int end = errorMessage.indexOf(AT, start);
-			if (end > start) {
-				final String e1 = errorMessage.substring(start + CAUSED_BY.length(), end);
-				return e1;
-			}
-		}
-		return errorMessage;
+	private static String findCausedby(final Exception e) {
+		return e.getCause().getClass().getCanonicalName() + ":" + e.getCause().getMessage();
 	}
 
 	@Data
