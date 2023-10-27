@@ -388,6 +388,14 @@ public class NioLongConnectionServer {
 	}
 
 	private static String findCausedby(final Exception e) {
+		if (e instanceof ZFException) {
+			return ((ZFException) e).getMessage();
+		}
+
+		if (e.getCause() != null && e.getCause() instanceof ZFException) {
+			return ((ZFException) e.getCause()).getMessage();
+		}
+
 		return e.getCause().getClass().getCanonicalName() + ":" + e.getCause().getMessage();
 	}
 
