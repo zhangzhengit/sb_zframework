@@ -272,8 +272,13 @@ public class NioLongConnectionServer {
 			final Task task = new Task(socketChannel);
 			try {
 				final ZRequest request = task.handleRead(requestString);
-// FIXME 2023年10月27日 下午11:14:12 zhanghen: 	setOriginalRequestBytes方法会导致qps降低，没用到先注释
-//				request.setOriginalRequestBytes(requestData);
+				final String contentType = request.getContentType();
+				if (StrUtil.isNotEmpty(contentType)
+						&& contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
+					// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
+					// 后续解析需要，或是不需要，再看.
+					request.setOriginalRequestBytes(requestData);
+				}
 				if (socketChannel.isOpen()) {
 					NioLongConnectionServer.response(key, socketChannel, request, task);
 				}
@@ -283,19 +288,16 @@ public class NioLongConnectionServer {
 				// 导致 FormData.parse 解析出错。在此提示出来
 				final String message = Task.gExceptionMessage(e);
 				LOG.error("task.handleRead异常,message={}", message);
+				final String findCausedby = findCausedby(e, message);
 				new ZResponse(socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(HeaderEnum.JSON.getType())
 					.body(JSON.toJSONString(
-							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
+							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby)))
 					.write();
 			}
 
 		}
-	}
-
-	void n() {
-
 	}
 
 	private void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
@@ -306,7 +308,6 @@ public class NioLongConnectionServer {
 			e.printStackTrace();
 		}
 	}
-
 
 	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
 			final Task task) {
@@ -368,11 +369,12 @@ public class NioLongConnectionServer {
 
 			LOG.error("执行错误,message={}", message);
 
+			final String findCausedby = findCausedby(e, message);
 			new ZResponse(socketChannel)
 					.httpStatus(HttpStatus.HTTP_500.getCode())
 					.contentType(HeaderEnum.JSON.getType())
 					.body(JSON.toJSONString(
-							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby(e, message))))
+							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby)))
 					.write();
 
 		}
@@ -388,7 +390,9 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private static String findCausedby(final Exception e, final String errorMessage) {
+
+
+	public static String findCausedby(final Exception e, final String errorMessage) {
 		if (e instanceof ZFException) {
 			return ((ZFException) e).getMessage();
 		}
