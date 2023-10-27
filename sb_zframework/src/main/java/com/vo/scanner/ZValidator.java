@@ -94,6 +94,11 @@ public class ZValidator {
 		try {
 			field.setAccessible(true);
 			final Object minFiledValue = field.get(object);
+
+			if (minFiledValue == null) {
+				throwZNotNullException(object, field);
+			}
+
 			final String canonicalName = minFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
 				if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
@@ -197,50 +202,55 @@ public class ZValidator {
 
 		try {
 			field.setAccessible(true);
-			final Object minFiledValue = field.get(object);
-			final String canonicalName = minFiledValue.getClass().getCanonicalName();
+			final Object maxFiledValue = field.get(object);
+
+			if (maxFiledValue == null) {
+				throwZNotNullException(object, field);
+			}
+
+			final String canonicalName = maxFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
-				if (Byte.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, (byte) max, minFiledValue);
+				if (Byte.valueOf(String.valueOf(maxFiledValue)) > max) {
+					throwZMaxMessage(object, field, (byte) max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(Short.class.getCanonicalName())) {
-				if (Short.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, (short) max, minFiledValue);
+				if (Short.valueOf(String.valueOf(maxFiledValue)) > max) {
+					throwZMaxMessage(object, field, (short) max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(Integer.class.getCanonicalName())) {
-				if (Integer.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, (int) max, minFiledValue);
+				if (Integer.valueOf(String.valueOf(maxFiledValue)) > max) {
+					throwZMaxMessage(object, field, (int) max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(Long.class.getCanonicalName())) {
-				if (Long.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, (long) max, minFiledValue);
+				if (Long.valueOf(String.valueOf(maxFiledValue)) > max) {
+					throwZMaxMessage(object, field, (long) max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(Float.class.getCanonicalName())) {
-				if (Float.valueOf(String.valueOf(minFiledValue)) > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+				if (Float.valueOf(String.valueOf(maxFiledValue)) > max) {
+					throwZMaxMessage(object, field, max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(Double.class.getCanonicalName())
-					&& (Double.valueOf(String.valueOf(minFiledValue)) > max)) {
-				throwZMaxMessage(object, field, max, minFiledValue);
+					&& (Double.valueOf(String.valueOf(maxFiledValue)) > max)) {
+				throwZMaxMessage(object, field, max, maxFiledValue);
 			} else if (canonicalName.equals(BigInteger.class.getCanonicalName())) {
-				final BigInteger bi = (BigInteger) minFiledValue;
+				final BigInteger bi = (BigInteger) maxFiledValue;
 				if (bi.doubleValue() > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(BigDecimal.class.getCanonicalName())) {
-				final BigDecimal bd = (BigDecimal) minFiledValue;
+				final BigDecimal bd = (BigDecimal) maxFiledValue;
 				if (bd.doubleValue() > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(AtomicInteger.class.getCanonicalName())) {
-				final AtomicInteger ai = (AtomicInteger) minFiledValue;
+				final AtomicInteger ai = (AtomicInteger) maxFiledValue;
 				if (ai.doubleValue() > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, max, maxFiledValue);
 				}
 			} else if (canonicalName.equals(AtomicLong.class.getCanonicalName())) {
-				final AtomicLong al = (AtomicLong) minFiledValue;
+				final AtomicLong al = (AtomicLong) maxFiledValue;
 				if (al.doubleValue() > max) {
-					throwZMaxMessage(object, field, max, minFiledValue);
+					throwZMaxMessage(object, field, max, maxFiledValue);
 				}
 			}
 		} catch (final IllegalAccessException e) {
