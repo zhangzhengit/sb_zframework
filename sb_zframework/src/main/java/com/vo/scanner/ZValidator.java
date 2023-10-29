@@ -10,9 +10,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.omg.PortableServer.POAPackage.ObjectAlreadyActiveHelper;
-
 import com.vo.core.ValidatedException;
+import com.vo.validator.ZEndsWith;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
@@ -74,6 +73,45 @@ public class ZValidator {
 				final String t = object.getClass().getSimpleName() + "." + field.getName();
 
 				final String format = String.format(message, t, prefix);
+
+				throw new ValidatedException(format);
+			}
+
+		} catch (final IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void validatedZEndsWith(final Object object, final Field field) {
+		final ZEndsWith endsWith = field.getAnnotation(ZEndsWith.class);
+		if (endsWith == null) {
+			return;
+		}
+
+		final Class<?> type = field.getType();
+		if (!type.getCanonicalName().equals(String.class.getCanonicalName())) {
+			throw new ValidatedException(
+					"@" + ZStartWith.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
+		}
+
+		try {
+			field.setAccessible(true);
+			final Object value = field.get(object);
+			if (value == null) {
+				throwZNotNullException(object, field);
+			}
+
+			final String v2 = String.valueOf(value);
+			if (v2.isEmpty()) {
+				throwZNotEmptyException(object, field);
+			}
+
+			if (!v2.endsWith(endsWith.suffix())) {
+
+				final String message = ZEndsWith.MESSAGE;
+				final String t = object.getClass().getSimpleName() + "." + field.getName();
+
+				final String format = String.format(message, t, endsWith.suffix());
 
 				throw new ValidatedException(format);
 			}
@@ -265,6 +303,7 @@ public class ZValidator {
 		validatedZMin(object, field);
 		validatedZMax(object, field);
 		validatedZStartWith(object, field);
+		validatedZEndsWith(object, field);
 
 	}
 
