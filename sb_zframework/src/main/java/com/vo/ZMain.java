@@ -38,6 +38,7 @@ public class ZMain {
 	public static void start(final String packageName,final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.trace("zframework开始启动");
+		// FIXME 2023年10月31日 下午10:42:15 zhanghen: TODO 最先校验：校验注解用的字段是否支持
 
 		// 0 读取 @ZConfigurationProperties 配置，创建配置类
 		ZConfigurationPropertiesScanner.scanAndCreate(packageName);
