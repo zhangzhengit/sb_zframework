@@ -1,8 +1,6 @@
 package com.vo.core;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  *
@@ -13,8 +11,8 @@ import lombok.NoArgsConstructor;
  *
  */
 @Data
-class ZFException extends RuntimeException {
 
+class ZFException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	private String message;

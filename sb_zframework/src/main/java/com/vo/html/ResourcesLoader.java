@@ -18,6 +18,7 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.ZMain;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
+import com.vo.core.ResourceNotExistException;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
@@ -245,13 +246,7 @@ public class ResourcesLoader {
 		return null;
 	}
 
-	/**
-	 *
-	 * @param resourceName
-	 * @return
-	 *
-	 */
-	public static byte[] loadByteArray(final String resourceName) {
+	private static byte[] loadByteArray(final String resourceName) {
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
 		if (v != null) {
@@ -267,7 +262,7 @@ public class ResourcesLoader {
 		}
 	}
 
-	public static String loadString(final String name) {
+	private static String loadString(final String name) {
 
 		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
 			return loadSring0(name);
@@ -350,7 +345,8 @@ public class ResourcesLoader {
 //		System.out.println("resource = " + resource);
 		final InputStream inputStream = ResourcesLoader.class.getResourceAsStream(name);
 		if (inputStream == null) {
-			throw new IllegalArgumentException("资源不存在,name = " + name);
+			throw new ResourceNotExistException("资源不存在,name = " + name);
+//			throw new IllegalArgumentException("资源不存在,name = " + name);
 		}
 		return inputStream;
 	}
