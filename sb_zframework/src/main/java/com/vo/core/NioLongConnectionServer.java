@@ -252,10 +252,10 @@ public class NioLongConnectionServer {
 			return;
 		}
 
-		this.responseAsync(key, socketChannel, array.get());
+		NioLongConnectionServer.responseAsync(key, socketChannel, array.get());
 	}
 
-	private void responseAsync(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
+	private static void responseAsync(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
 		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(key, socketChannel, requestData));
 	}
 

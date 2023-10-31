@@ -217,6 +217,12 @@ public class ZControllerScanner {
 			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
 		}
 
+		final boolean[] isRegex = requestMappingAnnotation.isRegex();
+		if (!ArrayUtil.isEmpty(isRegex) && isRegex.length != requestMappingArray.length) {
+			throw new IllegalArgumentException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
+					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
+		}
+
 		final Set<String> temp = Sets.newHashSet();
 
 		for (final String requestMapping : requestMappingArray) {
@@ -227,18 +233,14 @@ public class ZControllerScanner {
 
 			ZControllerScanner.checkRequestMapping(method, requestMapping);
 
-			final boolean add = temp.add(requestMapping);
+			final boolean add = temp.add(requestMapping + "@" + requestMappingAnnotation.method().getMethod());
 			if (!add) {
 				throw new IllegalArgumentException(
 						"接口方法 " + method.getName() + " mapping值不能重复,mapping = " + Arrays.toString(requestMappingArray));
 			}
 		}
 
-		final boolean[] isRegex = requestMappingAnnotation.isRegex();
-		if (!ArrayUtil.isEmpty(isRegex) && isRegex.length != requestMappingArray.length) {
-			throw new IllegalArgumentException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
-					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
-		}
+
 	}
 
 	/**

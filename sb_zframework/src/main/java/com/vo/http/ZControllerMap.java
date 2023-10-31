@@ -43,7 +43,9 @@ public class ZControllerMap {
 	public synchronized static void put(final MethodEnum methodEnum, final String mapping, final Method method,
 			final Object object, final boolean isRegex) {
 
-		checkAPI(methodEnum, mapping, method, object);
+		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
+
+		checkAPI(methodEnum, mapping, method, object, requestMapping);
 
 		methodPathTable.put(methodEnum, mapping, method);
 
@@ -51,7 +53,6 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 		if (requestMapping != null) {
 			final int qps = requestMapping.qps();
 			if (qps <= 0) {
@@ -118,7 +119,7 @@ public class ZControllerMap {
 	}
 
 	private static void checkAPI(final MethodEnum methodEnum, final String mapping, final Method method,
-			final Object object) {
+			final Object object, final ZRequestMapping requestMapping) {
 		if (methodEnum == null) {
 			throw new IllegalArgumentException(MethodEnum.class.getSimpleName() + " 不能为空");
 		}
@@ -136,10 +137,11 @@ public class ZControllerMap {
 			throw new IllegalArgumentException("object 不能为空");
 		}
 
-		final boolean add = mappingSet.add(mapping);
+		final String mappingMethod = mapping + "@" + requestMapping.method().getMethod();
+		final boolean add = mappingSet.add(mappingMethod);
 		if (!add) {
 			throw new IllegalArgumentException(
-					"接口方法的 mapping值重复, mapping = " + mapping + "\t" + " method = " + method.getName());
+					"接口方法的 mapping和Method重复, mapping = " + mapping + "\t" + " method = " + method.getName());
 		}
 	}
 
