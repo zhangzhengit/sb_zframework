@@ -5,9 +5,9 @@ import java.util.Objects;
 
 import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
-import com.vo.core.StartupException;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
+import com.vo.validator.StartupException;
 
 import cn.hutool.core.util.StrUtil;
 

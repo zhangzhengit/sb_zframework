@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.validator;
 
 /**
  * http接口参数对解析异常

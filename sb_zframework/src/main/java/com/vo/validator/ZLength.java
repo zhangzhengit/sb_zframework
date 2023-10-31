@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.validator;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,10 +22,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.FIELD })
 public @interface ZLength {
 
-	public static final String MESSAGE_MIN = "[%s]长度不能小于[%s]";
+	public static final String MESSAGE_DEFAULT = "validator.constraints.length.message";
 
-	public static final String MESSAGE_MAX= "[%s]长度不能大于[%s]";
-
+	String message() default MESSAGE_DEFAULT;
 
 	int min() default 0;
 

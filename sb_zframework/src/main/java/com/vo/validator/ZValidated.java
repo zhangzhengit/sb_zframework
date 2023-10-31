@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.validator;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

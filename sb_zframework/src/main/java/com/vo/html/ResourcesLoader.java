@@ -18,12 +18,12 @@ import com.google.common.collect.HashBasedTable;
 import com.vo.ZMain;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.HeaderEnum;
-import com.vo.core.ResourceNotExistException;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
+import com.vo.validator.ResourceNotExistException;
 
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;

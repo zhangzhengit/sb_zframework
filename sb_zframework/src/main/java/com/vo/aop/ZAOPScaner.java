@@ -28,9 +28,9 @@ import com.vo.core.ZMethod;
 import com.vo.core.ZMethodArg;
 import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
-import com.vo.core.ZValidated;
 import com.vo.scanner.ClassMap;
 import com.vo.scanner.ZValidator;
+import com.vo.validator.ZValidated;
 
 import cn.hutool.core.collection.CollectionUtil;
 

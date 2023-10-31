@@ -10,9 +10,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.vo.core.ValidatedException;
-import com.vo.core.ZLength;
+import com.vo.core.ZContext;
+import com.vo.validator.ValidatedException;
 import com.vo.validator.ZEndsWith;
+import com.vo.validator.ZLength;
+import com.vo.validator.ZLengthMessage;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
@@ -58,17 +60,14 @@ public class ZValidator {
 					"@" + ZLength.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
 		}
 
+		final ZLengthMessage zlm = ZContext.getBean(ZLengthMessage.class);
+
 		final String s = (String) v;
-		if (s.length() < zl.min()) {
-			final String message = ZLength.MESSAGE_MIN;
+		if (s.length() < zl.min() || s.length() > zl.max()) {
+			final String message = zlm.getMessage();
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
-			final String format = String.format(message, t, String.valueOf(zl.min()));
-			throw new ValidatedException(format);
-		}
-		if (s.length() > zl.max()) {
-			final String message = ZLength.MESSAGE_MAX;
-			final String t = object.getClass().getSimpleName() + "." + field.getName();
-			final String format = String.format(message, t, String.valueOf(zl.max()));
+			final String format = String.format(message, t, String.valueOf(zl.min()), String.valueOf(zl.max()),
+					String.valueOf(s.length()));
 			throw new ValidatedException(format);
 		}
 

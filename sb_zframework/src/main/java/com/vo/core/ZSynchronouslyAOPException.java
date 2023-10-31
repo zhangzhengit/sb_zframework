@@ -1,5 +1,7 @@
 package com.vo.core;
 
+import com.vo.validator.ZFException;
+
 /**
  *
  *

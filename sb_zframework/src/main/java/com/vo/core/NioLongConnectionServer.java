@@ -30,6 +30,7 @@ import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
+import com.vo.validator.ZFException;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;

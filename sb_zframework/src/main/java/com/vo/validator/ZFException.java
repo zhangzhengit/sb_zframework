@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.validator;
 
 import lombok.Data;
 
@@ -12,7 +12,7 @@ import lombok.Data;
  */
 @Data
 
-class ZFException extends RuntimeException {
+public class ZFException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	private String message;

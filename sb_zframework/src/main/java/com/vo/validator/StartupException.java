@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.validator;
 
 /**
  * 程序启动异常
