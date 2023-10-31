@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.vo.core.ValidatedException;
+import com.vo.core.ZLength;
 import com.vo.validator.ZEndsWith;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
@@ -39,6 +40,38 @@ public class ZValidator {
 		}
 
 		throwZNotNullException(object, field);
+	}
+
+	public static void validatedZLength(final Object object, final Field field) {
+		final ZLength zl = field.getAnnotation(ZLength.class);
+		if (zl == null) {
+			return;
+		}
+
+		final Object v = getFieldValue(object, field);
+		if (v == null) {
+			throwZNotNullException(object, field);
+		}
+
+		if (!(v instanceof String)) {
+			throw new ValidatedException(
+					"@" + ZLength.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
+		}
+
+		final String s = (String) v;
+		if (s.length() < zl.min()) {
+			final String message = ZLength.MESSAGE_MIN;
+			final String t = object.getClass().getSimpleName() + "." + field.getName();
+			final String format = String.format(message, t, String.valueOf(zl.min()));
+			throw new ValidatedException(format);
+		}
+		if (s.length() > zl.max()) {
+			final String message = ZLength.MESSAGE_MAX;
+			final String t = object.getClass().getSimpleName() + "." + field.getName();
+			final String format = String.format(message, t, String.valueOf(zl.max()));
+			throw new ValidatedException(format);
+		}
+
 	}
 
 	public static void validatedZStartWith(final Object object, final Field field) {
@@ -298,8 +331,17 @@ public class ZValidator {
 	}
 
 	public static void validatedAll(final Object object, final Field field) {
+		// FIXME 2023年10月31日 下午10:13:39 zhanghen: 启动时是否验证注解值的合理性，如下声明：
+//		@ZStartWith(prefix = "ZH")
+//		@ZEndsWith(suffix = "G")
+//		@ZLength(max = 3)
+//		private String name;
+
+		// 显然是不合理，name怎么传值都不会通过验证。该怎么办？程序启动时就验证所有的注解的组合中不合理的情况？
+
 		validatedZNotNull(object, field);
 		validatedZNotEmpty(object, field);
+		validatedZLength(object, field);
 		validatedZMin(object, field);
 		validatedZMax(object, field);
 		validatedZStartWith(object, field);
