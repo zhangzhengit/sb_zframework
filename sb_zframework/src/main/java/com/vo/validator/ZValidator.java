@@ -1,26 +1,21 @@
-package com.vo.scanner;
+package com.vo.validator;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.collect.Sets;
 import com.vo.core.ZContext;
-import com.vo.validator.ValidatedException;
-import com.vo.validator.ZEndsWith;
-import com.vo.validator.ZLength;
-import com.vo.validator.ZLengthMessage;
-import com.vo.validator.ZMax;
-import com.vo.validator.ZMin;
-import com.vo.validator.ZNotEmtpy;
-import com.vo.validator.ZNotNull;
-import com.vo.validator.ZPositive;
-import com.vo.validator.ZStartWith;
+import com.vo.core.ZLog2;
+import com.vo.scanner.ClassMap;
 
 /**
  *	验证器
@@ -56,7 +51,7 @@ public class ZValidator {
 			throwZNotNullException(object, field);
 		}
 
-		if (!isExtendsNumber(v)) {
+		if (!isZMinZMaxSupported(v.getClass())) {
 			throw new ValidatedException("@" + ZPositive.class.getSimpleName()
 					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段["
 					+ field.getName() + "]");
@@ -75,17 +70,21 @@ public class ZValidator {
 
 	}
 
-	public static boolean isExtendsNumber(final Object value) {
-		return value instanceof Byte
-			|| value instanceof Short
-			|| value instanceof Integer
-			|| value instanceof Long
-			|| value instanceof Float
-			|| value instanceof Double
-			|| value instanceof BigDecimal
-			|| value instanceof BigInteger
-			|| value instanceof AtomicLong
-			|| value instanceof AtomicInteger
+	public static boolean isString(final Class cls) {
+		return cls == String.class;
+	}
+
+	public static boolean isZMinZMaxSupported(final Class<?> cls) {
+		return cls == Byte.class
+			|| cls == Short.class
+			|| cls == Integer.class
+			|| cls == Long.class
+			|| cls == Float.class
+			|| cls == Double.class
+			|| cls == BigDecimal.class
+			|| cls == BigInteger.class
+			|| cls == AtomicLong.class
+			|| cls == AtomicInteger.class
 					;
 	}
 
@@ -100,7 +99,7 @@ public class ZValidator {
 			throwZNotNullException(object, field);
 		}
 
-		if (!(v instanceof String)) {
+		if (!isString(v.getClass())) {
 			throw new ValidatedException(
 					"@" + ZLength.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
 		}
@@ -216,7 +215,7 @@ public class ZValidator {
 				throwZNotNullException(object, field);
 			}
 
-			if (!isExtendsNumber(minFiledValue)) {
+			if (!isZMinZMaxSupported(minFiledValue.getClass())) {
 				throw new ValidatedException(
 						"@" + ZMin.class.getSimpleName() + " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段[" + field.getName() + "]");
 			}
@@ -293,7 +292,7 @@ public class ZValidator {
 				if (((Map) value).isEmpty()) {
 					throwZNotEmptyException(object, field);
 				}
-			} else if (value instanceof String) {
+			} else if (isString(value.getClass())) {
 				// 此处不内联，防止自动保存 两个条件放在了一个if里，导致后续添加else分支时混乱
 				final String string = (String) value;
 				if (string.isEmpty()) {
@@ -330,7 +329,7 @@ public class ZValidator {
 				throwZNotNullException(object, field);
 			}
 
-			if (!isExtendsNumber(maxFiledValue)) {
+			if (!isZMinZMaxSupported(maxFiledValue.getClass())) {
 				throw new ValidatedException(
 						"@" + ZMax.class.getSimpleName() + " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段[" + field.getName() + "]");
 			}
@@ -438,6 +437,77 @@ public class ZValidator {
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
 		final String format = String.format(message, t, max, maxFiledValue);
 		throw new ValidatedException(format);
+	}
+
+	/**
+	 * 程序启动时调用此方法，扫描所有带有校验注解的字段，来判断此字段是否支持
+	 *
+	 * @param packageName
+	 *
+	 */
+	public static void start(final String packageName) {
+		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
+		for (final Class<?> cls : clsSet) {
+			final Field[] fs = cls.getDeclaredFields();
+			for (final Field f : fs) {
+				final Annotation[] as = f.getDeclaredAnnotations();
+				for (final Annotation annotation :as) {
+					final boolean isVA = isValidatorAnnotation(annotation.annotationType());
+					if (!isVA) {
+						continue;
+					}
+					if (annotation.annotationType() == ZNotNull.class) {
+						// @ZNotNull 不用校验，因为它支持所有类型
+					} else if ((annotation.annotationType() == ZNotEmtpy.class) && !isZNotEmptySupported(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
+					} else if ((annotation.annotationType() == ZMin.class) && !isZMinZMaxSupported(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZMin.class, f);
+					} else if ((annotation.annotationType() == ZMax.class) && !isZMinZMaxSupported(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZMax.class, f);
+					} else if ((annotation.annotationType() == ZLength.class) && !isString(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZLength.class, f);
+					} else if ((annotation.annotationType() == ZStartWith.class) && !isString(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZStartWith.class, f);
+					} else if ((annotation.annotationType() == ZEndsWith.class) && !isString(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZEndsWith.class, f);
+					} else if ((annotation.annotationType() == ZPositive.class) && !isZMinZMaxSupported(f.getType())) {
+						throwTypNotSupportedExcpetion(cls, ZPositive.class, f);
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+	private static void throwTypNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,
+			final Field f) {
+		throw new TypNotSupportedExcpetion(cls.getName() + "." + f.getName() + "类型为" + f.getType().getSimpleName()
+				+ ",校验注解为" + "@" + annoCls.getSimpleName());
+	}
+
+	public static boolean isZNotEmptySupported(final Class<?> annoClass) {
+		return annoClass == String.class
+			|| annoClass == List.class
+			|| annoClass == Set.class
+			|| annoClass == Map.class
+				;
+	}
+
+	private final static HashSet<Class<? extends Annotation>> VA_SET = Sets.newHashSet(
+			ZNotNull.class,
+			ZNotEmtpy.class,
+			ZStartWith.class,
+			ZEndsWith.class,
+			ZLength.class,
+			ZMin.class,
+			ZMax.class,
+			ZPositive.class
+			);
+
+	public static boolean isValidatorAnnotation(final Class<? extends Annotation> annoClass) {
+		return VA_SET.contains(annoClass);
 	}
 
 }

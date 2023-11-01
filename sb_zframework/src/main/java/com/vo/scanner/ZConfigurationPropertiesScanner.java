@@ -29,6 +29,7 @@ import com.vo.conf.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
+import com.vo.validator.ZValidator;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;

@@ -24,6 +24,7 @@ import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
 import com.vo.validator.ZValidated;
+import com.vo.validator.ZValidator;
 
 /**
  * 扫描 @ZComponent 的类

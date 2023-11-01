@@ -1,9 +1,13 @@
 package com.vo;
 
+import javax.servlet.ServletSecurityElement;
+import javax.sound.midi.SysexMessage;
+
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
 import com.vo.conf.ServerConfiguration;
+import com.vo.core.Task;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZServer;
@@ -16,6 +20,7 @@ import com.vo.scanner.ZConfigurationScanner;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZValueScanner;
+import com.vo.validator.ZValidator;
 
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
@@ -38,7 +43,15 @@ public class ZMain {
 	public static void start(final String packageName,final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.trace("zframework开始启动");
-		// FIXME 2023年10月31日 下午10:42:15 zhanghen: TODO 最先校验：校验注解用的字段是否支持
+
+		// 最先校验：校验注解用的字段是否支持
+		try {
+			ZValidator.start(packageName);
+		} catch (final Exception e) {
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("@校验注解标记的字段未通过，请检查注解.errorMessage={}",message);
+			System.exit(0);
+		}
 
 		// 0 读取 @ZConfigurationProperties 配置，创建配置类
 		ZConfigurationPropertiesScanner.scanAndCreate(packageName);

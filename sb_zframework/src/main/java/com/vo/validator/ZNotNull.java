@@ -21,13 +21,4 @@ public @interface ZNotNull {
 
 	public static final String MESSAGE = "[%s]不能为null";
 
-	/**
-	 *
-	 * 当此注解标记的字段为null时的提示语，默认为上面的 ZNotNull.MESSAGE
-	 *
-	 * @return
-	 *
-	 */
-//	String message() default "";
-
 }

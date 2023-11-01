@@ -49,11 +49,11 @@ import com.vo.http.ZHtml;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZControllerInterceptorScanner;
-import com.vo.scanner.ZValidator;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.FormPairParseException;
 import com.vo.validator.ZValidated;
+import com.vo.validator.ZValidator;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
