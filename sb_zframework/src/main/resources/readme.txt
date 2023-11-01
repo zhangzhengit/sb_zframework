@@ -234,6 +234,18 @@
 		@ZNotEmtpy 表示此配置字段不能是empty,支持类型：String、List、Set、Map，都是使用isEmpty来判断
 		@ZNotNull 表示此配置字段不能是null,支持所有类型
 		@ZStartWith 表示此配置字段必须以特定值开头,支持String类型
+		@ZLength   表示子字段的length必须在min和max之间，包含两个值。支持String类型
+		
+		
+		# 特殊配置：
+			@ZLength.message如果没在代码中指定，则默认读取配置项	
+				validator.constraints.length.message
+			#see ZLengthMessage ZLength的message配置类
+			
+			如果validator.constraints.length.message也没配置，则默认
+			使用ZLengthMessage.message中的默认值.
+			# 20231101 校验注解暂只支持@ZLength使用自定义message
+		
 	
 	
 	@ZSynchronously：
