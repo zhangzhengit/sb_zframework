@@ -64,7 +64,14 @@ public class ZValidator {
 
 		final String s = (String) v;
 		if (s.length() < zl.min() || s.length() > zl.max()) {
-			final String message = zlm.getMessage();
+
+			final String message =
+					ZLength.MESSAGE_DEFAULT.equals(zl.message())
+					?
+					zlm.getMessage()
+					: zl.message()
+					;
+
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
 			final String format = String.format(message, t, String.valueOf(zl.min()), String.valueOf(zl.max()),
 					String.valueOf(s.length()));
