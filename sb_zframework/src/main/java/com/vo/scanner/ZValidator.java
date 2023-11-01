@@ -60,17 +60,12 @@ public class ZValidator {
 					"@" + ZLength.class.getSimpleName() + " 只能用于 String类型,当前用于字段[" + field.getName() + "]");
 		}
 
-		final ZLengthMessage zlm = ZContext.getBean(ZLengthMessage.class);
-
 		final String s = (String) v;
 		if (s.length() < zl.min() || s.length() > zl.max()) {
 
-			final String message =
-					ZLength.MESSAGE_DEFAULT.equals(zl.message())
-					?
-					zlm.getMessage()
-					: zl.message()
-					;
+			final String message = ZLength.MESSAGE_DEFAULT.equals(zl.message())
+					? ZContext.getBean(ZLengthMessage.class).getMessage()
+					: zl.message();
 
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
 			final String format = String.format(message, t, String.valueOf(zl.min()), String.valueOf(zl.max()),
