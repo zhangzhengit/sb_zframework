@@ -19,6 +19,7 @@ import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
+import com.vo.validator.ZPositive;
 import com.vo.validator.ZStartWith;
 
 /**
@@ -42,6 +43,50 @@ public class ZValidator {
 		}
 
 		throwZNotNullException(object, field);
+	}
+
+	public static void validatedZPositive(final Object object, final Field field) {
+		final ZPositive zp = field.getAnnotation(ZPositive.class);
+		if (zp == null) {
+			return;
+		}
+
+		final Object v = getFieldValue(object, field);
+		if (v == null) {
+			throwZNotNullException(object, field);
+		}
+
+		if (!isExtendsNumber(v)) {
+			throw new ValidatedException("@" + ZPositive.class.getSimpleName()
+					+ " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段["
+					+ field.getName() + "]");
+		}
+
+		final double doubleValue = ((Number) v).doubleValue();
+		// FIXME 2023年11月1日 下午7:10:13 zhanghen: XXX 待定 ((Number) v).doubleValue() 是否可行
+		if (doubleValue < 0D) {
+			final String message = ZPositive.MESSAGE;
+			final String t = object.getClass().getSimpleName() + "." + field.getName();
+
+			final String format = String.format(message, t, v);
+
+			throw new ValidatedException(format);
+		}
+
+	}
+
+	public static boolean isExtendsNumber(final Object value) {
+		return value instanceof Byte
+			|| value instanceof Short
+			|| value instanceof Integer
+			|| value instanceof Long
+			|| value instanceof Float
+			|| value instanceof Double
+			|| value instanceof BigDecimal
+			|| value instanceof BigInteger
+			|| value instanceof AtomicLong
+			|| value instanceof AtomicInteger
+					;
 	}
 
 	public static void validatedZLength(final Object object, final Field field) {
@@ -171,6 +216,11 @@ public class ZValidator {
 				throwZNotNullException(object, field);
 			}
 
+			if (!isExtendsNumber(minFiledValue)) {
+				throw new ValidatedException(
+						"@" + ZMin.class.getSimpleName() + " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段[" + field.getName() + "]");
+			}
+
 			final String canonicalName = minFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
 				if (Byte.valueOf(String.valueOf(minFiledValue)) < min) {
@@ -280,6 +330,11 @@ public class ZValidator {
 				throwZNotNullException(object, field);
 			}
 
+			if (!isExtendsNumber(maxFiledValue)) {
+				throw new ValidatedException(
+						"@" + ZMax.class.getSimpleName() + " 只能用于Byte,Short,Integer,Long,Float,Double,BigDecimal,BigInteger,AtomicLong,AtomicInteger类型,当前用于字段[" + field.getName() + "]");
+			}
+
 			final String canonicalName = maxFiledValue.getClass().getCanonicalName();
 			if (canonicalName.equals(Byte.class.getCanonicalName())) {
 				if (Byte.valueOf(String.valueOf(maxFiledValue)) > max) {
@@ -347,6 +402,7 @@ public class ZValidator {
 		validatedZMax(object, field);
 		validatedZStartWith(object, field);
 		validatedZEndsWith(object, field);
+		validatedZPositive(object, field);
 
 	}
 
