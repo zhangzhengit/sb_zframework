@@ -20,6 +20,8 @@ import com.vo.enums.MethodEnum;
 @Target({ ElementType.METHOD })
 public @interface ZRequestMapping {
 
+	public static final int DEFAULT_QPS = -11111111;
+
 	/**
 	 * 请求路径，如： /index
 	 *
@@ -50,6 +52,6 @@ public @interface ZRequestMapping {
 	 * @return
 	 *
 	 */
-	int qps();
+	int qps() default DEFAULT_QPS;
 
 }

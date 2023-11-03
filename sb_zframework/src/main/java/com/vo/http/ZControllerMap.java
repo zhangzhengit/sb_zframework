@@ -12,6 +12,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.aop.ZIAOP;
+import com.vo.core.ZContext;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.util.StrUtil;
@@ -53,14 +54,15 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		if (requestMapping != null) {
-			final int qps = requestMapping.qps();
-			if (qps <= 0) {
-				throw new IllegalArgumentException(
-						"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);
-			}
-			methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
+		final ZRequestMappingConf zrmConf = ZContext.getBean(ZRequestMappingConf.class);
+		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? zrmConf.getQps() : requestMapping.qps();
+		System.out.println("m = " + requestMapping.mapping()[0] + "\t" + "qps = " + qps);
+		if (qps <= 0) {
+			throw new IllegalArgumentException(
+					"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);
 		}
+
+		methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);
 
 		final ZQPSLimitation zqpsl = method.getAnnotation(ZQPSLimitation.class);
 		if (zqpsl != null) {
@@ -69,12 +71,12 @@ public class ZControllerMap {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".type 不能为空,method = " + method.getName());
 			}
-			final int qps = zqpsl.qps();
-			if (qps <= 0) {
+			final int qpsL = zqpsl.qps();
+			if (qpsL <= 0) {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
 			}
-			if (qps > requestMapping.qps()) {
+			if (qpsL > qps) {
 				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
 						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
 			}
