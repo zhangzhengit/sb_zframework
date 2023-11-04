@@ -405,7 +405,7 @@ public class ZValidator {
 
 	}
 
-	static Object getFieldValue(final Object object, final Field field) {
+	private static Object getFieldValue(final Object object, final Field field) {
 		try {
 			field.setAccessible(true);
 			final Object v = field.get(object);
@@ -459,19 +459,19 @@ public class ZValidator {
 					if (annotation.annotationType() == ZNotNull.class) {
 						// @ZNotNull 不用校验，因为它支持所有类型
 					} else if ((annotation.annotationType() == ZNotEmtpy.class) && !isZNotEmptySupported(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZNotEmtpy.class, f);
 					} else if ((annotation.annotationType() == ZMin.class) && !isZMinZMaxSupported(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZMin.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZMin.class, f);
 					} else if ((annotation.annotationType() == ZMax.class) && !isZMinZMaxSupported(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZMax.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZMax.class, f);
 					} else if ((annotation.annotationType() == ZLength.class) && !isString(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZLength.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZLength.class, f);
 					} else if ((annotation.annotationType() == ZStartWith.class) && !isString(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZStartWith.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZStartWith.class, f);
 					} else if ((annotation.annotationType() == ZEndsWith.class) && !isString(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZEndsWith.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZEndsWith.class, f);
 					} else if ((annotation.annotationType() == ZPositive.class) && !isZMinZMaxSupported(f.getType())) {
-						throwTypNotSupportedExcpetion(cls, ZPositive.class, f);
+						throwTypeNotSupportedExcpetion(cls, ZPositive.class, f);
 					}
 
 				}
@@ -481,9 +481,9 @@ public class ZValidator {
 
 	}
 
-	private static void throwTypNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,
+	private static void throwTypeNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,
 			final Field f) {
-		throw new TypNotSupportedExcpetion(cls.getName() + "." + f.getName() + "类型为" + f.getType().getSimpleName()
+		throw new TypeNotSupportedExcpetion(cls.getName() + "." + f.getName() + "类型为" + f.getType().getSimpleName()
 				+ ",校验注解为" + "@" + annoCls.getSimpleName());
 	}
 
