@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.bean;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

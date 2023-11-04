@@ -13,6 +13,7 @@ import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZServer;
 import com.vo.core.ZSessionMap;
 import com.vo.core.ZSingleton;
+import com.vo.exception.ZControllerAdviceScanner;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
 import com.vo.scanner.ZConfigurationPropertiesScanner;

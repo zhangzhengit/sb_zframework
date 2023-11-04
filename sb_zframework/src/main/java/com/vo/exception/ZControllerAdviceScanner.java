@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.exception;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

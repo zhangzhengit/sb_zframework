@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.bean;
 
 import org.springframework.beans.BeansException;
 import org.springframework.lang.Nullable;

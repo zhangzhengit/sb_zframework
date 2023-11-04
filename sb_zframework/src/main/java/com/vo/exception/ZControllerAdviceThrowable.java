@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.exception;
 
 import com.vo.anno.ZComponent;
 import com.vo.core.ZContext;
