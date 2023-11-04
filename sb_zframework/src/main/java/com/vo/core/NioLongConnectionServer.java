@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
+import com.vo.ZControllerAdviceActuator;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
-import com.vo.validator.ZFException;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
@@ -284,15 +284,17 @@ public class NioLongConnectionServer {
 			} catch (final Exception e) {
 				// FIXME 2023年10月27日 下午9:54:50 zhanghen: XXX postman form-data上传文件，一次请求会分两次发送？
 				// 导致 FormData.parse 解析出错。在此提示出来
-				final String message = Task.gExceptionMessage(e);
-				LOG.error("task.handleRead异常,message={}", message);
-				final String findCausedby = findCausedby(e);
+
+//				String m = ZControllerAdviceThrowable.findCausedby(e);
+
+				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
+
+				final Object r = a.execute(e);
 				new ZResponse(socketChannel)
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.contentType(HeaderEnum.JSON.getType())
-					.body(JSON.toJSONString(
-							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby)))
-					.write();
+						.httpStatus(HttpStatus.HTTP_500.getCode())
+						.contentType(HeaderEnum.JSON.getType())
+						.body(JSON.toJSONString(r))
+						.write();
 			}
 
 		}
@@ -308,7 +310,7 @@ public class NioLongConnectionServer {
 	}
 
 	private static void response(final SelectionKey key, final SocketChannel socketChannel, final ZRequest request,
-			final Task task) {
+			final Task task) throws Exception {
 
 		// 解析请求时，无匹配的Method
 		if (request.getRequestLine().getMethodEnum() == null) {
@@ -361,20 +363,7 @@ public class NioLongConnectionServer {
 				response.write();
 			}
 		} catch (final Exception e) {
-
-			// FIXME 2023年10月15日 下午7:47:12 zhanghen: XXX 直接把真实的报错信息给客户端？还是只告诉客户端一个ERROR
-			final String message = Task.gExceptionMessage(e);
-
-			LOG.error("执行错误,message={}", message);
-
-			final String findCausedby = findCausedby(e);
-			new ZResponse(socketChannel)
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.contentType(HeaderEnum.JSON.getType())
-					.body(JSON.toJSONString(
-							CR.error(HttpStatus.HTTP_500.getCode(), findCausedby)))
-					.write();
-
+			throw e;
 		}
 
 		if (keepAlive) {
@@ -386,18 +375,6 @@ public class NioLongConnectionServer {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	private static String findCausedby(final Exception e) {
-		if (e instanceof ZFException) {
-			return ((ZFException) e).getMessage();
-		}
-
-		if (e.getCause() != null && e.getCause() instanceof ZFException) {
-			return ((ZFException) e.getCause()).getMessage();
-		}
-
-		return e.getCause().getClass().getCanonicalName() + ":" + e.getCause().getMessage();
 	}
 
 	@Data

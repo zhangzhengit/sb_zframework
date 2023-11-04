@@ -93,6 +93,13 @@ public class ZMain {
 			zs.setName(Z_SERVER_THREAD);
 			zs.start();
 
+			try {
+				ZControllerAdviceScanner.scan(packageName);
+			} catch (final Exception e) {
+				e.printStackTrace();
+				System.exit(0);
+			}
+
 			ZSessionMap.sessionTimeoutJOB();
 		}
 	}
