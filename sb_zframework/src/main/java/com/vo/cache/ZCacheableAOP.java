@@ -40,11 +40,21 @@ public class ZCacheableAOP implements ZIAOP {
 			return vC.getValue();
 		}
 
-		final Object v = aopParameter.invoke();
-		final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
-				System.currentTimeMillis());
-		bean.add(cacheKey, r);
-		return v;
+		synchronized (cacheKey.intern()) {
+
+			// 后面排队的线程开始执行后，先判断下缓存内是否已经有结果了（是否前面的线程已经把结果放入了）。
+			final ZCacheR vC2 = (ZCacheR) bean.get(cacheKey);
+			if (vC2 != null && (vC2.getExpire() == ZCacheable.NEVER
+					|| System.currentTimeMillis() < vC2.getExpire() + vC2.getCurrentTimeMillis())) {
+				return vC2.getValue();
+			}
+
+			final Object v = aopParameter.invoke();
+			final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
+					System.currentTimeMillis());
+			bean.add(cacheKey, r);
+			return v;
+		}
 	}
 
 	@Override
