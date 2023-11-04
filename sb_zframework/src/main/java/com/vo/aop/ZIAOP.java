@@ -11,10 +11,10 @@ package com.vo.aop;
  */
 public interface ZIAOP {
 
-	public Object before(AOPParameter AOPParameter);
+	public Object before(AOPParameter aopParameter);
 
-	public Object around(AOPParameter AOPParameter);
+	public Object around(AOPParameter aopParameter);
 
-	public Object after(AOPParameter AOPParameter);
+	public Object after(AOPParameter aopParameter);
 
 }
