@@ -42,11 +42,11 @@ public class ZObjectGeneratorStarter {
 		return glis;
 	}
 
-	public static void start() {
+	public static void start(final String... packageName) {
 		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
 				+ "ZObjectGeneratorStarter.start()");
 
-		final List<ZObjectGenerator> zogList = scan();
+		final List<ZObjectGenerator> zogList = scan(packageName);
 		System.out.println("zogList.size = " + zogList.size());
 		for (final ZObjectGenerator zObjectGenerator : zogList) {
 			System.out.println(zObjectGenerator);
@@ -69,12 +69,12 @@ public class ZObjectGeneratorStarter {
 		}
 	}
 
-	public static List<ZObjectGenerator> scan() {
+	public static List<ZObjectGenerator> scan(final String... packageName) {
 		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
 				+ "ZObjectGeneratorStarter.scan()");
 
 		final ArrayList<ZObjectGenerator> zogList = Lists.newArrayList();
-		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM();
+		final Set<Class<?>> zsSet = ZAOPScaner.scanPackage_COM(packageName);
 		for (final Class<?> c : zsSet) {
 			final Class<?>[] is = c.getInterfaces();
 			for (final Class i : is) {

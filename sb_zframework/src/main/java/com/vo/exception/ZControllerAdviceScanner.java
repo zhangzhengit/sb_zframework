@@ -36,8 +36,7 @@ public class ZControllerAdviceScanner {
 
 	public static final List<ZControllerAdviceBody> LIST = Lists.newArrayList();
 
-	public static void scan(final String packageName) {
-
+	public static void scan(final String... packageName) {
 
 		final Set<Class<?>> csset = ClassMap.scanPackage(packageName);
 		final List<Class<?>> zcaList = csset.stream().filter(c -> c.isAnnotationPresent(ZControllerAdvice.class))

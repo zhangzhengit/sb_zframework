@@ -44,9 +44,9 @@ public class ZValueScanner {
 	private final static ConcurrentMap<Field, Object> valueMap = Maps.newConcurrentMap();
 	private final static HashBasedTable<String, Field, Object> valueTable = HashBasedTable.create();
 
-	public static void inject(final String packageName) {
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZComponent.class);
-		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
+	public static void inject(final String... packageName) {
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
+		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 
 		final List<Class<?>> clist = Lists.newArrayListWithCapacity(zcSet.size() + zc2Set.size());
 		clist.addAll(zcSet);

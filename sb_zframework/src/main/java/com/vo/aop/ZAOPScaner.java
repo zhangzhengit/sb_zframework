@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,23 +59,10 @@ public class ZAOPScaner {
 
 	public static final String KEY = "scan";
 
-	public static Map<String, ZClass> scanAndGenerateProxyClass() {
-		synchronized (KEY) {
-			final Map<String, ZClass> vv = zcMap.get(KEY);
-			if (vv != null) {
-				return vv;
-			}
-
-			final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1();
-			zcMap.put(KEY, map);
-			return map;
-		}
-	}
-
-	public	static Map<String, ZClass> scanAndGenerateProxyClass1() {
+	public	static Map<String, ZClass> scanAndGenerateProxyClass1(final String... packageName) {
 
 		final Map<String, ZClass> map = Maps.newHashMap();
-		final Set<Class<?>> cs = scanPackage_COM();
+		final Set<Class<?>> cs = scanPackage_COM(packageName);
 
 		final HashBasedTable<Class, Method, Class<?>> table = extractedC(cs);
 
@@ -269,11 +257,9 @@ public class ZAOPScaner {
 		return string;
 	}
 
-	public static Set<Class<?>> scanPackage_COM() {
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String scanPackage = serverConfiguration.getScanPackage();
-		LOG.info("开始扫描类,scanPackage={}", scanPackage);
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(scanPackage);
+	public static Set<Class<?>> scanPackage_COM(final String... packageName) {
+		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
+		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		return clsSet;
 	}
 

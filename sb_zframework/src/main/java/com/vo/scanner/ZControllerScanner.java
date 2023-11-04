@@ -59,9 +59,9 @@ public class ZControllerScanner {
 	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZGet.class, ZPost.class,
 			ZPut.class, ZDelete.class, ZTrace.class, ZOptions.class, ZHead.class, ZConnect.class, ZPatch.class);
 
-	public static Set<Class<?>> scanAndCreateObject(final String packageName) {
+	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
 		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, ZController.class);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);

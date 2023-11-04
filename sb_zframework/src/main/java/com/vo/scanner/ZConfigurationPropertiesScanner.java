@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,7 +51,7 @@ public class ZConfigurationPropertiesScanner {
 	public static final int PROPERTY_INDEX = 1520;
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreate(final String packageName) {
+	public static void scanAndCreate(final String... packageName) {
 
 		final Set<Class<?>> csSet = scanPackage(packageName).stream()
 				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
@@ -308,10 +309,15 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	public static Set<Class<?>> scanPackage(final String packageName) {
-		LOG.info("开始扫描类,scanPackage={}", packageName);
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
-		return clsSet;
+	public static Set<Class<?>> scanPackage(final String... packageName) {
+		LOG.info("开始扫描类,scanPackage={}", Arrays.toString(packageName));
+		final HashSet<Class<?>> rs = Sets.newHashSet();
+		for (final String p : packageName) {
+			final Set<Class<?>> clsSet = ClassMap.scanPackage(p);
+			rs.addAll(clsSet);
+
+		}
+		return rs;
 	}
 
 	/**

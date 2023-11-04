@@ -445,7 +445,7 @@ public class ZValidator {
 	 * @param packageName
 	 *
 	 */
-	public static void start(final String packageName) {
+	public static void start(final String... packageName) {
 		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 		for (final Class<?> cls : clsSet) {
 			final Field[] fs = cls.getDeclaredFields();

@@ -37,14 +37,12 @@ public class ZComponentScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreate() {
+	public static void scanAndCreate(final String... packageName) {
 
-		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1();
-
-		final ServerConfiguration serverConfiguration = ZContext.getBean(ServerConfiguration.class);
+		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
 
 		LOG.info("开始扫描带有[{}]注解的类", ZComponent.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(serverConfiguration.getScanPackage(), ZComponent.class);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
 		LOG.info("扫描到带有[{}]注解的类个数={}", ZComponent.class.getCanonicalName(),zcSet.size());
 		LOG.info("开始给带有[{}]注解的类创建对象",ZComponent.class.getCanonicalName());
 		for (final Class<?> cls : zcSet) {

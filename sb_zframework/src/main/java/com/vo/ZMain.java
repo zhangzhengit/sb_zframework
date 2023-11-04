@@ -1,8 +1,9 @@
 package com.vo;
 
-import javax.servlet.ServletSecurityElement;
-import javax.sound.midi.SysexMessage;
+import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
@@ -36,14 +37,19 @@ import cn.hutool.core.util.StrUtil;
 public class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+	public static final String COM_VO = "com.vo";
 
 	public static final String STATIC_RESOURCES_PROPERTY_NAME = "resource.path-" + UUID.randomUUID();
 
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
-	public static void start(final String packageName,final boolean httpEnable, final String[] args) {
+	public static void start(final List<String> packageNameList,final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.trace("zframework开始启动");
+		final Set<String> pns = Sets.newHashSet(COM_VO);
+		pns.addAll(packageNameList);
+
+		final String[] packageName = pns.toArray(new String[0] );
 
 		// 最先校验：校验注解用的字段是否支持
 		try {
@@ -58,32 +64,31 @@ public class ZMain {
 		ZConfigurationPropertiesScanner.scanAndCreate(packageName);
 
 		// 0.1 扫描 @ZConfiguration类，生成配置
-		ZConfigurationScanner.scanAndCreate();
+		ZConfigurationScanner.scanAndCreate(packageName);
 
 		// 1 初始化 对象生成器
-		ZObjectGeneratorStarter.start();
+		ZObjectGeneratorStarter.start(packageName);
 
 		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
-		ZComponentScanner.scanAndCreate();
+		ZComponentScanner.scanAndCreate(packageName);
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final String scanPackage = serverConfiguration.getScanPackage();
 
 		if (httpEnable) {
 			// 3 创建 @ZController 对象
-			ZControllerScanner.scanAndCreateObject(scanPackage);
+			ZControllerScanner.scanAndCreateObject(packageName);
 			// 3.1 创建 @ZController 的拦截器对象
-			ZControllerInterceptorScanner.scan();
+			ZControllerInterceptorScanner.scan(packageName);
 		}
 
 		// 4 扫描组件的 @ZAutowired 字段 并注入值
-		ZAutowiredScanner.inject(scanPackage, ZComponent.class);
-		ZAutowiredScanner.inject(scanPackage, ZController.class);
-		ZAutowiredScanner.inject(scanPackage, ZAOP.class);
+		ZAutowiredScanner.inject(ZComponent.class, packageName);
+		ZAutowiredScanner.inject(ZController.class, packageName);
+		ZAutowiredScanner.inject(ZAOP.class, packageName);
 
 		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
-		ZValueScanner.inject(scanPackage);
+		ZValueScanner.inject(packageName);
 
+		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
 			System.setProperty(STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
 			System.out.println("staticPath = " + serverConfiguration.getStaticPath());

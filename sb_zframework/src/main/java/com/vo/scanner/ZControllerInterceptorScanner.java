@@ -32,9 +32,8 @@ public class ZControllerInterceptorScanner {
 
 	static Set<Integer> orderValue = Sets.newHashSet();
 
-	public static void scan() {
-		final ServerConfiguration serverConfiguration = ZContext.getBean(ServerConfiguration.class);
-		final Set<Class<?>> clsSet = ClassMap.scanPackage(serverConfiguration.getScanPackage());
+	public static void scan(final String... packageName) {
+		final Set<Class<?>> clsSet = ClassMap.scanPackage(packageName);
 
 		final ArrayList<ZCIP> zcipList = Lists.newArrayList();
 

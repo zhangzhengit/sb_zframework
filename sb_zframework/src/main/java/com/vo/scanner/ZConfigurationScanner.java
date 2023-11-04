@@ -28,12 +28,10 @@ public class ZConfigurationScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreate() {
+	public static void scanAndCreate(final String... packageName) {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(serverConfiguration.getScanPackage(),
-				ZConfiguration.class);
+		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(ZConfiguration.class, packageName);
 		if (CollUtil.isEmpty(clsSet)) {
 			LOG.info("没有带有@{}注解的类", ZConfiguration.class.getSimpleName());
 			return;

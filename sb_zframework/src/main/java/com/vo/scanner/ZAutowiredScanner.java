@@ -25,10 +25,10 @@ public class ZAutowiredScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 
-	public static Set<Class<?>> inject(final String packageName, final Class targetClass) {
+	public static Set<Class<?>> inject(final Class targetClass, final String... packageName) {
 
 		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(packageName, targetClass);
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(targetClass, packageName);
 
 		ZAutowiredScanner.LOG.info("带有[{}]注解的类个数={}", targetClass.getCanonicalName(), zcSet.size());
 

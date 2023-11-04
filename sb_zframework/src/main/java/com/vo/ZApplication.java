@@ -1,15 +1,18 @@
 package com.vo;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import com.google.common.collect.Lists;
 import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.validator.StartupException;
 
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.collection.CollUtil;
 
 /**
  *
@@ -32,34 +35,38 @@ public class ZApplication {
 	/**
 	 * 启动程序
 	 *
-	 * @param scanPackageName 要扫描的包名，如：com
+	 * @param scanPackageNameList 要扫描的包名，如：com
 	 * @param httpEnable
 	 * @param args
 	 */
-	public static void run(final String scanPackageName, final boolean httpEnable, final String[] args) {
+	public static void run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
-		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageName, httpEnable,
+		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
+
+		if (CollUtil.isEmpty(scanPackageNameList)) {
+			throw new IllegalArgumentException("启动出错,scanPackageName 不能为空");
+		}
 
 		try {
 			final String packageName = g();
-			if (!Objects.equals(scanPackageName, packageName)) {
-				throw new StartupException(
-						"scanPackageName必须与启动类所在包名一致。当前scanPackageName=" + scanPackageName + ",启动类所在包名=" + packageName);
+			final Optional<String> findAny = scanPackageNameList.stream().filter(p -> Objects.equals(p, packageName))
+					.findAny();
+			if (!findAny.isPresent()) {
+				throw new StartupException("scanPackageNameList必须包含启动类所在的包。当前scanPackageNameList=" + scanPackageNameList
+						+ ",启动类所在包名=" + packageName);
 			}
+
 		} catch (final Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 
-		ZProperties.getInstance().addProperty("server.scanPackage", scanPackageName);
+		ZProperties.getInstance().addProperty("server.scanPackage", scanPackageNameList);
 
-		if (StrUtil.isEmpty(scanPackageName)) {
-			throw new IllegalArgumentException("启动出错,scanPackageName 不能为空");
-		}
 
 		final long t1 = System.currentTimeMillis();
-		ZMain.start(scanPackageName, httpEnable, args);
+		ZMain.start(Lists.newArrayList(scanPackageNameList), httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
 		final long freeMemory = Runtime.getRuntime().freeMemory();
