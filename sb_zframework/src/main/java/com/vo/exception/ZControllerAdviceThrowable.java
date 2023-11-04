@@ -16,6 +16,10 @@ import com.votool.common.CR;
 @ZComponent
 public class ZControllerAdviceThrowable {
 
+	// FIXME 2023年11月4日 下午7:31:39 zhanghen: XXX
+	/*
+	 * 此方法还待定，是否直接提示具体报错信息给前端？要不要写得模糊一点？如：服务器内部错误
+	 */
 	public CR throwZ(final Throwable throwable) {
 		final String m = findCausedby(throwable);
 		final ZControllerAdviceThrowableConfigurationProperties conf = ZContext.getBean(ZControllerAdviceThrowableConfigurationProperties.class);
