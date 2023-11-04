@@ -56,7 +56,6 @@ public class ZControllerMap {
 
 		final ZRequestMappingConf zrmConf = ZContext.getBean(ZRequestMappingConf.class);
 		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? zrmConf.getQps() : requestMapping.qps();
-		System.out.println("m = " + requestMapping.mapping()[0] + "\t" + "qps = " + qps);
 		if (qps <= 0) {
 			throw new IllegalArgumentException(
 					"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);

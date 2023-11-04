@@ -270,7 +270,6 @@ public class ZAOPScaner {
 	}
 
 	public static Set<Class<?>> scanPackage_COM() {
-		final PropertiesConfiguration propertiesConfiguration = ZProperties.getInstance();
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		final String scanPackage = serverConfiguration.getScanPackage();
 		LOG.info("开始扫描类,scanPackage={}", scanPackage);

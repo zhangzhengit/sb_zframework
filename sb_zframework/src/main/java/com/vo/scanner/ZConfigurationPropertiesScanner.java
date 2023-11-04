@@ -94,11 +94,10 @@ public class ZConfigurationPropertiesScanner {
 
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) {
 		final PropertiesConfiguration p = ZProperties.getInstance();
-		final String key = prefix + field.getName();
-		System.out.println("ZCP.key = " + key);
 		final Class<?> type = field.getType();
 
 		final AtomicReference<String> keyAR = new AtomicReference<>();
+		final String key = prefix + field.getName();
 		if (p.containsKey(key)) {
 			keyAR.set(key);
 			setValueByType(object, field, p, type, keyAR);
