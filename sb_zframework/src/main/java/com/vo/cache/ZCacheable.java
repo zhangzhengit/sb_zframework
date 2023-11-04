@@ -48,6 +48,8 @@ public @interface ZCacheable {
 	 * @return
 	 *
 	 */
+	// FIXME 2023年11月5日 上午12:47:15 zhanghen: TODO 三个注解都考虑支持对象类型 和 对象.字段 类型
+	// 现在支持吃Integer、String等等简单类型。以及生产cacheKey时，对于对象要怎么取值
 	String key();
 
 	/**
