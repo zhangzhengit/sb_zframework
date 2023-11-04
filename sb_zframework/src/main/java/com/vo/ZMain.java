@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
+import com.vo.cache.ZCacheableValidator;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZLog2;
@@ -87,6 +88,14 @@ public class ZMain {
 
 		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
 		ZValueScanner.inject(packageName);
+
+		try {
+			ZCacheableValidator.validated(packageName);
+		} catch (final Exception e) {
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("cache相关注解校验未通过，请检查注解.errorMessage={}",message);
+			System.exit(0);
+		}
 
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {

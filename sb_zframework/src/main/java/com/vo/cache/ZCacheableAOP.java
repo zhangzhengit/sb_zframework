@@ -28,9 +28,11 @@ public class ZCacheableAOP implements ZIAOP {
 	@Override
 	public Object around(final AOPParameter aopParameter) {
 
-		final String key = aopParameter.getMethod().getAnnotation(ZCacheable.class).key();
+		final ZCacheable annotation = aopParameter.getMethod().getAnnotation(ZCacheable.class);
 
-		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key);
+		final String key = annotation.key();
+
+		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
 		final ZCacheMemory bean = ZContext.getBean(ZCacheMemory.class);
 		final ZCacheR vC = (ZCacheR) bean.get(cacheKey);
 		if (vC != null && (vC.getExpire() == ZCacheable.NEVER
@@ -39,7 +41,7 @@ public class ZCacheableAOP implements ZIAOP {
 		}
 
 		final Object v = aopParameter.invoke();
-		final ZCacheR r = new ZCacheR(cacheKey, v, aopParameter.getMethod().getAnnotation(ZCacheable.class).expire(),
+		final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
 				System.currentTimeMillis());
 		bean.add(cacheKey, r);
 		return v;
@@ -50,7 +52,7 @@ public class ZCacheableAOP implements ZIAOP {
 		return null;
 	}
 
-	private static String gKey(final AOPParameter aopParameter, final String key) {
+	public static String gKey(final AOPParameter aopParameter, final String key, final String group) {
 		final Parameter[] ps = aopParameter.getMethod().getParameters();
 		for (int i = 0; i < ps.length; i++) {
 
@@ -58,9 +60,8 @@ public class ZCacheableAOP implements ZIAOP {
 			if (parameter.getName().equals(key)) {
 
 				final String canonicalName = aopParameter.getTarget().getClass().getCanonicalName();
-				final String name = aopParameter.getMethod().getName();
 				final List<Object> pl = aopParameter.getParameterList();
-				final String cacheKey = PREFIX + "@" + canonicalName + "@" + name + "@" + parameter.getName() + "="
+				final String cacheKey = PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
 						+ pl.get(i);
 //				System.out.println("cacheKey = " + cacheKey);
 
