@@ -1,8 +1,11 @@
 package com.vo.scanner;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.collect.Lists;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
@@ -52,13 +55,52 @@ public class ZAutowiredScanner {
 			final Field[] fs = o2.getClass().getDeclaredFields();
 			for (final Field f : fs) {
 				inject(cls, f);
-
 			}
+
+			injectForProxyMethod_getSingletonByClass(o2);
+
 		}
 
 		return zcSet;
 	}
 
+	/**
+	 * 给对象的父类的 @ZAutowired 的字段赋值，生成的代理方法中需要用到
+	 *
+	 * @param object
+	 *
+	 */
+	private static void injectForProxyMethod_getSingletonByClass(final Object object) {
+		final Object superClassObject = com.vo.core.ZSingleton.getSingletonByClass(object.getClass().getSuperclass());
+		if (superClassObject.getClass().getCanonicalName().equals(Object.class.getCanonicalName())) {
+			return;
+		}
+
+		final List<Field> zafList = Lists.newArrayList(superClassObject.getClass().getDeclaredFields()).stream().filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
+		zafList.forEach(f -> {
+
+			ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", object.getClass().getCanonicalName(),
+					ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
+
+			final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
+			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+
+			final Object vT = ZContext.getBean(name);
+			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+
+			try {
+				f.setAccessible(true);
+				final Object fOldV = f.get(superClassObject);
+				System.out.println("对象 " + superClassObject + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
+				ZAutowiredScanner.setFiledValue(f, superClassObject, value);
+				final Object fNewV = f.get(superClassObject);
+				System.out.println("对象 " + superClassObject + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+		});
+	}
 
 	public static String inject(final Class<?> cls, final Field f) {
 		final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
