@@ -44,78 +44,71 @@ public class ZMain {
 
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
-	public static void start(final List<String> packageNameList,final boolean httpEnable, final String[] args) {
+	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.trace("zframework开始启动");
 		final Set<String> pns = Sets.newHashSet(COM_VO);
 		pns.addAll(packageNameList);
 
-		final String[] packageName = pns.toArray(new String[0] );
+		final String[] packageName = pns.toArray(new String[0]);
 
 		// 最先校验：校验注解用的字段是否支持
 		try {
 			ZValidator.start(packageName);
-		} catch (final Exception e) {
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("@校验注解标记的字段未通过，请检查注解.errorMessage={}",message);
-			System.exit(0);
-		}
 
-		// 0 读取 @ZConfigurationProperties 配置，创建配置类
-		ZConfigurationPropertiesScanner.scanAndCreate(packageName);
+			// 0 读取 @ZConfigurationProperties 配置，创建配置类
+			ZConfigurationPropertiesScanner.scanAndCreate(packageName);
 
-		// 0.1 扫描 @ZConfiguration类，生成配置
-		ZConfigurationScanner.scanAndCreate(packageName);
+			// 0.1 扫描 @ZConfiguration类，生成配置
+			ZConfigurationScanner.scanAndCreate(packageName);
 
-		// 1 初始化 对象生成器
-		ZObjectGeneratorStarter.start(packageName);
+			// 1 初始化 对象生成器
+			ZObjectGeneratorStarter.start(packageName);
 
-		// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
-		ZComponentScanner.scanAndCreate(packageName);
+			// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
+			ZComponentScanner.scanAndCreate(packageName);
 
-
-		if (httpEnable) {
-			// 3 创建 @ZController 对象
-			ZControllerScanner.scanAndCreateObject(packageName);
-			// 3.1 创建 @ZController 的拦截器对象
-			ZControllerInterceptorScanner.scan(packageName);
-		}
-
-		// 4 扫描组件的 @ZAutowired 字段 并注入值
-		ZAutowiredScanner.inject(ZComponent.class, packageName);
-		ZAutowiredScanner.inject(ZController.class, packageName);
-		ZAutowiredScanner.inject(ZAOP.class, packageName);
-
-		// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
-		ZValueScanner.inject(packageName);
-
-		try {
-			ZCacheableValidator.validated(packageName);
-		} catch (final Exception e) {
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("cache相关注解校验未通过，请检查注解.errorMessage={}",message);
-			System.exit(0);
-		}
-
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
-		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
-			System.setProperty(STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
-			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
-		}
-
-		if (httpEnable) {
-			final ZServer zs = new ZServer();
-			zs.setName(Z_SERVER_THREAD);
-			zs.start();
-
-			try {
-				ZControllerAdviceScanner.scan(packageName);
-			} catch (final Exception e) {
-				e.printStackTrace();
-				System.exit(0);
+			if (httpEnable) {
+				// 3 创建 @ZController 对象
+				ZControllerScanner.scanAndCreateObject(packageName);
+				// 3.1 创建 @ZController 的拦截器对象
+				ZControllerInterceptorScanner.scan(packageName);
 			}
 
-			ZSessionMap.sessionTimeoutJOB();
+			// 4 扫描组件的 @ZAutowired 字段 并注入值
+			ZAutowiredScanner.inject(ZComponent.class, packageName);
+			ZAutowiredScanner.inject(ZController.class, packageName);
+			ZAutowiredScanner.inject(ZAOP.class, packageName);
+
+			// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
+			ZValueScanner.inject(packageName);
+
+			ZCacheableValidator.validated(packageName);
+
+			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
+				System.setProperty(STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
+				System.out.println("staticPath = " + serverConfiguration.getStaticPath());
+			}
+
+			if (httpEnable) {
+				final ZServer zs = new ZServer();
+				zs.setName(Z_SERVER_THREAD);
+				zs.start();
+
+				try {
+					ZControllerAdviceScanner.scan(packageName);
+				} catch (final Exception e) {
+					e.printStackTrace();
+					System.exit(0);
+				}
+
+				ZSessionMap.sessionTimeoutJOB();
+			}
+		} catch (final Exception e) {
+			final String message = Task.gExceptionMessage(e);
+			LOG.error("程序启动失败，请检查代码。errorMessage={}", message);
+			System.exit(0);
 		}
 	}
 

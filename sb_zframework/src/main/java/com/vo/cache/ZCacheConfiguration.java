@@ -19,13 +19,13 @@ public class ZCacheConfiguration {
 
 	public static final String REDIS = "REDIS";
 
+	public static final String DEFAULT = MEMORY;
+
 	@ZAutowired
 	private ZCacheConfigurationProperties cacheConfigurationProperties;
 
 	@ZBean
 	public ZCache<ZCacheR> cacheBbuiltinForPackageCache() {
-		System.out.println(java.time.LocalDateTime.now() + "\t" + Thread.currentThread().getName() + "\t"
-				+ "ZCacheConfiguration.cacheBbuiltinForPackageCache()");
 
 		final String type = this.cacheConfigurationProperties.getType();
 		switch (type) {
@@ -37,7 +37,8 @@ public class ZCacheConfiguration {
 			return new ZCacheRedis();
 
 		default:
-			throw new TypeNotSupportedExcpetion("cache.type不支持，type=" + type + ",支持类型为：" + MEMORY + "和" + REDIS);
+			throw new TypeNotSupportedExcpetion(
+					"cache.type不支持，type=" + type + ",支持类型为：" + MEMORY + "和" + REDIS + ",默认值为 cache.type=" + DEFAULT);
 
 		}
 	}

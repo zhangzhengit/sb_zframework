@@ -28,7 +28,7 @@ public class ZConfigurationScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreate(final String... packageName) {
+	public static void scanAndCreate(final String... packageName) throws Exception {
 		LOG.info("开始扫描带有@{}注解的类", ZConfiguration.class.getSimpleName());
 
 		final Set<Class<?>> clsSet = ClassMap.scanPackageByAnnotation(ZConfiguration.class, packageName);
@@ -78,7 +78,8 @@ public class ZConfigurationScanner {
 					ZContext.addBean(r.getClass().getCanonicalName(), r);
 
 				} catch (final InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
-					e.printStackTrace();
+//					e.printStackTrace();
+					throw e;
 				}
 
 			}

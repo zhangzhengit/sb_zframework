@@ -21,6 +21,6 @@ import lombok.NoArgsConstructor;
 public class ZCacheConfigurationProperties {
 
 	@ZNotEmtpy
-	private String type = ZCacheConfiguration.MEMORY;
+	private String type = ZCacheConfiguration.DEFAULT;
 
 }
