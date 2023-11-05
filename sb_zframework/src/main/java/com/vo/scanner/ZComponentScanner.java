@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,7 +14,6 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
-import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZContext;
@@ -55,67 +55,82 @@ public class ZComponentScanner {
 			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
 			if (proxyClass != null) {
 				final Object newInstance = proxyClass.newInstance();
+
 				// 放代理类
 				ZContext.addBean(newComponent.getClass().getCanonicalName(), newInstance);
 				ZContext.addZClassBean(newComponent.getClass().getCanonicalName(), proxyClass, newInstance);
 			} else {
 
-				// 放原类情况(也是放生成的代理类)：
 				// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
+				final Optional<Method> anyMethodIsAnnotationPresentZValidated = Lists.newArrayList(cls.getDeclaredMethods())
+						.stream()
+						.filter(m -> Lists.newArrayList(m.getParameterTypes()).stream()
+								.filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent())
+						.findAny();
 
-				final ZClass proxyZClass = new ZClass();
-				proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
-				proxyZClass.setName(cls.getSimpleName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX);
-				proxyZClass.setSuperClass(cls.getCanonicalName());
-				proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getCanonicalName()));
-
-				final Method[] mss = cls.getDeclaredMethods();
-
-				final HashSet<ZMethod> zms = Sets.newHashSet();
-				for (final Method m : mss) {
-					final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
-					final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
-					final Class<?> returnType = m.getReturnType();
-					if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
-						final String insertBody =
-								"if (zvdto.getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
-								+  "for (final " + Field.class.getCanonicalName() + " field : zvdto.getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-								+  		 ZValidator.class.getCanonicalName() + ".validatedAll(zvdto, field);"  + Task.NEW_LINE
-								+   "}" + Task.NEW_LINE
-								+ "}";
-
-						final String body =
-								ZAOPScaner.VOID.equals(returnType.getName())
-								? "super." + m.getName() + "(" + a + ");"
-								: "return super." + m.getName() + "(" + a + ");";
-
-						final ZMethod zm = ZMethod.copyFromMethod(m);
-						zm.setgReturn(false);
-						zm.setBody(insertBody  + Task.NEW_LINE + body);
-
-						zms.add(zm);
-
-					} else {
-
-						final String body =
-								ZAOPScaner.VOID.equals(returnType.getName())
-								? "super." + m.getName() + "(" + a + ");"
-								: "return super." + m.getName() + "(" + a + ");";
-
-						final ZMethod zm = ZMethod.copyFromMethod(m);
-						zm.setgReturn(false);
-						zm.setBody(body);
-
-						zms.add(zm);
-					}
+				if (anyMethodIsAnnotationPresentZValidated.isPresent()) {
+					addZValidatedProxyClass(cls, newComponent);
+				} else {
+					// 正常放原类
+					ZContext.addBean(newComponent.getClass().getCanonicalName(), newComponent);
 				}
-				proxyZClass.setMethodSet(zms);
 
-				ZContext.addBean(newComponent.getClass().getCanonicalName(), proxyZClass.newInstance());
 			}
 		}
 
 		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", ZComponent.class.getCanonicalName(), zcSet.size());
+	}
+
+	private static void addZValidatedProxyClass(final Class<?> cls, final Object newComponent) {
+		final ZClass proxyZClass = new ZClass();
+		proxyZClass.setPackage1(new ZPackage(cls.getPackage().getName()));
+		proxyZClass.setName(cls.getSimpleName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX);
+		proxyZClass.setSuperClass(cls.getCanonicalName());
+		proxyZClass.setAnnotationSet(Sets.newHashSet(ZAOPProxyClass.class.getCanonicalName()));
+
+		final Method[] mss = cls.getDeclaredMethods();
+
+		final HashSet<ZMethod> zms = Sets.newHashSet();
+		for (final Method m : mss) {
+			final ArrayList<ZMethodArg> argList = ZMethod.getArgListFromMethod(m);
+			final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
+			final Class<?> returnType = m.getReturnType();
+			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
+				final String insertBody =
+						"if (zvdto.getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
+						+  "for (final " + Field.class.getCanonicalName() + " field : zvdto.getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+						+  		 ZValidator.class.getCanonicalName() + ".validatedAll(zvdto, field);"  + Task.NEW_LINE
+						+   "}" + Task.NEW_LINE
+						+ "}";
+
+				final String body =
+						ZAOPScaner.VOID.equals(returnType.getName())
+						? "super." + m.getName() + "(" + a + ");"
+						: "return super." + m.getName() + "(" + a + ");";
+
+				final ZMethod zm = ZMethod.copyFromMethod(m);
+				zm.setgReturn(false);
+				zm.setBody(insertBody  + Task.NEW_LINE + body);
+
+				zms.add(zm);
+
+			} else {
+
+				final String body =
+						ZAOPScaner.VOID.equals(returnType.getName())
+						? "super." + m.getName() + "(" + a + ");"
+						: "return super." + m.getName() + "(" + a + ");";
+
+				final ZMethod zm = ZMethod.copyFromMethod(m);
+				zm.setgReturn(false);
+				zm.setBody(body);
+
+				zms.add(zm);
+			}
+		}
+		proxyZClass.setMethodSet(zms);
+
+		ZContext.addBean(newComponent.getClass().getCanonicalName(), proxyZClass.newInstance());
 	}
 
 }

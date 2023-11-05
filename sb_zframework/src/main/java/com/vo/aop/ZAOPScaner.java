@@ -100,7 +100,9 @@ public class ZAOPScaner {
 							final String value = getAnnoName(a).replaceAll("\"", "");
 							final String as = a.toString().replace("\"\"", "");
 							final String r2 = replaceLast(as, value, "\"" + value + "\"");
-							zf.addAnno(r2);
+							// FIXME 2023年11月6日 上午1:24:25 zhanghen: 此处addAnno貌似毫无用处
+							// 因为代理类都是直接super.xxx ，都是用的父类字段没用到本类的
+//							zf.addAnno(r2);
 						}
 					}
 					proxyZClass.addField(zf);
