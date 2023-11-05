@@ -13,14 +13,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.vo.conf.ServerConfiguration;
-import com.vo.conf.ZProperties;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
 import com.vo.core.ZField;
@@ -112,7 +108,7 @@ public class ZAOPScaner {
 			}
 
 			final String chiS = proxyZClass.toString();
-//			System.out.println("chiS = \n" + chiS);
+			System.out.println("代理类源码 = \n" + chiS);
 
 			map.put(cls.getSimpleName(), proxyZClass);
 		}
