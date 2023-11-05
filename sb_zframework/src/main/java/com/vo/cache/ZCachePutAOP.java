@@ -1,9 +1,9 @@
 package com.vo.cache;
 
+import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
-import com.vo.core.ZContext;
 
 /**
  * @ZCachePut 的实现类
@@ -14,6 +14,9 @@ import com.vo.core.ZContext;
  */
 @ZAOP(interceptType = ZCachePut.class)
 public class ZCachePutAOP implements ZIAOP {
+
+	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	private ZCache<ZCacheR> cache;
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
@@ -28,8 +31,9 @@ public class ZCachePutAOP implements ZIAOP {
 
 		final Object v = aopParameter.invoke();
 		final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(), System.currentTimeMillis());
-		final ZCacheMemory bean = ZContext.getBean(ZCacheMemory.class);
-		bean.add(cacheKey, r);
+
+		this.cache.add(cacheKey, r);
+
 		return v;
 	}
 

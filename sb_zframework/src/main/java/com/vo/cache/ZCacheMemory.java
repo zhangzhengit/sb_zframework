@@ -30,13 +30,13 @@ public class ZCacheMemory implements ZCache {
 	}
 
 	@Override
-	public void remove(final String key) {
+	public synchronized void remove(final String key) {
 		this.map.remove(key);
 	}
 
 	@Override
-	public synchronized void contains(final String key) {
-		this.map.containsKey(key);
+	public synchronized boolean contains(final String key) {
+		return this.map.containsKey(key);
 	}
 
 	@Override

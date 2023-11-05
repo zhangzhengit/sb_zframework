@@ -3,10 +3,10 @@ package com.vo.cache;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
+import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
-import com.vo.core.ZContext;
 
 /**
  * @ZCacheable 的AOP实现类
@@ -19,6 +19,9 @@ import com.vo.core.ZContext;
 public class ZCacheableAOP implements ZIAOP {
 
 	public static final String PREFIX = "ZCacheable";
+
+	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	private ZCache<ZCacheR> cache;
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
@@ -33,17 +36,16 @@ public class ZCacheableAOP implements ZIAOP {
 		final String key = annotation.key();
 
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
-		final ZCacheMemory bean = ZContext.getBean(ZCacheMemory.class);
-		final ZCacheR vC = (ZCacheR) bean.get(cacheKey);
+
+		final ZCacheR vC = this.cache.get(cacheKey);
 		if (vC != null && (vC.getExpire() == ZCacheable.NEVER
 				|| System.currentTimeMillis() < vC.getExpire() + vC.getCurrentTimeMillis())) {
 			return vC.getValue();
 		}
 
 		synchronized (cacheKey.intern()) {
-
 			// 后面排队的线程开始执行后，先判断下缓存内是否已经有结果了（是否前面的线程已经把结果放入了）。
-			final ZCacheR vC2 = (ZCacheR) bean.get(cacheKey);
+			final ZCacheR vC2 = this.cache.get(cacheKey);
 			if (vC2 != null && (vC2.getExpire() == ZCacheable.NEVER
 					|| System.currentTimeMillis() < vC2.getExpire() + vC2.getCurrentTimeMillis())) {
 				return vC2.getValue();
@@ -52,7 +54,9 @@ public class ZCacheableAOP implements ZIAOP {
 			final Object v = aopParameter.invoke();
 			final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
 					System.currentTimeMillis());
-			bean.add(cacheKey, r);
+
+			this.cache.add(cacheKey, r);
+
 			return v;
 		}
 	}

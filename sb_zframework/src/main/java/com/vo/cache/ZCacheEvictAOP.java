@@ -1,9 +1,9 @@
 package com.vo.cache;
 
+import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
-import com.vo.core.ZContext;
 
 /**
  * @ZCacheEvict 的实现类
@@ -14,6 +14,9 @@ import com.vo.core.ZContext;
  */
 @ZAOP(interceptType = ZCacheEvict.class)
 public class ZCacheEvictAOP implements ZIAOP {
+
+	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	private ZCache<ZCacheR> cache;
 
 	@Override
 	public Object before(final AOPParameter aopParameter) {
@@ -26,8 +29,7 @@ public class ZCacheEvictAOP implements ZIAOP {
 		final String key = annotation.key();
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
 
-		final ZCacheMemory bean = ZContext.getBean(ZCacheMemory.class);
-		bean.remove(cacheKey);
+		this.cache.remove(cacheKey);
 
 		final Object v = aopParameter.invoke();
 		return v;

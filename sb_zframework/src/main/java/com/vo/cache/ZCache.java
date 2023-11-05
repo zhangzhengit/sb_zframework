@@ -9,15 +9,15 @@ import java.util.Set;
  * @date 2023年11月4日
  *
  */
-public interface ZCache {
+public interface ZCache<V> {
 
-	public void add(final String key, final Object value);
+	public void add(final String key, final V value);
 
-	public Object get(final String key);
+	public V get(final String key);
 
 	public void remove(final String key);
-	
-	public void contains(final String key);
+
+	public boolean contains(final String key);
 
 	public Set<String> keySet();
 }
