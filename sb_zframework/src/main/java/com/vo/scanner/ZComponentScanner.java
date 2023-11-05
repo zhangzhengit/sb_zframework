@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.aop.ZAOPProxyClass;
 import com.vo.aop.ZAOPScaner;
@@ -25,6 +26,8 @@ import com.vo.core.ZPackage;
 import com.vo.core.ZSingleton;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
+
+import cn.hutool.core.util.StrUtil;
 
 /**
  * 扫描 @ZComponent 的类
@@ -54,11 +57,13 @@ public class ZComponentScanner {
 			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
 			final ZClass proxyClass = map.get(newComponent.getClass().getSimpleName());
 			if (proxyClass != null) {
-				final Object newInstance = proxyClass.newInstance();
+				final Object newInstanceProxy = proxyClass.newInstance();
+
+				injectParentFieldForProxy(newInstanceProxy);
 
 				// 放代理类
-				ZContext.addBean(newComponent.getClass().getCanonicalName(), newInstance);
-				ZContext.addZClassBean(newComponent.getClass().getCanonicalName(), proxyClass, newInstance);
+				ZContext.addBean(newComponent.getClass().getCanonicalName(), newInstanceProxy);
+				ZContext.addZClassBean(newComponent.getClass().getCanonicalName(), proxyClass, newInstanceProxy);
 			} else {
 
 				// 1、@ZComponent 类中方法的参数是否带有 @ZValidated 注解，有则插入校验代码，无则super.xx(xx);
@@ -79,6 +84,33 @@ public class ZComponentScanner {
 		}
 
 		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", ZComponent.class.getCanonicalName(), zcSet.size());
+	}
+
+	private static void injectParentFieldForProxy(final Object newInstance) {
+		final Field[] declaredFields = newInstance.getClass().getSuperclass().getDeclaredFields();
+		for (final Field f : declaredFields) {
+			final ZAutowired a = f.getAnnotation(ZAutowired.class);
+			if (a == null) {
+				continue;
+			}
+
+			final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
+			final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+
+			final Object vT = ZContext.getBean(name);
+			final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
+
+			try {
+				f.setAccessible(true);
+				final Object fOldV = f.get(newInstance);
+				System.out.println("对象 " + newInstance + " 的字段f = " + f.getName() + " 赋值前，值 = " + fOldV);
+				ZAutowiredScanner.setFiledValue(f, newInstance, value);
+				final Object fNewV = f.get(newInstance);
+				System.out.println("对象 " + newInstance + " 的字段f = " + f.getName() + " 赋值后，值 = " + fNewV);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private static void addZValidatedProxyClass(final Class<?> cls, final Object newComponent) {

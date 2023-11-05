@@ -11,7 +11,7 @@ import java.util.Set;
  */
 public interface ZCache<V> {
 
-	public void add(final String key, final V value);
+	public void add(final String key, final V value, long expire);
 
 	public V get(final String key);
 

@@ -11,7 +11,7 @@ import redis.clients.jedis.JedisPool;
 /**
  *
  * 缓存redis实现
- * 
+ *
  * @author zhangzhen
  * @date 2023年11月5日
  *
@@ -19,9 +19,10 @@ import redis.clients.jedis.JedisPool;
 public class ZCacheRedis implements ZCache<ZCacheR> {
 
 	@Override
-	public void add(final String key, final ZCacheR value) {
+	public void add(final String key, final ZCacheR value, final long expire) {
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
 			jedis.set(key, JSON.toJSONString(value));
+			jedis.pexpire(key, expire);
 		}
 
 	}

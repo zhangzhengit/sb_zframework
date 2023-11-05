@@ -20,7 +20,7 @@ public class ZCacheMemory implements ZCache {
 	private final ConcurrentMap<String, Object> map = Maps.newConcurrentMap();
 
 	@Override
-	public synchronized void add(final String key, final Object value) {
+	public synchronized void add(final String key, final Object value,final long expire) {
 		this.map.put(key, value);
 	}
 

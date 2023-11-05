@@ -19,6 +19,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.core.Task;
 import com.vo.core.ZClass;
+import com.vo.core.ZContext;
 import com.vo.core.ZField;
 import com.vo.core.ZLog2;
 import com.vo.core.ZMethod;
@@ -220,7 +221,7 @@ public class ZAOPScaner {
 				?
 				"final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
 			  + "parameter.setIsVOID(true);" + "\n\t"
-			  + "parameter.setTarget("+ZSingleton.class.getCanonicalName()+".getSingletonByClass(this.getClass().getSuperclass()));" + "\n\t"
+			  + "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
 			  + "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
 			  +  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 			  + "parameter.setMethod(m);" + "\n\t"
@@ -231,7 +232,7 @@ public class ZAOPScaner {
 		      :
 		    	 "final "+AOPParameter.class.getCanonicalName()+" parameter = new "+AOPParameter.class.getCanonicalName()+"();" + "\n\t"
 		      + "parameter.setIsVOID(false);" + "\n\t"
-		      + "parameter.setTarget("+ZSingleton.class.getCanonicalName()+".getSingletonByClass(this.getClass().getSuperclass()));" + "\n\t"
+		      + "parameter.setTarget("+ZContext.class.getCanonicalName()+".getBean(this.getClass().getSuperclass().getCanonicalName() + "+ZAOPScaner.class.getCanonicalName() + ".PROXY_ZCLASS_NAME_SUFFIX));" + "\n\t"
 		      + "parameter.setMethodName(\"" + m.getName() + "\");" + "\n\t"
 		      +  Method.class.getCanonicalName() + " m = "+ZAOPScaner.class.getCanonicalName()+".cmap.get(\""+nnn+"\");" + "\n\t"
 		      + "parameter.setMethod(m);" + "\n\t"

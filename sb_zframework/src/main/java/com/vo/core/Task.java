@@ -154,6 +154,10 @@ public class Task {
 			final Object zController = ZControllerMap.getObjectByMethod(method);
 			final ZResponse re = this.invokeAndResponse(method, p, zController, request);
 			return re;
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+			throw e;
 		} finally {
 			this.close();
 		}

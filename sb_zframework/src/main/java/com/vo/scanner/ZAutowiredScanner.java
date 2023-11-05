@@ -10,6 +10,7 @@ import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
+import com.vo.aop.ZAOPScaner;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -57,8 +58,8 @@ public class ZAutowiredScanner {
 				inject(cls, f);
 			}
 
-			injectForProxyMethod_getSingletonByClass(o2);
-
+			final Object superClassObject = com.vo.core.ZSingleton.getSingletonByClass(o2.getClass().getSuperclass());
+			injectForProxyMethod_getSingletonByClass(superClassObject);
 		}
 
 		return zcSet;
@@ -71,13 +72,13 @@ public class ZAutowiredScanner {
 	 *
 	 */
 	private static void injectForProxyMethod_getSingletonByClass(final Object object) {
-		final Object superClassObject = com.vo.core.ZSingleton.getSingletonByClass(object.getClass().getSuperclass());
+		final Object superClassObject = object;
 		if (superClassObject.getClass().getCanonicalName().equals(Object.class.getCanonicalName())) {
 			return;
 		}
 
 		final List<Field> zafList = Lists.newArrayList(superClassObject.getClass().getDeclaredFields()).stream().filter(f -> f.isAnnotationPresent(ZAutowired.class)).collect(Collectors.toList());
-		zafList.forEach(f -> {
+		for (final Field f : zafList) {
 
 			ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", object.getClass().getCanonicalName(),
 					ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
@@ -99,7 +100,9 @@ public class ZAutowiredScanner {
 				e.printStackTrace();
 			}
 
-		});
+		}
+
+		ZContext.addBean(superClassObject.getClass().getCanonicalName() + ZAOPScaner.PROXY_ZCLASS_NAME_SUFFIX	, superClassObject);
 	}
 
 	public static String inject(final Class<?> cls, final Field f) {
@@ -135,7 +138,7 @@ public class ZAutowiredScanner {
 	}
 
 
-	private static void setFiledValue(final Field f, final Object object, final Object value) {
+	static void setFiledValue(final Field f, final Object object, final Object value) {
 		try {
 			f.setAccessible(true);
 			f.set(object, value);

@@ -32,7 +32,7 @@ public class ZCachePutAOP implements ZIAOP {
 		final Object v = aopParameter.invoke();
 		final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(), System.currentTimeMillis());
 
-		this.cache.add(cacheKey, r);
+		this.cache.add(cacheKey, r, annotation.expire());
 
 		return v;
 	}

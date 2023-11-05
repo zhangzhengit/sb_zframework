@@ -55,7 +55,7 @@ public class ZCacheableAOP implements ZIAOP {
 			final ZCacheR r = new ZCacheR(cacheKey, v, annotation.expire(),
 					System.currentTimeMillis());
 
-			this.cache.add(cacheKey, r);
+			this.cache.add(cacheKey, r, annotation.expire());
 
 			return v;
 		}
