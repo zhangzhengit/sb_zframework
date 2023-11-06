@@ -35,7 +35,8 @@ import lombok.NoArgsConstructor;
  */
 public class ZTemplate {
 
-	private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
+	private static final Configuration CFG = new Configuration();
+//	private static final Configuration CFG = new Configuration(Configuration.VERSION_2_3_31);
 
 	/**
 	 * 从一个带有freemarker标签的html文档的字符串形式，处理其中的freemarker标签，而生成一个完整的可以被浏览器直接解析的html文档。
