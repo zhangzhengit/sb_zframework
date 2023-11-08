@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
+import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
@@ -105,9 +106,13 @@ public class ZMain {
 
 				ZSessionMap.sessionTimeoutJOB();
 			}
+
+
+			ZCacheScanner.scanAndValidate();
+
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
-			LOG.error("程序启动失败，请检查代码。errorMessage=\n{}", message);
+			LOG.error("程序启动失败，请检查代码。errorMessage=\n\t{}", message);
 			System.exit(0);
 		}
 	}
