@@ -1,8 +1,11 @@
 package com.vo.cache;
 
 import java.lang.reflect.Parameter;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.vo.anno.ZAutowired;
 import com.vo.aop.AOPParameter;
 import com.vo.aop.ZAOP;
@@ -76,8 +79,8 @@ public class ZCacheableAOP implements ZIAOP {
 				final String canonicalName = aopParameter.getTarget().getClass().getCanonicalName();
 				final List<Object> pl = aopParameter.getParameterList();
 				final String cacheKey = PREFIX + "@" + canonicalName + "@" + group + "@" + parameter.getName() + "="
-						+ pl.get(i);
-//				System.out.println("cacheKey = " + cacheKey);
+						+ hash(pl.get(i));
+//						+ pl.get(i);
 
 				return cacheKey;
 			}
@@ -86,4 +89,10 @@ public class ZCacheableAOP implements ZIAOP {
 		throw new CacheKeyDeclarationException("key不存在,key = " + key + ",方法名称=" + aopParameter.getMethod().getName());
 	}
 
+	public static String hash(final Object object) {
+		final Hasher putString2 = Hashing.goodFastHash(256).newHasher().putString(String.valueOf(object),
+				Charset.defaultCharset());
+		final String v = putString2.hash().toString();
+		return v;
+	}
 }
