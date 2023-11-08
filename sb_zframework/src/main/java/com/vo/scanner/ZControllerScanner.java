@@ -22,6 +22,7 @@ import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
+import com.vo.core.ZPathVariable;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.enums.BeanModeEnum;
@@ -40,7 +41,6 @@ import com.vo.http.ZRequestMapping;
 import com.vo.http.ZTrace;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -310,34 +310,34 @@ public class ZControllerScanner {
 		for (int i = 0; i < pvList.size(); i++) {
 			final Parameter parameter = ps[i];
 			final ZPathVariable zPathVariable = parameter.getAnnotation(ZPathVariable.class);
-			if (zPathVariable == null) {
-				throw new IllegalArgumentException("接口方法 " + method.getName() + " 第 " + (i + 1) + " 个参数必须是 @" + ZPathVariable.class.getSimpleName() + " 参数");
-			}
-			if (("{" + zPathVariable.name() + "}").equals(pvList.get(i))
-				||	 ("{" + parameter.getName()  + "}").equals(pvList.get(i))
-					) {
+//			if (zPathVariable == null) {
+//				throw new IllegalArgumentException("接口方法 " + method.getName() + " 第 " + (i + 1) + " 个参数必须是 @"
+//						+ ZPathVariable.class.getSimpleName() + " 参数");
+//			}
+//			if (("{" + zPathVariable.name() + "}").equals(pvList.get(i))
+//					|| ("{" + parameter.getName() + "}").equals(pvList.get(i))) {
+//
+//				System.out.println("pvList 匹配一个 = " + pvList.get(i));
 
-				System.out.println("pvList 匹配一个 = " + pvList.get(i));
-
-			} else {
-				throw new IllegalArgumentException("接口方法参数顺序必须与 @" + ZPathVariable.class.getName() + " 顺序保持一致");
-			}
+//			} else {
+//				throw new IllegalArgumentException("接口方法参数顺序必须与 @" + ZPathVariable.class.getName() + " 顺序保持一致");
+//			}
 
 		}
 
-		 int p = 0;
+		 final int p = 0;
 		for (final Parameter parameter : ps) {
 			final boolean annotationPresent = parameter.isAnnotationPresent(ZPathVariable.class);
 			if (annotationPresent) {
-				final List<String> collect = pvSet.stream()
-						.filter(pv -> ("{" + parameter.getAnnotation(ZPathVariable.class).name() + "}").equals(pv)
-								|| ("{" +parameter.getName() + "}").equals(pv))
-						.collect(Collectors.toList());
-				if (collect.size() != 1) {
-					throw new IllegalArgumentException(
-							"path 中的可变量必须与" + "@" + ZPathVariable.class.getName() + "变量无法匹配");
-				}
-				p++;
+//				final List<String> collect = pvSet.stream()
+//						.filter(pv -> ("{" + parameter.getAnnotation(ZPathVariable.class).name() + "}").equals(pv)
+//								|| ("{" +parameter.getName() + "}").equals(pv))
+//						.collect(Collectors.toList());
+//				if (collect.size() != 1) {
+//					throw new IllegalArgumentException(
+//							"path 中的可变量必须与" + "@" + ZPathVariable.class.getName() + "变量无法匹配");
+//				}
+//				p++;
 			}
 		}
 		if (pvSet.size() != p) {

@@ -2,13 +2,16 @@ package com.vo.http;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.aop.ZIAOP;
@@ -102,7 +105,60 @@ public class ZControllerMap {
 
 	public static Method getMethodByMethodEnumAndPath(final MethodEnum methodEnum, final String path) {
 		final Method method = methodPathTable.get(methodEnum, path);
-		return method;
+
+		if (method != null) {
+			return method;
+		}
+
+		final Set<String> keySet = methodPathTable.row(methodEnum).keySet();
+		final String pathM = getx(path, keySet);
+		if (StrUtil.isEmpty(pathM)) {
+			return null;
+		}
+
+		final Method method2 = methodPathTable.get(methodEnum, pathM);
+		return method2;
+	}
+
+	private static String getx(final String path, final Set<String> keySet) {
+
+		final String[] s = path.replaceAll("//+", "/").split("/");
+
+		for (final String k : keySet) {
+			final String[] a = k.split("/");
+			if (a.length != s.length) {
+				continue;
+			}
+
+			int pipeiM = 0;
+			int pipei = 0;
+			int empty = 0;
+
+			final ArrayList<Object> list = Lists.newArrayList();
+			for (int i = 0; i < s.length; i++) {
+				final String t = s[i];
+				if (StrUtil.isEmpty(t)) {
+					empty++;
+					continue;
+				}
+				if (a[i].startsWith("{") && a[i].endsWith("}")) {
+					pipeiM++;
+					list.add(t);
+					continue;
+				}
+
+				if (t.equals(a[i])) {
+					pipei++;
+				}
+			}
+
+			if (pipei + pipeiM + empty == s.length) {
+				ZPVTL.set(list);
+				return k;
+			}
+		}
+
+		return null;
 	}
 
 	public static Map<MethodEnum, Method> getByPath(final String path) {

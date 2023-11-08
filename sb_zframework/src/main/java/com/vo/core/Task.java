@@ -41,17 +41,20 @@ import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZRequest.RequestLine;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
+import com.vo.exception.ZControllerAdviceThrowable;
 import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
+import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.FormPairParseException;
+import com.vo.validator.PathVariableException;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
 import com.votool.common.CR;
@@ -493,39 +496,20 @@ public class Task {
 				parametersArray[pI++] = object;
 
 			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
-				final Set<RequestParam> paramSet = requestLine.getParamSet();
-				if (CollUtil.isNotEmpty(paramSet)) {
-					final Optional<RequestParam> findAny = paramSet.stream()
-							.filter(rp -> rp.getName().equals(p.getName()))
-							.findAny();
-					if (!findAny.isPresent()) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-					}
-
-					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
-				} else {
-					final String body = request.getBody();
-					if (StrUtil.isEmpty(body)) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-					}
-					final byte[] originalRequestBytes = request.getOriginalRequestBytes();
-
-					final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
-					if (CollUtil.isEmpty(fdList)) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-					}
-
-					final Optional<FormData> findAny = fdList.stream()
-							.filter(f -> StrUtil.isEmpty(f.getFileName()))
-							.filter(f -> f.getName().equals(p.getName()))
-							.findAny();
-					if (!findAny.isPresent()) {
-						throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
-					}
-
-					pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+				pI = this.hZRequestParam(parametersArray, request, requestLine, path, pI, p);
+			} else if (p.isAnnotationPresent(ZPathVariable.class)) {
+				final List<Object> list = ZPVTL.get();
+				final Class<?> type = p.getType();
+				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
+				try {
+					Task.setZPathVariableValue(parametersArray, pI, list, type);
+				} catch (final Exception e) {
+					// NumberFormatException
+//					final String message = Task.gExceptionMessage(e);
+					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
+					throw new PathVariableException(causedby);
 				}
-
+				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
 				// FIXME 2023年10月26日 下午9:28:39 zhanghen: 写这里
 				final String body = request.getBody();
@@ -558,6 +542,67 @@ public class Task {
 		}
 
 		return parametersArray;
+	}
+
+	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final List<Object> list, final Class<?> type) {
+		if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			parametersArray[pI] = Byte.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+			parametersArray[pI] = Short.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			parametersArray[pI] = Integer.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+			parametersArray[pI] = Long.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+			parametersArray[pI] = Float.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+			parametersArray[pI] = Double.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			parametersArray[pI] = Boolean.valueOf(String.valueOf(list.get(pI)));
+		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+			parametersArray[pI] = Character.valueOf(String.valueOf(list.get(pI)).charAt(0));
+		}
+
+		else if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
+			parametersArray[pI] = String.valueOf(list.get(pI));
+		}
+	}
+
+	private int hZRequestParam(final Object[] parametersArray, final ZRequest request, final RequestLine requestLine,
+			final String path, int pI, final Parameter p) {
+		final Set<RequestParam> paramSet = requestLine.getParamSet();
+		if (CollUtil.isNotEmpty(paramSet)) {
+			final Optional<RequestParam> findAny = paramSet.stream()
+					.filter(rp -> rp.getName().equals(p.getName()))
+					.findAny();
+			if (!findAny.isPresent()) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+			}
+
+			pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+		} else {
+			final String body = request.getBody();
+			if (StrUtil.isEmpty(body)) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+			}
+			final byte[] originalRequestBytes = request.getOriginalRequestBytes();
+
+			final List<FormData> fdList = FormData.parseFormData(originalRequestBytes);
+			if (CollUtil.isEmpty(fdList)) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+			}
+
+			final Optional<FormData> findAny = fdList.stream()
+					.filter(f -> StrUtil.isEmpty(f.getFileName()))
+					.filter(f -> f.getName().equals(p.getName()))
+					.findAny();
+			if (!findAny.isPresent()) {
+				throw new FormPairParseException("请求方法[" + path + "]的参数[" + p.getName() + "]不存在");
+			}
+
+			pI = Task.setValue(parametersArray, pI, p, findAny.get().getValue());
+		}
+		return pI;
 	}
 
 	private static void checkZValidated(final Parameter p, final Object object) {
