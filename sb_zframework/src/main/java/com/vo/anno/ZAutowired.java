@@ -38,4 +38,12 @@ public @interface ZAutowired {
 	 */
 	String name() default "";
 
+	/**
+	 * 注入依赖的bean是否必须存在，默认为true。如果值为true并且依赖的bean不存在则启动报错
+	 *
+	 * @return
+	 *
+	 */
+	boolean required() default true;
+
 }

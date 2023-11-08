@@ -1,13 +1,16 @@
 package com.vo.scanner;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Lists;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
+import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZAOPScaner;
@@ -28,8 +31,7 @@ public class ZAutowiredScanner {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-
-	public static Set<Class<?>> inject(final Class targetClass, final String... packageName) {
+	public static Set<Class<?>> inject(final Class<? extends Annotation> targetClass, final String... packageName) {
 
 		ZAutowiredScanner.LOG.info("开始扫描带有[{}]注解的类", targetClass.getCanonicalName());
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(targetClass, packageName);
@@ -42,6 +44,9 @@ public class ZAutowiredScanner {
 				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
+				o2 = ZContext.getBean(cls.getCanonicalName());
+			}
+			if (targetClass.getCanonicalName().equals(ZConfiguration.class.getCanonicalName())) {
 				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZAOP.class.getCanonicalName())) {
@@ -123,6 +128,11 @@ public class ZAutowiredScanner {
 		final Object vT = ZContext.getBean(name);
 		final Object value = vT != null ? vT : ZContext.getBean(f.getType().getCanonicalName());
 
+		// 不能在此提示，因为可能有循环依赖，某些时候bean存在但是还没注入进来，所以在此提示不合适，等所有bean都初始化完成了再提示
+//		if (autowired.required() && value == null) {
+//			throw new BeanNotExistException(name);
+//		}
+
 		try {
 			f.setAccessible(true);
 			final Object fOldV = f.get(object);
@@ -149,4 +159,33 @@ public class ZAutowiredScanner {
 		}
 	}
 
+
+	public static void after() {
+		final ImmutableCollection<Object> bs = ZContext.all().values();
+		for (final Object bean : bs) {
+
+			final Field[] fs = bean.getClass().getDeclaredFields();
+			for (final Field f : fs) {
+				final ZAutowired autowired = f.getAnnotation(ZAutowired.class);
+				if(autowired==null) {
+					continue;
+				}
+
+				f.setAccessible(true);
+				try {
+					final Object v = f.get(bean);
+					if (v == null && autowired.required()) {
+						final String beanName = StrUtil.isEmpty(autowired.name()) ? f.getName() : autowired.name();
+//						throw new BeanNotExistException(beanName + ",bean = " + bean.getClass().getCanonicalName());
+						throw new BeanNotExistException(bean.getClass().getSimpleName() + "." + beanName + " 不存在，请检查 " + f.getType().getSimpleName() + " 是否正确配置了？");
+					}
+
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+
+	}
 }

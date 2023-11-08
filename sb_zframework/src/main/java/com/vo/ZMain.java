@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
+import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
@@ -85,6 +86,7 @@ public class ZMain {
 			// 4 扫描组件的 @ZAutowired 字段 并注入值
 			ZAutowiredScanner.inject(ZComponent.class, packageName);
 			ZAutowiredScanner.inject(ZController.class, packageName);
+			ZAutowiredScanner.inject(ZConfiguration.class, packageName);
 			ZAutowiredScanner.inject(ZAOP.class, packageName);
 
 			// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
@@ -99,6 +101,8 @@ public class ZMain {
 			}
 
 			ZCacheScanner.scanAndValidate();
+
+			ZAutowiredScanner.after();
 
 			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getPrintConfigurationProperties())) {
 				printZConfigurationProperties();
