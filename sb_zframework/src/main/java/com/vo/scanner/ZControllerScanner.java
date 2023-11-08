@@ -27,18 +27,9 @@ import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
 import com.vo.enums.BeanModeEnum;
 import com.vo.enums.MethodEnum;
-import com.vo.http.ZConnect;
 import com.vo.http.ZControllerMap;
-import com.vo.http.ZDelete;
-import com.vo.http.ZGet;
-import com.vo.http.ZHead;
 import com.vo.http.ZHtml;
-import com.vo.http.ZOptions;
-import com.vo.http.ZPatch;
-import com.vo.http.ZPost;
-import com.vo.http.ZPut;
 import com.vo.http.ZRequestMapping;
-import com.vo.http.ZTrace;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
@@ -56,8 +47,7 @@ public class ZControllerScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	@SuppressWarnings("unchecked")
-	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZGet.class, ZPost.class,
-			ZPut.class, ZDelete.class, ZTrace.class, ZOptions.class, ZHead.class, ZConnect.class, ZPatch.class);
+	private static final HashSet<Class<? extends Annotation>> HTTP_METHOD_SET = Sets.newHashSet(ZRequestMapping.class);
 
 	public static Set<Class<?>> scanAndCreateObject(final String... packageName) {
 		ZControllerScanner.LOG.info("开始扫描带有[{}]的类", ZController.class.getCanonicalName());
@@ -106,45 +96,7 @@ public class ZControllerScanner {
 						ZControllerMap.put(methodEnum, mapping, method, controllerObject, isRegex[i]);
 					}
 				}
-
-				final ZGet get = method.getAnnotation(ZGet.class);
-				if (get != null) {
-					ZControllerScanner.checkPathVariable(get.path(), method);
-					ZControllerMap.put(MethodEnum.GET, get.path() , method, controllerObject, false);
-				}
-
-				final ZPost post = method.getAnnotation(ZPost.class);
-				if (post != null) {
-					ZControllerMap.put(MethodEnum.POST, post.path() , method, controllerObject, false);
-				}
-				final ZPut put = method.getAnnotation(ZPut.class);
-				if (put != null) {
-					ZControllerMap.put(MethodEnum.PUT, put.path() , method, controllerObject, false);
-				}
-				final ZDelete delete = method.getAnnotation(ZDelete.class);
-				if (delete != null) {
-					ZControllerMap.put(MethodEnum.DELETE, delete.path() , method, controllerObject, false);
-				}
-				final ZHead head = method.getAnnotation(ZHead.class);
-				if (head != null) {
-					ZControllerMap.put(MethodEnum.HEAD, head.path() , method, controllerObject, false);
-				}
-				final ZConnect connect = method.getAnnotation(ZConnect.class);
-				if (connect != null) {
-					ZControllerMap.put(MethodEnum.CONNECT, connect.path() , method, controllerObject, false);
-				}
-				final ZTrace trace = method.getAnnotation(ZTrace.class);
-				if (trace != null) {
-					ZControllerMap.put(MethodEnum.TRACE, trace.path() , method, controllerObject, false);
-				}
-				final ZOptions options = method.getAnnotation(ZOptions.class);
-				if (options != null) {
-					ZControllerMap.put(MethodEnum.OPTIONS, options.path() , method, controllerObject, false);
-				}
-				final ZPatch patch = method.getAnnotation(ZPatch.class);
-				if (patch != null) {
-					ZControllerMap.put(MethodEnum.PATCH, patch.path() , method, controllerObject, false);
-				}
+//				ZControllerScanner.checkPathVariable(get.path(), method);
 
 				// FIXME 2023年8月30日 下午6:55:14 zhanghen: TODO 查找方法上的自定义A，看A是否被ZIAOP的子类拦截了，如果拦截了，则执行
 				final Annotation[] as = method.getAnnotations();
