@@ -1,16 +1,20 @@
 package com.vo;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZComponent;
+import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.Task;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZServer;
@@ -74,6 +78,8 @@ public class ZMain {
 				ZControllerScanner.scanAndCreateObject(packageName);
 				// 3.1 创建 @ZController 的拦截器对象
 				ZControllerInterceptorScanner.scan(packageName);
+				// 3.2 扫描 @ZControllerAdvice 的类
+				ZControllerAdviceScanner.scan(packageName);
 			}
 
 			// 4 扫描组件的 @ZAutowired 字段 并注入值
@@ -92,23 +98,18 @@ public class ZMain {
 				System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 			}
 
+			ZCacheScanner.scanAndValidate();
+
+			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getPrintConfigurationProperties())) {
+				printZConfigurationProperties();
+			}
+
 			if (httpEnable) {
 				final ZServer zs = new ZServer();
 				zs.setName(Z_SERVER_THREAD);
 				zs.start();
-
-				try {
-					ZControllerAdviceScanner.scan(packageName);
-				} catch (final Exception e) {
-					e.printStackTrace();
-					System.exit(0);
-				}
-
 				ZSessionMap.sessionTimeoutJOB();
 			}
-
-
-			ZCacheScanner.scanAndValidate();
 
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
@@ -117,6 +118,33 @@ public class ZMain {
 		}
 	}
 
+	private static void printZConfigurationProperties() {
+		LOG.info("开始打印@{}配置类信息", ZConfigurationProperties.class.getSimpleName());
+
+		final ImmutableCollection<Object> bs = ZContext.all().values();
+		for (final Object bean : bs) {
+			if(!bean.getClass().isAnnotationPresent(ZConfigurationProperties.class)) {
+				continue;
+			}
+
+			final Field[] fs = bean.getClass().getDeclaredFields();
+			for (final Field f : fs) {
+				try {
+					f.setAccessible(true);
+					final Object value = f.get(bean);
+					// FIXME 2023年11月8日 下午9:08:00 zhanghen: XXX 是否会打印出某些敏感信息？
+					// 新增注解标记下不打印？似乎没必要
+					LOG.info("配置项{}.{}={}", bean.getClass().getSimpleName(), f.getName(), value);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+
+		LOG.info("打印@{}配置类信息完成", ZConfigurationProperties.class.getSimpleName());
+
+	}
 
 	public static void main(final String[] args) {
 

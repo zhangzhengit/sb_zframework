@@ -158,6 +158,12 @@ public class ServerConfiguration {
 	 */
 	private Map<String, String> responseHeaders;
 
+	/**
+	 * 程序启动时是否打印 @ZConfigurationProperties 配置类信息
+	 */
+	@ZNotNull
+	private Boolean printConfigurationProperties = false;
+
 	public boolean gzipContains(final String contentType) {
 		final String[] a = this.getGzipContentType();
 		for (final String string : a) {
