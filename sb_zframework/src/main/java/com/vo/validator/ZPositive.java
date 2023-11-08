@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 public @interface ZPositive {
 
 	public static final String MESSAGE = "[%s]必须为正数,当前值[%s]";

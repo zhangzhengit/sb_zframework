@@ -56,6 +56,8 @@ import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.FormPairParseException;
 import com.vo.validator.PathVariableException;
+import com.vo.validator.ZMin;
+import com.vo.validator.ZPositive;
 import com.vo.validator.ZValidated;
 import com.vo.validator.ZValidator;
 import com.votool.common.CR;
@@ -508,6 +510,17 @@ public class Task {
 					final Object a = list.get(zpvPI);
 					Task.setZPathVariableValue(parametersArray, pI, type, a);
 					zpvPI++;
+
+
+					// FIXME 2023年11月8日 下午10:47:54 zhanghen: TODO 继续支持 校验注解
+					if (p.isAnnotationPresent(ZPositive.class)) {
+						ZValidator.validatedZPositive(p, parametersArray[pI]);
+					}
+					if (p.isAnnotationPresent(ZMin.class)) {
+						ZValidator.validatedZMin(p, parametersArray[pI],p.getAnnotation(ZMin.class).min());
+					}
+
+
 				} catch (final Exception e) {
 					e.printStackTrace();
 					// NumberFormatException
@@ -515,6 +528,7 @@ public class Task {
 					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
 					throw new PathVariableException(causedby);
 				}
+
 				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZMultipartFile.class.getCanonicalName())) {
 				// FIXME 2023年10月26日 下午9:28:39 zhanghen: 写这里

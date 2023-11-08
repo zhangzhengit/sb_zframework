@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 // FIXME 2023年10月28日 上午12:14:16 zhanghen: TODO ZMin 和 ZMax 如果存在于同一字段，是否判断 最大值和最小值
 // 范围是否合理？如max=4 min = 10？还是纯靠配置时注意？
 public @interface ZMin {
