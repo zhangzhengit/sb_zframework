@@ -193,7 +193,7 @@ public class ZResponse {
 				this.socketChannel.write(buffer);
 			}
 		} catch (final IOException e) {
-//			e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 

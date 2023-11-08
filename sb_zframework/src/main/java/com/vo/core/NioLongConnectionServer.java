@@ -211,7 +211,7 @@ public class NioLongConnectionServer {
 			try {
 				tR = socketChannel.read(byteBuffer);
 			} catch (final IOException e) {
-				this.socketChannelCloseAndKeyCancel(key, socketChannel);
+				NioLongConnectionServer.socketChannelCloseAndKeyCancel(key, socketChannel);
 				break;
 			}
 			bytesRead += tR;
@@ -246,7 +246,7 @@ public class NioLongConnectionServer {
 		}
 
 		if (bytesRead <= 0) {
-			this.socketChannelCloseAndKeyCancel(key, socketChannel);
+			NioLongConnectionServer.socketChannelCloseAndKeyCancel(key, socketChannel);
 		}
 
 		if (!socketChannel.isOpen()) {
@@ -295,12 +295,13 @@ public class NioLongConnectionServer {
 						.contentType(HeaderEnum.JSON.getType())
 						.body(JSON.toJSONString(r))
 						.write();
-			}
 
+				socketChannelCloseAndKeyCancel(key, socketChannel);
+			}
 		}
 	}
 
-	private void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+	private static void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
 		try {
 			socketChannel.close();
 			key.cancel();
