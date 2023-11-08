@@ -18,6 +18,9 @@ public class ZCacheEvictAOP implements ZIAOP {
 	@ZAutowired(name = "cacheBbuiltinForPackageCache")
 	private ZCache<ZCacheR> cache;
 
+	@ZAutowired
+	private ZCacheConfigurationProperties cacheConfigurationProperties;
+
 	@Override
 	public Object before(final AOPParameter aopParameter) {
 		return null;
@@ -25,6 +28,11 @@ public class ZCacheEvictAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
+
+		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
+			return aopParameter.invoke();
+		}
+
 		final ZCacheEvict annotation = aopParameter.getMethod().getAnnotation(ZCacheEvict.class);
 		final String key = annotation.key();
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());

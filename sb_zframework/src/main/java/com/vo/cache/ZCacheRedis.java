@@ -2,6 +2,8 @@ package com.vo.cache;
 
 import java.util.Set;
 
+import org.springframework.util.StringUtils;
+
 import com.alibaba.fastjson.JSON;
 import com.vo.core.ZContext;
 
@@ -29,10 +31,14 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 
 	@Override
 	public ZCacheR get(final String key) {
+
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
 			final String v = jedis.get(key);
-			final ZCacheR cr = JSON.parseObject(v, ZCacheR.class);
-			return cr;
+			if (!StringUtils.hasText(v)) {
+				return null;
+			}
+
+			return JSON.parseObject(v, ZCacheR.class);
 		}
 
 	}

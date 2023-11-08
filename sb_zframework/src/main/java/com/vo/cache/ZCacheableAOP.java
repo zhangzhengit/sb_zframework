@@ -26,6 +26,9 @@ public class ZCacheableAOP implements ZIAOP {
 	@ZAutowired(name = "cacheBbuiltinForPackageCache")
 	private ZCache<ZCacheR> cache;
 
+	@ZAutowired
+	private ZCacheConfigurationProperties cacheConfigurationProperties;
+
 	@Override
 	public Object before(final AOPParameter aopParameter) {
 		return null;
@@ -33,6 +36,9 @@ public class ZCacheableAOP implements ZIAOP {
 
 	@Override
 	public Object around(final AOPParameter aopParameter) {
+		if (!Boolean.TRUE.equals(this.cacheConfigurationProperties.getEnable())) {
+			return aopParameter.invoke();
+		}
 
 		final ZCacheable annotation = aopParameter.getMethod().getAnnotation(ZCacheable.class);
 
@@ -41,16 +47,14 @@ public class ZCacheableAOP implements ZIAOP {
 		final String cacheKey = ZCacheableAOP.gKey(aopParameter, key, annotation.group());
 
 		final ZCacheR vC = this.cache.get(cacheKey);
-		if (vC != null && (vC.getExpire() == ZCacheable.NEVER
-				|| System.currentTimeMillis() < vC.getExpire() + vC.getCurrentTimeMillis())) {
+		if (vC != null) {
 			return vC.getValue();
 		}
 
 		synchronized (cacheKey.intern()) {
 			// 后面排队的线程开始执行后，先判断下缓存内是否已经有结果了（是否前面的线程已经把结果放入了）。
 			final ZCacheR vC2 = this.cache.get(cacheKey);
-			if (vC2 != null && (vC2.getExpire() == ZCacheable.NEVER
-					|| System.currentTimeMillis() < vC2.getExpire() + vC2.getCurrentTimeMillis())) {
+			if (vC2 != null) {
 				return vC2.getValue();
 			}
 

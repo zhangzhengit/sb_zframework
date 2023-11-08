@@ -19,7 +19,9 @@ public class ZCacheConfiguration {
 
 	public static final String REDIS = "REDIS";
 
-	public static final String DEFAULT = MEMORY;
+	public static final String MIXED = "MIXED";
+
+	public static final String DEFAULT = MIXED;
 
 	@ZAutowired
 	private ZCacheConfigurationProperties cacheConfigurationProperties;
@@ -29,16 +31,19 @@ public class ZCacheConfiguration {
 
 		final String type = this.cacheConfigurationProperties.getType();
 		switch (type) {
+
 		case MEMORY:
 			return new ZCacheMemory();
 
 		case REDIS:
-
 			return new ZCacheRedis();
+
+		case MIXED:
+			return new ZMixed();
 
 		default:
 			throw new TypeNotSupportedExcpetion(
-					"cache.type不支持，type=" + type + ",支持类型为：" + MEMORY + "和" + REDIS + ",默认值为 cache.type=" + DEFAULT);
+					"cache.type不支持，type=" + type + ",支持类型为：" + MEMORY + "和" + REDIS + "和" + MIXED + ",默认值为 cache.type=" + DEFAULT);
 
 		}
 	}
