@@ -3,7 +3,6 @@ package com.vo.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +29,7 @@ import com.vo.enums.MethodEnum;
 import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
+import com.vo.validator.StartupException;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
@@ -155,7 +155,7 @@ public class ZControllerScanner {
 					.filter(p -> p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName()))
 					.findAny();
 			if (ro.isPresent()) {
-				throw new IllegalArgumentException(
+				throw new StartupException(
 						"接口方法 " + method.getName() + " 带返回值不允许使用 " + ZResponse.class.getSimpleName() + " 参数，去掉 "
 								+ ZResponse.class.getSimpleName() + " 参数，或者返回值改为 void");
 			}
@@ -166,14 +166,14 @@ public class ZControllerScanner {
 			final String[] requestMappingArray) {
 
 		if (ArrayUtil.isEmpty(requestMappingArray)) {
-			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
+			throw new StartupException("接口方法 " + method.getName() + " mapping值不能为空");
 		}
 
 		// requestMappingArray 如果有 @ZPathVariable，则长度只能为1
 		for (final String mapping : requestMappingArray) {
 			final String p1 = mapping.replaceAll("//+", "/");
 			if (!mapping.equals(p1)) {
-				throw new IllegalArgumentException(
+				throw new StartupException(
 						"接口方法mapping 必须使用一个/分隔,接口方法=" + method.getName() + ",mapping=" + mapping);
 			}
 
@@ -186,9 +186,10 @@ public class ZControllerScanner {
 				if ((s.charAt(0) == '{' && s.charAt(s.length() - 1) == '}')) {
 					zpvNameList.add(s.substring(1, s.length() - 1));
 					if ((requestMappingArray.length > 1)) {
-						throw new IllegalArgumentException("接口方法mapping 使用@" + ZPathVariable.class.getSimpleName()
-								+ ",则mapping只能声明一个,当前声明了" + requestMappingArray.length + "个,接口方法=" + method.getName()
-								+ ",mapping=" + mapping);
+						throw new StartupException(
+								"接口方法[" + method.getName() + "]参数使用@" + ZPathVariable.class.getSimpleName()
+										+ ",则mapping只能声明一个,当前声明了" + requestMappingArray.length + "个"
+										+ Arrays.toString(requestMappingArray) + ",请修改");
 					}
 				}
 			}
@@ -198,7 +199,7 @@ public class ZControllerScanner {
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
 
 			if (zpvPList.size() != zpvNameList.size()) {
-				throw new IllegalArgumentException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName() + "个数["
+				throw new StartupException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName() + "个数["
 						+ zpvNameList.size() + "]与方法参数个数[" + zpvPList.size() + "]不一致,接口方法=" + method.getName()
 						+ ",mapping=" + mapping);
 			}
@@ -209,7 +210,7 @@ public class ZControllerScanner {
 					if (!zpvPList.get(i).getName().equals(zpvNameList.get(i))) {
 						final List<String> pnl = zpvPList.stream().map(p -> p.getName())
 								.collect(Collectors.toList());
-						throw new IllegalArgumentException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName()
+						throw new StartupException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName()
 								+ "参数顺序" + pnl + "与方法mapping" + zpvNameList + "顺序不一致,请修改参数顺序。接口方法=" + method.getName()
 								+ ",mapping=" + mapping);
 					}
@@ -219,7 +220,7 @@ public class ZControllerScanner {
 
 		final boolean[] isRegex = requestMappingAnnotation.isRegex();
 		if (!ArrayUtil.isEmpty(isRegex) && isRegex.length != requestMappingArray.length) {
-			throw new IllegalArgumentException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
+			throw new StartupException("接口方法 " + method.getName() + " isRegex个数必须与mapping值个数 相匹配, isRegex个数 = "
 					+ isRegex.length + " mapping个数 = " + requestMappingArray.length);
 		}
 
@@ -228,14 +229,14 @@ public class ZControllerScanner {
 		for (final String requestMapping : requestMappingArray) {
 
 			if (StrUtil.isEmpty(requestMapping)) {
-				throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
+				throw new StartupException("接口方法 " + method.getName() + " mapping值不能为空");
 			}
 
 			ZControllerScanner.checkRequestMapping(method, requestMapping);
 
 			final boolean add = temp.add(requestMapping + "@" + requestMappingAnnotation.method().getMethod());
 			if (!add) {
-				throw new IllegalArgumentException(
+				throw new StartupException(
 						"接口方法 " + method.getName() + " mapping值不能重复,mapping = " + Arrays.toString(requestMappingArray));
 			}
 		}
@@ -251,7 +252,7 @@ public class ZControllerScanner {
 	 */
 	private static void checkRequestMapping(final Method method, final String requestMapping) {
 		if (requestMapping.charAt(0) != '/') {
-			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
+			throw new StartupException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
 					+ method.getName() + " requestMapping = " + requestMapping);
 		}
 
@@ -261,87 +262,8 @@ public class ZControllerScanner {
 
 		final char charAt = requestMapping.charAt(1);
 		if (charAt == '/') {
-			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
+			throw new StartupException("接口方法 " + method.getName() + " mapping值必须以/开始,method = "
 					+ method.getName() + " requestMapping = " + requestMapping);
-		}
-
-	}
-
-	private static void checkPathVariable(final String path, final Method method) {
-		if (path.charAt(0) != '/') {
-//			throw new IllegalArgumentException("path值必须以/开头,method = " + method.getName());
-			throw new IllegalArgumentException("path值必须以/开头");
-		}
-
-		final String[] pa = path.split("/");
-		System.out.println("pa = " + Arrays.toString(pa));
-		final HashSet<String> pvSet = Sets.newLinkedHashSet();
-		final ArrayList<String> pvList = Lists.newArrayList();
-		for (final String s : pa) {
-			if (StrUtil.isEmpty(s)) {
-				continue;
-			}
-
-			if (s.charAt(0) != '{' && s.charAt(s.length() - 1) != '}') {
-				continue;
-			}
-
-			if (((s.charAt(0) == '{') && (s.charAt(s.length() - 1) != '}'))
-					|| ((s.charAt(0) != '{') && (s.charAt(s.length() - 1) == '}'))) {
-				throw new IllegalArgumentException("path 中可变量必须用{}包括起来,path = " + path);
-			}
-
-			System.out.println("pv = " + s);
-			pvSet.add(s);
-			pvList.add(s);
-		}
-
-		if (pvSet.isEmpty()) {
-			return;
-		}
-
-		final Parameter[] ps = method.getParameters();
-		if (ArrayUtil.isEmpty(ps) || ps.length < pvList.size()) {
-			throw new IllegalArgumentException(
-					"接口方法参数与@" + ZPathVariable.class.getName() + " 个数不匹配,method = " + method.getName());
-		}
-
-		for (int i = 0; i < pvList.size(); i++) {
-			final Parameter parameter = ps[i];
-			final ZPathVariable zPathVariable = parameter.getAnnotation(ZPathVariable.class);
-//			if (zPathVariable == null) {
-//				throw new IllegalArgumentException("接口方法 " + method.getName() + " 第 " + (i + 1) + " 个参数必须是 @"
-//						+ ZPathVariable.class.getSimpleName() + " 参数");
-//			}
-//			if (("{" + zPathVariable.name() + "}").equals(pvList.get(i))
-//					|| ("{" + parameter.getName() + "}").equals(pvList.get(i))) {
-//
-//				System.out.println("pvList 匹配一个 = " + pvList.get(i));
-
-//			} else {
-//				throw new IllegalArgumentException("接口方法参数顺序必须与 @" + ZPathVariable.class.getName() + " 顺序保持一致");
-//			}
-
-		}
-
-		 final int p = 0;
-		for (final Parameter parameter : ps) {
-			final boolean annotationPresent = parameter.isAnnotationPresent(ZPathVariable.class);
-			if (annotationPresent) {
-//				final List<String> collect = pvSet.stream()
-//						.filter(pv -> ("{" + parameter.getAnnotation(ZPathVariable.class).name() + "}").equals(pv)
-//								|| ("{" +parameter.getName() + "}").equals(pv))
-//						.collect(Collectors.toList());
-//				if (collect.size() != 1) {
-//					throw new IllegalArgumentException(
-//							"path 中的可变量必须与" + "@" + ZPathVariable.class.getName() + "变量无法匹配");
-//				}
-//				p++;
-			}
-		}
-		if (pvSet.size() != p) {
-			throw new IllegalArgumentException(
-					"path中的可变量[" + path + "]必须声明为 @" + ZPathVariable.class.getName() + "标记的参数");
 		}
 
 	}
@@ -351,7 +273,7 @@ public class ZControllerScanner {
 			final Class<?> rCls = method.getReturnType();
 			final boolean isS = rCls.getCanonicalName().equals(String.class.getCanonicalName());
 			if (!isS) {
-				throw new IllegalArgumentException(
+				throw new StartupException(
 						"@" + ZHtml.class.getCanonicalName() + "标记的http接口的返回值必须是String : methodName = " + method.getName());
 			}
 		}
