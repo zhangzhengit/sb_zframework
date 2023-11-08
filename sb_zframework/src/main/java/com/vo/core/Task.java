@@ -470,6 +470,7 @@ public class Task {
 		}
 
 		int pI = 0;
+		int zpvPI = 0;
 		for (final Parameter p : ps) {
 			if (p.isAnnotationPresent(ZRequestHeader.class)) {
 				final ZRequestHeader a = p.getAnnotation(ZRequestHeader.class);
@@ -502,8 +503,11 @@ public class Task {
 				final Class<?> type = p.getType();
 				// FIXME 2023年11月8日 下午4:39:18 zhanghen: @ZRM 启动校验是否此类型
 				try {
-					Task.setZPathVariableValue(parametersArray, pI, list, type);
+					final Object a = list.get(zpvPI);
+					Task.setZPathVariableValue(parametersArray, pI, type, a);
+					zpvPI++;
 				} catch (final Exception e) {
+					e.printStackTrace();
 					// NumberFormatException
 //					final String message = Task.gExceptionMessage(e);
 					final String causedby = ZControllerAdviceThrowable.findCausedby(e);
@@ -544,27 +548,27 @@ public class Task {
 		return parametersArray;
 	}
 
-	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final List<Object> list, final Class<?> type) {
+	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object a) {
 		if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
-			parametersArray[pI] = Byte.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Byte.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
-			parametersArray[pI] = Short.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Short.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
-			parametersArray[pI] = Integer.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Integer.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
-			parametersArray[pI] = Long.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Long.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-			parametersArray[pI] = Float.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Float.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
-			parametersArray[pI] = Double.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Double.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-			parametersArray[pI] = Boolean.valueOf(String.valueOf(list.get(pI)));
+			parametersArray[pI] = Boolean.valueOf(String.valueOf(a));
 		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
-			parametersArray[pI] = Character.valueOf(String.valueOf(list.get(pI)).charAt(0));
+			parametersArray[pI] = Character.valueOf(String.valueOf(a).charAt(0));
 		}
 
 		else if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-			parametersArray[pI] = String.valueOf(list.get(pI));
+			parametersArray[pI] = String.valueOf(a);
 		}
 	}
 

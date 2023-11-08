@@ -82,12 +82,12 @@ public class ZControllerScanner {
 
 				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
-				// 接口上是否有 @ZRequestMapping
+				// 校验 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
 				if (requestMappingAnnotation != null) {
 					final String[] requestMappingArray = requestMappingAnnotation.mapping();
 
-					ZControllerScanner.checkMapping(method, requestMappingAnnotation, requestMappingArray);
+					ZControllerScanner.checkZRequestMapping(method, requestMappingAnnotation, requestMappingArray);
 
 					final boolean[] isRegex = requestMappingAnnotation.isRegex();
 					for (int i = 0; i < requestMappingArray.length; i++) {
@@ -96,7 +96,7 @@ public class ZControllerScanner {
 						ZControllerMap.put(methodEnum, mapping, method, controllerObject, isRegex[i]);
 					}
 				}
-//				ZControllerScanner.checkPathVariable(get.path(), method);
+
 
 				// FIXME 2023年8月30日 下午6:55:14 zhanghen: TODO 查找方法上的自定义A，看A是否被ZIAOP的子类拦截了，如果拦截了，则执行
 				final Annotation[] as = method.getAnnotations();
@@ -162,11 +162,59 @@ public class ZControllerScanner {
 		}
 	}
 
-	private static void checkMapping(final Method method, final ZRequestMapping requestMappingAnnotation,
+	private static void checkZRequestMapping(final Method method, final ZRequestMapping requestMappingAnnotation,
 			final String[] requestMappingArray) {
 
 		if (ArrayUtil.isEmpty(requestMappingArray)) {
 			throw new IllegalArgumentException("接口方法 " + method.getName() + " mapping值不能为空");
+		}
+
+		// requestMappingArray 如果有 @ZPathVariable，则长度只能为1
+		for (final String mapping : requestMappingArray) {
+			final String p1 = mapping.replaceAll("//+", "/");
+			if (!mapping.equals(p1)) {
+				throw new IllegalArgumentException(
+						"接口方法mapping 必须使用一个/分隔,接口方法=" + method.getName() + ",mapping=" + mapping);
+			}
+
+			final String[] sa = p1.split("/");
+			final List<String> zpvNameList = Lists.newArrayList();
+			for (final String s : sa) {
+				if (s.length() <= 1) {
+					continue;
+				}
+				if ((s.charAt(0) == '{' && s.charAt(s.length() - 1) == '}')) {
+					zpvNameList.add(s.substring(1, s.length() - 1));
+					if ((requestMappingArray.length > 1)) {
+						throw new IllegalArgumentException("接口方法mapping 使用@" + ZPathVariable.class.getSimpleName()
+								+ ",则mapping只能声明一个,当前声明了" + requestMappingArray.length + "个,接口方法=" + method.getName()
+								+ ",mapping=" + mapping);
+					}
+				}
+			}
+			final Parameter[] ps = method.getParameters();
+
+			final List<Parameter> zpvPList = Lists.newArrayList(ps).stream()
+					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
+
+			if (zpvPList.size() != zpvNameList.size()) {
+				throw new IllegalArgumentException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName() + "个数["
+						+ zpvNameList.size() + "]与方法参数个数[" + zpvPList.size() + "]不一致,接口方法=" + method.getName()
+						+ ",mapping=" + mapping);
+			}
+
+			if (!zpvPList.isEmpty()) {
+				for (int i = 0; i < zpvPList.size(); i++) {
+					// 可以按名称顺序判断，因为一个方法中参数名称不可以重复
+					if (!zpvPList.get(i).getName().equals(zpvNameList.get(i))) {
+						final List<String> pnl = zpvPList.stream().map(p -> p.getName())
+								.collect(Collectors.toList());
+						throw new IllegalArgumentException("接口方法mapping 声明@" + ZPathVariable.class.getSimpleName()
+								+ "参数顺序" + pnl + "与方法mapping" + zpvNameList + "顺序不一致,请修改参数顺序。接口方法=" + method.getName()
+								+ ",mapping=" + mapping);
+					}
+				}
+			}
 		}
 
 		final boolean[] isRegex = requestMappingAnnotation.isRegex();
@@ -191,7 +239,6 @@ public class ZControllerScanner {
 						"接口方法 " + method.getName() + " mapping值不能重复,mapping = " + Arrays.toString(requestMappingArray));
 			}
 		}
-
 
 	}
 
