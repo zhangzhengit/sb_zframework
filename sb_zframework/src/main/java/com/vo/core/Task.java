@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZControllerInterceptor;
@@ -86,6 +87,7 @@ public class Task {
 	public static final HeaderEnum DEFAULT_CONTENT_TYPE = HeaderEnum.JSON;
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
+
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -548,6 +550,14 @@ public class Task {
 		return parametersArray;
 	}
 
+	/**
+	 * @ZPathVariable 支持的类型
+	 */
+	public final static ImmutableSet<String> ZPV_TYPE = ImmutableSet.copyOf(Lists.newArrayList(
+			Byte.class.getCanonicalName(), Short.class.getCanonicalName(), Integer.class.getCanonicalName(),
+			Long.class.getCanonicalName(), Float.class.getCanonicalName(), Double.class.getCanonicalName(),
+			Boolean.class.getCanonicalName(), Character.class.getCanonicalName(), String.class.getCanonicalName()));
+
 	private static void setZPathVariableValue(final Object[] parametersArray, final int pI, final Class<?> type, final Object a) {
 		if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
 			parametersArray[pI] = Byte.valueOf(String.valueOf(a));
@@ -684,7 +694,7 @@ public class Task {
 			return boolean1;
 		}
 
-		synchronized (name) {
+		synchronized (name.intern()) {
 
 			final boolean annotationPresent = method.isAnnotationPresent(ZHtml.class);
 			CACHE_MAP.put(name, annotationPresent);

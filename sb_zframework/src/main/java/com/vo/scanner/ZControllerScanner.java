@@ -215,6 +215,17 @@ public class ZControllerScanner {
 								+ ",mapping=" + mapping);
 					}
 				}
+
+				for (int i = 0; i < zpvPList.size(); i++) {
+					final Parameter p = zpvPList.get(i);
+					final String canonicalName = p.getType().getCanonicalName();
+
+					if (!Task.ZPV_TYPE.contains(canonicalName)) {
+						throw new StartupException("接口方法["+method.getName()+"]的@" + ZPathVariable.class.getSimpleName() + "参数类型["
+								+ canonicalName + "]不支持，支持类型为" + Task.ZPV_TYPE);
+					}
+				}
+
 			}
 		}
 
