@@ -235,7 +235,7 @@
 		@ZNotNull 表示此配置字段不能是null,支持所有类型
 		@ZStartWith 表示此配置字段必须以特定值开头,支持String类型
 		@ZLength   表示子字段的length必须在min和max之间，包含两个值。支持String类型
-		
+		@ZPositive 表示字段必须是正数，支持 extends Number 的类型
 		
 		# 特殊配置：
 			@ZLength.message如果没在代码中指定，则默认读取配置项	
@@ -251,6 +251,48 @@
 	@ZSynchronously：
 		用在方法上，key=参数名 或 参数名.字段名
 		AOP实现为：相同key值的调用，使用同一个线程排队执行
+	
+	
+	# 内置缓存接口 ZCache
+			cache.type 
+				配置启动哪种缓存模式：MEMORY REDIS MIXED
+			cache.enable 
+				配置是否启用内置的缓存功能
+			 
+			配置为 cache.type=MIXED 时，以下配置项起作用：
+				
+				cache.type.mix.memory.expire
+				
+				表示在内存中存活的时间（毫秒）
+	
+		1、@ZCacheable 
+			表示先从缓存中获取，存在则直接返回缓存内容，不存在再执行所标记的方法然后把结果放入缓存并且返回结果
+			
+		2、@ZCachePut
+			表示更新缓存，不管缓存中是否存在，都会执行所标记的方法，并且把结果放入缓存中
+			
+		3、@ZCacheEvict
+			表示删除缓存，不管缓存中是否存在，都会执行所标记的方法，并且删除缓存
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
