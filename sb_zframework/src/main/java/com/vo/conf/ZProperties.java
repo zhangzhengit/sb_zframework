@@ -30,7 +30,7 @@ public class ZProperties {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	private static final Charset ISO88591 = StandardCharsets.ISO_8859_1;
+	public static final String UTF_8 = "UTF-8";
 
 	public static final ThreadLocal<String> PROPERTIESCONFIGURATION_ENCODING = new ThreadLocal<>();
 
@@ -60,6 +60,7 @@ public class ZProperties {
 		for (final String pv : PROPERTIES_LIST) {
 			try {
 				propertiesConfiguration = new PropertiesConfiguration(pv);
+				propertiesConfiguration.setEncoding(UTF_8);
 			} catch (final ConfigurationException e) {
 				continue;
 			}
@@ -96,7 +97,7 @@ public class ZProperties {
 		final Properties properties = new Properties();
 
 		try (final FileInputStream fileInputStream = new FileInputStream(path);
-				final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
+				final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, UTF_8);
 				final BufferedReader bufferedReader = new BufferedReader(inputStreamReader);) {
 			properties.load(bufferedReader);
 		} catch (final IOException e) {
@@ -104,6 +105,7 @@ public class ZProperties {
 		}
 
 		propertiesConfiguration.clear();
+
 		final Set<Object> ks = properties.keySet();
 		for (final Object k : ks) {
 			propertiesConfiguration.addProperty(String.valueOf(k), properties.get(k));
