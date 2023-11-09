@@ -23,7 +23,7 @@ public class ZCacheableAOP implements ZIAOP {
 
 	public static final String PREFIX = "ZCacheable";
 
-	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
 	@ZAutowired

@@ -15,7 +15,7 @@ import com.vo.aop.ZIAOP;
 @ZAOP(interceptType = ZCacheEvict.class)
 public class ZCacheEvictAOP implements ZIAOP {
 
-	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
 	@ZAutowired

@@ -15,7 +15,7 @@ import com.vo.aop.ZIAOP;
 @ZAOP(interceptType = ZCachePut.class)
 public class ZCachePutAOP implements ZIAOP {
 
-	@ZAutowired(name = "cacheBbuiltinForPackageCache")
+	@ZAutowired(name = ZCache.CACHE_BBUILTIN_FOR_PACKAGE_CACHE)
 	private ZCache<ZCacheR> cache;
 
 	@ZAutowired
