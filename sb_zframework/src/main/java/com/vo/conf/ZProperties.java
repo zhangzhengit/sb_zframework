@@ -96,7 +96,7 @@ public class ZProperties {
 		final Properties properties = new Properties();
 
 		try (final FileInputStream fileInputStream = new FileInputStream(path);
-				final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, ISO88591);
+				final InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
 				final BufferedReader bufferedReader = new BufferedReader(inputStreamReader);) {
 			properties.load(bufferedReader);
 		} catch (final IOException e) {

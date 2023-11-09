@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
@@ -30,6 +31,9 @@ import com.vo.conf.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
+import com.vo.validator.StartupException;
+import com.vo.validator.TypeNotSupportedExcpetion;
+import com.vo.validator.ZType;
 import com.vo.validator.ZValidator;
 
 import cn.hutool.core.collection.CollUtil;
@@ -51,7 +55,7 @@ public class ZConfigurationPropertiesScanner {
 	public static final int PROPERTY_INDEX = 1520;
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static void scanAndCreate(final String... packageName) {
+	public static void scanAndCreate(final String... packageName) throws Exception {
 
 		final Set<Class<?>> csSet = scanPackage(packageName).stream()
 				.filter(cls -> cls.isAnnotationPresent(ZConfigurationProperties.class))
@@ -93,7 +97,7 @@ public class ZConfigurationPropertiesScanner {
 		}
 	}
 
-	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) {
+	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) throws Exception {
 		final PropertiesConfiguration p = ZProperties.getInstance();
 		final Class<?> type = field.getType();
 
@@ -101,7 +105,9 @@ public class ZConfigurationPropertiesScanner {
 		final String key = prefix + field.getName();
 		if (p.containsKey(key)) {
 			keyAR.set(key);
+
 			setValueByType(object, field, p, type, keyAR);
+
 			return;
 		}
 
@@ -114,6 +120,32 @@ public class ZConfigurationPropertiesScanner {
 			if (field.getType().getCanonicalName().equals(Map.class.getCanonicalName())) {
 				setMap(object, field, p, key);
 			} else if (field.getType().getCanonicalName().equals(List.class.getCanonicalName())) {
+				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
+
+				final ZType zType = field.getAnnotation(ZType.class);
+				if (zType == null) {
+					throw new StartupException(object.getClass().getSimpleName() + "." + field.getName() + " 缺少@"
+							+ ZType.class.getSimpleName() + "注解");
+				}
+
+				final boolean contains = LIST_TYPE.contains(zType.type().getCanonicalName());
+				if (!contains && zType.type().getCanonicalName().startsWith("java")) {
+					throw new StartupException(object.getClass().getSimpleName() + "." + field.getName() + " @"
+							+ ZType.class.getSimpleName() + "的类型不支持,type=" + zType.type().getSimpleName() + ",支持类型为" + LIST_TYPE);
+				}
+
+				if (!contains) {
+					final Field[] ztfs = zType.type().getDeclaredFields();
+					for (final Field f : ztfs) {
+						final boolean contains2 = LIST_TYPE.contains(f.getType().getCanonicalName());
+						if (!contains2) {
+							throw new StartupException("@" + ZType.class.getSimpleName() + ".type["
+									+ zType.type().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
+									+ f.getName() + "]类型不支持,支持字段类型为" + LIST_TYPE);
+						}
+					}
+				}
+
 				setList(object, field, p, key);
 			} else if (field.getType().getCanonicalName().equals(Set.class.getCanonicalName())) {
 				setSet(object, field, p, key);
@@ -129,6 +161,24 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 	}
+
+	public static final
+		ImmutableList<String> LIST_TYPE = ImmutableList.copyOf(
+					Lists.newArrayList(
+								Byte.class.getCanonicalName(),
+								Short.class.getCanonicalName(),
+								Integer.class.getCanonicalName(),
+								Long.class.getCanonicalName(),
+								Float.class.getCanonicalName(),
+								Double.class.getCanonicalName(),
+								Character.class.getCanonicalName(),
+								Boolean.class.getCanonicalName(),
+								String.class.getCanonicalName()
+							)
+
+				);
+
+
 
 	private static void setSet(final Object object, final Field field, final PropertiesConfiguration p,
 			final String key) {
@@ -155,15 +205,39 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static void setList(final Object object, final Field field, final PropertiesConfiguration p,
-			final String key) {
+			final String key) throws Exception {
+
 		// 从1-N个[i]
 		final List<Object> list = Lists.newArrayList();
+
+
+		final boolean isJavaType = LIST_TYPE.contains(field.getAnnotation(ZType.class).type().getCanonicalName());
+
+		final boolean isUserType = !isJavaType && !field.getAnnotation(ZType.class).type().getCanonicalName().startsWith("java");
+
 		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
+
+
 			final String suffix = "[" + (i - 1) + "]";
-			final Iterator<String> sk = p.getKeys(key + suffix);
+			final String fullKey = key + suffix;
+			final Iterator<String> sk = p.getKeys(fullKey);
+
 			if (sk.hasNext()) {
 				final String xa = sk.next();
-				list.add(p.getString(xa));
+				final String xaValue = p.getString(xa);
+				if (isJavaType) {
+					list.add(xaValue);
+				} else if (isUserType) {
+					final Object newInstance = newInstance(field);
+					setValue(newInstance, fullKey, xa, xaValue);
+
+					while (sk.hasNext()) {
+						final String xa2 = sk.next();
+						final String xaValue2 = p.getString(xa2);
+						setValue(newInstance, fullKey, xa2, xaValue2);
+					}
+					list.add(newInstance);
+				}
 			} else {
 				// 为空也add null，占一个位置，为了这种需求：
 				// [0]=A [2]=C 就是不配置第二个位置让其为空，
@@ -173,16 +247,16 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 		// 最后去除后面的所有的null
-		int dI = list.size() - 1;
-		for (int i = list.size() - 1; i > 0; i--) {
-			if (list.get(i) == null) {
-				dI--;
+		int i = list.size() - 1;
+		while (i > 1) {
+			if (list.get(i - 1) == null) {
+				i--;
 			} else {
 				break;
 			}
 		}
 
-		final List<Object> subList = dI <= 0 ? null : list.subList(0, dI + 1);
+		final List<Object> subList = i <= 0 ? null : list.subList(0, i);
 
 		System.out.println("list = " + subList);
 
@@ -193,6 +267,71 @@ public class ZConfigurationPropertiesScanner {
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static void setValue(final Object newInstance, final String fullKey, final String key,
+			final String value) throws Exception {
+		final String fieldName = key.replace(fullKey + ".", "");
+
+		try {
+			final Field field = newInstance.getClass().getDeclaredField(fieldName);
+			field.setAccessible(true);
+
+			if (field.getType().getCanonicalName().equals(Byte.class.getCanonicalName())) {
+				field.set(newInstance, Byte.parseByte(value));
+			} else if (field.getType().getCanonicalName().equals(Short.class.getCanonicalName())) {
+				field.set(newInstance, Short.parseShort(value));
+			} else if (field.getType().getCanonicalName().equals(Integer.class.getCanonicalName())) {
+				field.set(newInstance, Integer.parseInt(value));
+			} else if (field.getType().getCanonicalName().equals(Long.class.getCanonicalName())) {
+				field.set(newInstance, Long.parseLong(value));
+			} else if (field.getType().getCanonicalName().equals(Float.class.getCanonicalName())) {
+				field.set(newInstance, Float.parseFloat(value));
+			} else if (field.getType().getCanonicalName().equals(Double.class.getCanonicalName())) {
+				field.set(newInstance, Double.parseDouble(value));
+			} else if (field.getType().getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+				// FIXME 2023年11月9日 下午1:53:34 zhanghen: TODO 其他类型继续提示
+				final String bo = String.valueOf(value);
+				if (!"true".equalsIgnoreCase(bo) && !"false".equalsIgnoreCase(bo)) {
+					// Boolean.parseBoolean 也无需校验，但仍提示
+					throw new ConfigurationPropertiesParameterException(
+							newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
+									+ Boolean.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为true或false");
+				}
+				field.set(newInstance, Boolean.parseBoolean(value));
+			} else if (field.getType().getCanonicalName().equals(Character.class.getCanonicalName())) {
+				if (value.length() > 1) {
+					throw new ConfigurationPropertiesParameterException(
+							newInstance.getClass().getSimpleName() + "." + fieldName + " 为 "
+									+ Character.class.getSimpleName() + " 类型，当前参数为 " + value + "，请检查代码参数类型或修改参数值为一个字符");
+				}
+				field.set(newInstance, Character.valueOf(value.charAt(0)));
+			} else if (field.getType().getCanonicalName().equals(String.class.getCanonicalName())) {
+				// String 无需校验直接赋值
+				field.set(newInstance, value);
+			} else {
+				throw new TypeNotSupportedExcpetion(fieldName);
+			}
+
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
+	private static Object newInstance(final Field field)  {
+		final ZType zType = field.getAnnotation(ZType.class);
+		final Class<?> type2 = zType.type();
+		System.out.println("type = " + type2);
+		Object newInstance = null;
+		try {
+			newInstance = type2.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		System.out.println("newInstance = " + newInstance);
+
+		return newInstance;
 	}
 
 	private static void setMap(final Object object, final Field field, final PropertiesConfiguration p,
@@ -252,10 +391,7 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 		// 赋值以后才可以校验
-		ZValidator.validatedZMin(object, field);
-		ZValidator.validatedZMax(object, field);
-		ZValidator.validatedZNotEmpty(object, field);
-		ZValidator.validatedZStartWith(object, field);
+		ZValidator.validatedAll(object, field);
 	}
 
 	private static String getStringValue(final PropertiesConfiguration p, final AtomicReference<String> keyAR) {
