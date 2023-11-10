@@ -6,11 +6,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.Lists;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
@@ -96,8 +96,8 @@ public class ZResponse {
 
 	private SocketChannel socketChannel;
 
-	private final ArrayList<ZHeader> headerList = Lists.newArrayList();
-	private final ArrayList<Byte> bodyList = Lists.newArrayList();
+	private List<ZHeader> headerList;
+	private List<Byte> bodyList;
 
 	public synchronized ZResponse contentType(final String contentType) {
 		if (!this.setContentType.get()) {
@@ -134,6 +134,9 @@ public class ZResponse {
 	}
 
 	public ZResponse header(final ZHeader zHeader) {
+		if (this.headerList == null) {
+			this.headerList = new ArrayList<>(1);
+		}
 		this.headerList.add(zHeader);
 		return this;
 	}
@@ -148,6 +151,10 @@ public class ZResponse {
 	}
 
 	public ZResponse body(final byte[] body) {
+		if (this.bodyList == null) {
+			this.bodyList = new ArrayList<>(body.length);
+		}
+
 		for (final byte b : body) {
 			this.bodyList.add(b);
 		}
@@ -223,12 +230,15 @@ public class ZResponse {
 			this.outputStream.write(this.contentTypeAR.get().getBytes());
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
-			for (int i = 0; i < this.headerList.size(); i++) {
-				final ZHeader zHeader = this.headerList.get(i);
+			if (this.headerList != null) {
+				for (int i = 0; i < this.headerList.size(); i++) {
+					final ZHeader zHeader = this.headerList.get(i);
 
-				this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-				this.outputStream.write(Task.NEW_LINE.getBytes());
+					this.outputStream.write((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
+					this.outputStream.write(Task.NEW_LINE.getBytes());
+				}
 			}
+
 			this.outputStream.write(Task.NEW_LINE.getBytes());
 
 			// body
@@ -276,11 +286,14 @@ public class ZResponse {
 		array.add((this.contentTypeAR.get()).getBytes());
 		array.add(Task.NEW_LINE.getBytes());
 
-		for (int i = 0; i < this.headerList.size(); i++) {
-			final ZHeader zHeader = this.headerList.get(i);
-			array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
-			array.add(Task.NEW_LINE.getBytes());
+		if (this.headerList != null) {
+			for (int i = 0; i < this.headerList.size(); i++) {
+				final ZHeader zHeader = this.headerList.get(i);
+				array.add((zHeader.getName() + ":" + zHeader.getValue()).getBytes());
+				array.add(Task.NEW_LINE.getBytes());
+			}
 		}
+
 		array.add(Task.NEW_LINE.getBytes());
 
 		// body
