@@ -1,13 +1,13 @@
 package com.vo.core;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -51,7 +51,7 @@ public class ZRequest {
 
 
 	// -------------------------------------------------------------------------------------------------
-	private List<String> lineList = Lists.newArrayList();
+	private List<String> lineList;
 
 	/**
 	 * http完整的请求信息
@@ -269,6 +269,13 @@ public class ZRequest {
 		}
 
 		return null;
+	}
+
+	public List<String> getLineList() {
+		if (this.lineList == null) {
+			this.lineList = new ArrayList<>();
+		}
+		return this.lineList;
 	}
 
 // -------------------------------------------------------------------------------------------------
