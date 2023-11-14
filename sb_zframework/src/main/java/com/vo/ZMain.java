@@ -22,6 +22,7 @@ import com.vo.core.ZServer;
 import com.vo.core.ZSessionMap;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ZControllerAdviceScanner;
+import com.vo.scanner.ZApplicationEventPublisher;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
@@ -50,6 +51,7 @@ public class ZMain {
 
 	private static final String Z_SERVER_THREAD = "ZServer-Thread";
 
+
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
 		ZMain.LOG.trace("zframework开始启动");
@@ -61,6 +63,7 @@ public class ZMain {
 		// 最先校验：校验注解用的字段是否支持
 		try {
 			ZValidator.start(packageName);
+			ZApplicationEventPublisher.start(packageName);
 
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			ZConfigurationPropertiesScanner.scanAndCreate(packageName);
