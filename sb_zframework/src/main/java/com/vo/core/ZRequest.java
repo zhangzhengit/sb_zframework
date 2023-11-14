@@ -61,6 +61,11 @@ public class ZRequest {
 	private String body;
 	private RequestLine requestLine;
 
+	/**
+	 * 客户端IP
+	 */
+	private String clientIp;
+
 	public void addLine(final String line) {
 		this.getLineList().add(line);
 	}

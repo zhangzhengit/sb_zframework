@@ -11,6 +11,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
@@ -91,6 +93,7 @@ public class Task {
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
+	private static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();;
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -98,6 +101,7 @@ public class Task {
 	private OutputStream outputStream;
 
 	public Task(final SocketChannel socketChannel) {
+		SCTL.set(socketChannel);
 		this.socketChannel = socketChannel;
 		this.socket = null;
 	}
@@ -125,7 +129,7 @@ public class Task {
 			}
 		}
 
-		final ZRequest parseRequest = parseRequest(request);
+		final ZRequest parseRequest = Task.parseRequest(request);
 		return parseRequest;
 	}
 
@@ -725,7 +729,7 @@ public class Task {
 		}
 
 		synchronized (request) {
-			final ZRequest v2 = Task.parseRequest0(request);
+			final ZRequest v2 = parseRequest0(request);
 			if (v2 == null) {
 				return v2;
 			}
@@ -769,9 +773,22 @@ public class Task {
 		// parseBody
 		parseBody(request, requestLine);
 
+		// clientIp
+		request.setClientIp(getClientIp());
+
+
 		request.setRequestLine(requestLine);
 
 		return request;
+	}
+
+	private static String getClientIp() {
+		final SocketChannel socketChannel2 = SCTL.get();
+		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socketChannel2.socket().getRemoteSocketAddress();
+		final InetAddress address = inetSocketAddress.getAddress();
+		final String hostAddress = address.getHostAddress();
+
+		return hostAddress;
 	}
 
 	private static void parsePath(final String s, final ZRequest.RequestLine line, final int methodIndex) {
