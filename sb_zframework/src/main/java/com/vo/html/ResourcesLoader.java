@@ -239,14 +239,17 @@ public class ResourcesLoader {
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 
-			final byte[] ba = loadByteArray(key);
+			final byte[] ba = loadByteArray0(key);
 			return ba;
 		}
 
 		return null;
 	}
 
-	private static byte[] loadByteArray(final String resourceName) {
+	private static byte[] loadByteArray0(final String resourceName) {
+		if (Boolean.FALSE.equals(SERVER_CONFIGURATION.getStaticResourceCacheEnable())) {
+			return readByteArray0(checkInputStream(resourceName));
+		}
 
 		final Object v = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
 		if (v != null) {
