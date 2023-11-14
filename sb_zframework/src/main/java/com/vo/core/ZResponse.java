@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.vo.cache.J;
 import com.vo.core.ZRequest.ZHeader;
 import com.vo.http.HttpStatus;
 import com.vo.http.ZCookie;
@@ -249,7 +250,7 @@ public class ZResponse {
 				}
 				this.outputStream.write(ba);
 			} else {
-				this.outputStream.write(JSON.toJSONString(CR.ok()).getBytes());
+				this.outputStream.write(J.toJSONString(CR.ok(), Include.NON_NULL).getBytes());
 			}
 
 			this.outputStream.write(Task.NEW_LINE.getBytes());

@@ -22,8 +22,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
+import com.vo.cache.J;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZServer.Counter;
 import com.vo.enums.ConnectionEnum;
@@ -118,21 +119,27 @@ public class NioLongConnectionServer {
 				if (!key.isValid()) {
 					continue;
 				}
+				try {
 
-				if (key.isAcceptable()) {
-					handleAccept(key, selector);
-				} else if (key.isReadable()) {
-					if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
-						this.handleRead(key);
-					} else {
-						final String message = "服务器访问频繁，请稍后再试";
-						new ZResponse((SocketChannel) key.channel())
+					if (key.isAcceptable()) {
+						handleAccept(key, selector);
+					} else if (key.isReadable()) {
+						if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
+							this.handleRead(key);
+						} else {
+							final String message = "服务器访问频繁，请稍后再试";
+							new ZResponse((SocketChannel) key.channel())
 							.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error(message)))
+							.body(J.toJSONString(CR.error(message), Include.NON_NULL))
 							.write();
+						}
 					}
+				} catch (final Exception e) {
+					e.printStackTrace();
+					continue;
 				}
+
 			}
 		}
 	}
@@ -247,6 +254,7 @@ public class NioLongConnectionServer {
 
 		if (bytesRead <= 0) {
 			NioLongConnectionServer.socketChannelCloseAndKeyCancel(key, socketChannel);
+			return;
 		}
 
 		if (!socketChannel.isOpen()) {
@@ -264,7 +272,7 @@ public class NioLongConnectionServer {
 		synchronized (socketChannel) {
 
 //				System.out.println("requestData.length = " + requestData.length);
-			final String requestString = new String(requestData, CHARSET);
+			final String requestString = new String(requestData, CHARSET).intern();
 //				System.out.println("requestString = \n" + requestString);
 
 			final Task task = new Task(socketChannel);
@@ -293,7 +301,7 @@ public class NioLongConnectionServer {
 				new ZResponse(socketChannel)
 						.httpStatus(HttpStatus.HTTP_500.getCode())
 						.contentType(HeaderEnum.JSON.getType())
-						.body(JSON.toJSONString(r))
+						.body(J.toJSONString(r, Include.NON_NULL))
 						.write();
 
 				socketChannelCloseAndKeyCancel(key, socketChannel);
@@ -322,7 +330,7 @@ public class NioLongConnectionServer {
 				.header(ZRequest.ALLOW, methodString)
 				.httpStatus(HttpStatus.HTTP_405.getCode())
 				.contentType(HeaderEnum.JSON.getType())
-				.body(JSON.toJSONString(error))
+				.body(J.toJSONString(error, Include.NON_NULL))
 				.write();
 			return;
 		}

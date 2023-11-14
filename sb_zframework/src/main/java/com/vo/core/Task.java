@@ -27,7 +27,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -38,6 +38,7 @@ import com.vo.aop.AOPParameter;
 import com.vo.aop.InterceptorParameter;
 import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
+import com.vo.cache.J;
 import com.vo.conf.ServerConfiguration;
 import com.vo.core.ZRequest.RequestLine;
 import com.vo.core.ZRequest.RequestParam;
@@ -179,8 +180,8 @@ public class Task {
 				.header(ZRequest.ALLOW, methodString)
 				.httpStatus(HttpStatus.HTTP_405.getCode())
 				.contentType(HeaderEnum.JSON.getType())
-				.body(JSON.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
-						+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString)));
+				.body(J.toJSONString(CR.error(HttpStatus.HTTP_405.getCode(), "请求Method不支持："
+						+ requestLine.getMethodEnum().getMethod() + ", Method: " + methodString), Include.NON_NULL));
 
 		}
 
@@ -207,7 +208,7 @@ public class Task {
 		return	new ZResponse(this.outputStream, this.socketChannel)
 					.httpStatus(HttpStatus.HTTP_404.getCode())
 					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.body(JSON.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]")))	;
+					.body(J.toJSONString(CR.error(HTTP_STATUS_404, "请求方法不存在 [" + path+"]"), Include.NON_NULL))	;
 	}
 
 	public static String gExceptionMessage(final Throwable e) {
@@ -274,7 +275,7 @@ public class Task {
 			final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 			response.contentType(HeaderEnum.JSON.getType())
 					.httpStatus(HttpStatus.HTTP_403.getCode())
-					.body(JSON.toJSONString(CR.error(message)));
+					.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 
 			return response;
 		}
@@ -297,7 +298,7 @@ public class Task {
 					final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
 					response.contentType(HeaderEnum.JSON.getType())
 							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(JSON.toJSONString(CR.error(message)));
+							.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 					return response;
 				}
 				break;
@@ -447,7 +448,7 @@ public class Task {
 			}
 		}
 
-		final String json = JSON.toJSONString(r);
+		final String json = J.toJSONString(r, Include.NON_NULL);
 		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
 		if (serverConfiguration.getGzipEnable()
 				&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
@@ -494,7 +495,7 @@ public class Task {
 				parametersArray[pI++] = model;
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
 				final String body = request.getBody();
-				final Object object = JSON.parseObject(body, p.getType());
+				final Object object = J.parseObject(body, p.getType());
 
 				Task.checkZValidated(p, object);
 

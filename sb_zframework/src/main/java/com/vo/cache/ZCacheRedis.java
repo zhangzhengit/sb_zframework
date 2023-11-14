@@ -4,7 +4,7 @@ import java.util.Set;
 
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.core.ZContext;
 
 import redis.clients.jedis.Jedis;
@@ -23,7 +23,7 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 	@Override
 	public void add(final String key, final ZCacheR value, final long expire) {
 		try (Jedis jedis = ZContext.getBean(JedisPool.class).getResource()) {
-			jedis.set(key, JSON.toJSONString(value));
+			jedis.set(key, J.toJSONString(value, Include.NON_NULL));
 			jedis.pexpire(key, expire);
 		}
 
@@ -38,7 +38,7 @@ public class ZCacheRedis implements ZCache<ZCacheR> {
 				return null;
 			}
 
-			return JSON.parseObject(v, ZCacheR.class);
+			return J.parseObject(v, ZCacheR.class);
 		}
 
 	}
