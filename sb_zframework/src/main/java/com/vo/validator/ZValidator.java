@@ -14,7 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Sets;
+import com.vo.core.Task;
 import com.vo.core.ZContext;
+import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
 
 /**
@@ -98,6 +100,12 @@ public class ZValidator {
 
 	public static boolean isString(final Class cls) {
 		return cls == String.class;
+	}
+
+	public static boolean isZCustomSupported(final Class<?> cls) {
+		// @ZCustom 支持任何类型
+		// FIXME 2023年11月14日 下午10:22:03 zhanghen: TODO 要不要判断并提示不能使基本类型？
+		return true;
 	}
 
 	public static boolean isZMinZMaxSupported(final Class<?> cls) {
@@ -468,6 +476,29 @@ public class ZValidator {
 
 	}
 
+	public static void validatedZCustom(final Object object, final Field field) {
+		final ZCustom zc = field.getAnnotation(ZCustom.class);
+		if (zc == null) {
+			return;
+		}
+
+		final Class<? extends ZCustomValidator> cls = zc.cls();
+
+		final ZCustomValidator customValidator = ZSingleton.getSingletonByClass(cls);
+		if (customValidator != null) {
+			try {
+				customValidator.validated(object, field);
+			} catch (final Exception e) {
+				if (e instanceof ValidatedException) {
+					throw (ValidatedException) e;
+				}
+
+				throw new ValidatedException(Task.gExceptionMessage(e));
+			}
+		}
+
+	}
+
 	public static void validatedAll(final Object object, final Field field) {
 		// FIXME 2023年10月31日 下午10:13:39 zhanghen: 启动时是否验证注解值的合理性，如下声明：
 //		@ZStartWith(prefix = "ZH")
@@ -485,6 +516,7 @@ public class ZValidator {
 		validatedZStartWith(object, field);
 		validatedZEndsWith(object, field);
 		validatedZPositive(object, field);
+		validatedZCustom(object, field);
 
 	}
 
@@ -569,6 +601,21 @@ public class ZValidator {
 						throwTypeNotSupportedExcpetion(cls, ZEndsWith.class, f);
 					} else if ((annotation.annotationType() == ZPositive.class) && !isZMinZMaxSupported(f.getType())) {
 						throwTypeNotSupportedExcpetion(cls, ZPositive.class, f);
+					} else if ((annotation.annotationType() == ZCustom.class)) {
+
+						if (!isZCustomSupported(f.getType())) {
+							throwTypeNotSupportedExcpetion(cls, ZCustom.class, f);
+						}
+
+						final Class<? extends ZCustomValidator> customClass = f.getAnnotation(ZCustom.class).cls();
+						try {
+							ZSingleton.getSingletonByClass(customClass);
+						} catch (final Exception e) {
+							final String message = Task.gExceptionMessage(e);
+							throw new ValidatedException("@" + ZCustom.class.getSimpleName() + ".cls 指定的类型["
+									+ customClass + "]初始化异常,message=" + message);
+						}
+
 					}
 
 				}

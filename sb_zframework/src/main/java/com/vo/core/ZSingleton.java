@@ -41,7 +41,7 @@ public class ZSingleton {
 
 		final String key = cls.getCanonicalName();
 
-		synchronized (key) {
+		synchronized (key.intern()) {
 
 			final Object v = SINGLETON_MAP.get(key);
 			if (v != null) {

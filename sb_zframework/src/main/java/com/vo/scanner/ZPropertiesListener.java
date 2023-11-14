@@ -16,6 +16,7 @@ import java.nio.file.WatchService;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import com.google.common.collect.ContiguousSet;
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.votool.ze.ZE;
@@ -106,7 +107,12 @@ public class ZPropertiesListener {
 //									String v2 = new String
 //									System.out.println(k + "=" + v);
 
-									ZValueScanner.updateValue(String.valueOf(k), v);
+									try {
+										ZValueScanner.updateValue(String.valueOf(k), v);
+									} catch (final Exception e) {
+										e.printStackTrace();
+										continue;
+									}
 								}
 
 							} catch (IORuntimeException | IOException e) {

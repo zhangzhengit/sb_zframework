@@ -118,8 +118,8 @@ public class ZValueScanner {
 			} catch (final Exception e) {
 
 				final String message = Task.gExceptionMessage(e);
-				LOG.error("field={}.{} 更新新值{}异常,开始重置为旧值{},message={}",
-						object.getClass().getSimpleName(), field.getName(), value, oldValue,message);
+				LOG.error("更新新值{}异常,开始重置为旧值{},field={}.{},message={}", value, oldValue,
+						object.getClass().getSimpleName(), field.getName(), message);
 
 				// 3 如果新值校验不通过，则重新赋值为旧值
 				setValue(oldValue, field, object, type);

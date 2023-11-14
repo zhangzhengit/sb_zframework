@@ -5,6 +5,7 @@ import java.util.Map;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
 import com.vo.core.ZServer;
+import com.vo.validator.ZCustom;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
@@ -90,6 +91,7 @@ public class ServerConfiguration {
 	@ZMin(min = ZServer.Counter.QPS_MIN)
 	@ZMax(max = 52000000)
 	@ZValue(name = "server.qps", listenForChanges = true)
+	@ZCustom(cls = ZDivisibleByCounterQPS_MIN.class)
 	private Integer qps = 10000 * 20;
 
 	/**
