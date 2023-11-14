@@ -13,8 +13,10 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -153,6 +155,8 @@ public class ZServer extends Thread {
 	 */
 	public static class Counter {
 
+		public static final int QPS_MIN = 100;
+
 		private static final Map<String, Long> map = new ConcurrentHashMap<>(4, 1F);
 
 		public static boolean allow(final String keyword, final long qps) {
@@ -161,7 +165,9 @@ public class ZServer extends Thread {
 				return false;
 			}
 
-			final long seconds = System.currentTimeMillis() / 1000L;
+			final long qP100MS = qps / QPS_MIN;
+
+			final long seconds = System.currentTimeMillis() / (1000 / (QPS_MIN));
 
 			final String key = keyword + "@" + seconds;
 
@@ -173,10 +179,16 @@ public class ZServer extends Thread {
 					return true;
 				}
 
+				final List<String> removeKeyList = map.keySet().stream().filter(k -> k.startsWith(keyword)).collect(Collectors.toList());
+
+				for (final String k : removeKeyList) {
+					map.remove(k);
+				}
+
 				final long newCount = v + 1L;
 				Counter.map.put(key, newCount);
 
-				return newCount <= qps;
+				return newCount <= qP100MS;
 			}
 		}
 

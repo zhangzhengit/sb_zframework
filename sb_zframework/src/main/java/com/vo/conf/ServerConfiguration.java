@@ -3,6 +3,8 @@ package com.vo.conf;
 import java.util.Map;
 
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.anno.ZValue;
+import com.vo.core.ZServer;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotNull;
@@ -85,11 +87,10 @@ public class ServerConfiguration {
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
-	@ZMin(min = 1)
+	@ZMin(min = ZServer.Counter.QPS_MIN)
 	@ZMax(max = 52000000)
-	// FIXME 2023年7月17日 下午9:33:16 zhanghen: TODO debug min=0的情况下并且qps配置为0，调用接口
-	// while socketChannel.write 报错问题
-	private Integer qps = 10000 * 102;
+	@ZValue(name = "server.qps", listenForChanges = true)
+	private Integer qps = 10000 * 20;
 
 	/**
 	 * 是否启用内置的 StaticController,

@@ -7,8 +7,8 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentMap;
@@ -22,8 +22,10 @@ import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.anno.ZValue;
 import com.vo.conf.ZProperties;
+import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.validator.ZValidator;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -97,43 +99,64 @@ public class ZValueScanner {
 			final Field field = entry.getKey();
 			final Object object = entry.getValue();
 
+			Object oldValue = null;
 			try {
-				final Object oldValue = field.get(object);
+				oldValue = field.get(object);
 				LOG.info("开始更新配置项key={},原value={},新value={}", name, oldValue, value);
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
 			}
 
 			final Class<?> type = field.getType();
-			if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
-				setValue(field, object, String.valueOf(value));
-			} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
-				setValue(field, object, Byte.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
-				setValue(field, object, Short.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
-				setValue(field, object, Integer.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
-				setValue(field, object, Long.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
-				setValue(field, object, new BigInteger(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
-				setValue(field, object, new BigDecimal(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
-				setValue(field, object, Boolean.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
-				setValue(field, object, Double.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
-				setValue(field, object, Float.valueOf(String.valueOf(value)));
-			} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
-				setValue(field, object, Character.valueOf(String.valueOf(value).charAt(0)));
-			} else {
-				throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
-						+ field.getType().getSimpleName() + " 暂不支持");
+
+			// 1 先赋值为新值
+			setValue(value, field, object, type);
+
+			try {
+				// 2 校验新值
+				ZValidator.validatedAll(object, field);
+			} catch (final Exception e) {
+
+				final String message = Task.gExceptionMessage(e);
+				LOG.error("field={}.{} 更新新值{}异常,开始重置为旧值{},message={}",
+						object.getClass().getSimpleName(), field.getName(), value, oldValue,message);
+
+				// 3 如果新值校验不通过，则重新赋值为旧值
+				setValue(oldValue, field, object, type);
 			}
+
 
 			LOG.info("更新配置项完成key={},新value={}", name, value);
 
+		}
+	}
+
+	private static void setValue(final Object value, final Field field, final Object object, final Class<?> type) {
+		if (type.getCanonicalName().equals(String.class.getCanonicalName())) {
+			setValue(field, object, String.valueOf(value));
+		} else if (type.getCanonicalName().equals(Byte.class.getCanonicalName())) {
+			setValue(field, object, Byte.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Short.class.getCanonicalName())) {
+			setValue(field, object, Short.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Integer.class.getCanonicalName())) {
+			setValue(field, object, Integer.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Long.class.getCanonicalName())) {
+			setValue(field, object, Long.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(BigInteger.class.getCanonicalName())) {
+			setValue(field, object, new BigInteger(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(BigDecimal.class.getCanonicalName())) {
+			setValue(field, object, new BigDecimal(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Boolean.class.getCanonicalName())) {
+			setValue(field, object, Boolean.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Double.class.getCanonicalName())) {
+			setValue(field, object, Double.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Float.class.getCanonicalName())) {
+			setValue(field, object, Float.valueOf(String.valueOf(value)));
+		} else if (type.getCanonicalName().equals(Character.class.getCanonicalName())) {
+			setValue(field, object, Character.valueOf(String.valueOf(value).charAt(0)));
+		} else {
+			throw new IllegalArgumentException("@" + ZValue.class.getSimpleName() + " 字段 " + field.getName() + " 的类型 "
+					+ field.getType().getSimpleName() + " 暂不支持");
 		}
 	}
 

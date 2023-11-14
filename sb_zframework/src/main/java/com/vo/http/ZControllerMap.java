@@ -16,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vo.aop.ZIAOP;
 import com.vo.core.ZContext;
+import com.vo.core.ZServer.Counter;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.util.StrUtil;
@@ -78,6 +79,12 @@ public class ZControllerMap {
 				throw new IllegalArgumentException(
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
 			}
+
+			if (qpsL < Counter.QPS_MIN) {
+				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能小于"
+						+ Counter.QPS_MIN + ",method = " + method.getName());
+			}
+
 			if (qpsL > qps) {
 				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能大于 @"
 						+ ZRequestMapping.class.getSimpleName() + ".qps" + ",method = " + method.getName());
