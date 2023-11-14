@@ -77,6 +77,7 @@ public class ServerConfiguration {
 	 * 是否启用静态资源的缓存
 	 */
 	@ZNotNull
+	@ZValue(name = "server.static.resource.cache.enable", listenForChanges = true)
 	private Boolean staticResourceCacheEnable = true;
 
 	/**
