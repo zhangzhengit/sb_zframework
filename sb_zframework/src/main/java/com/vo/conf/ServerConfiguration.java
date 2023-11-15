@@ -93,6 +93,8 @@ public class ServerConfiguration {
 	@ZMax(max = 52000000)
 	@ZValue(name = "server.qps", listenForChanges = true)
 	@ZCustom(cls = ZDivisibleByCounterQPS_MIN.class)
+	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
+	// 如果不限制的话，是否其他ip的请求优先处理？
 	private Integer qps = 10000 * 20;
 
 	/**
