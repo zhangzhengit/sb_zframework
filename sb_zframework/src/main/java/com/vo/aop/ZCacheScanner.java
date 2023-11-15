@@ -26,6 +26,8 @@ public class ZCacheScanner {
 
 		final ZCacheConfigurationProperties cacheConfigurationProperties = ZContext
 				.getBean(ZCacheConfigurationProperties.class);
+
+		// 只验证 MIXED 模式下，配置的超时时间是否合理
 		if (!ZCacheConfiguration.MIXED.equals(cacheConfigurationProperties.getType())) {
 			return;
 		}
