@@ -71,7 +71,7 @@ public class ServerConfiguration {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 10;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 2;
 
 	/**
 	 * 是否启用静态资源的缓存
