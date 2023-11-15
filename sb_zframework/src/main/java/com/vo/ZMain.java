@@ -6,6 +6,8 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Sets;
+import com.vo.anno.ZCommandLineRunner;
+import com.vo.anno.ZCommandLineRunnerScanner;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationProperties;
@@ -118,6 +120,11 @@ public class ZMain {
 
 			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getPrintConfigurationProperties())) {
 				printZConfigurationProperties();
+			}
+
+			// 执行 ZCommandLineRunner
+			for (final Object zclr : ZCommandLineRunnerScanner.scan(packageName)) {
+				((ZCommandLineRunner) zclr).run(args);
 			}
 
 			if (httpEnable) {
