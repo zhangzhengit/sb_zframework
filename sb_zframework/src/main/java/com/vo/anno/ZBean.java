@@ -22,11 +22,7 @@ import com.vo.enums.BeanModeEnum;
  *
  *	此方法表示，声明一个bean由容器自动管理，类型为ZBean，名称为bean1。
  *
- *	使用类型注入：
- *		@ZAutowired
- *		ZBean zBean;
- *
- *	或者使用名称注入：
+ *	使用此bean，需要使用名称注入：
  *
  *		@ZAutowired(name = "bean1")
  *		ZBean zBean;
