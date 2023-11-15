@@ -341,7 +341,6 @@ public class NioLongConnectionServer {
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
 
 		try {
-			// FIXME 2023年11月15日 下午4:32:38 zhanghen: 在此执行拦截器
 			final ZResponse response = task.invoke(request);
 			if (response != null && !response.getWrite().get()) {
 
