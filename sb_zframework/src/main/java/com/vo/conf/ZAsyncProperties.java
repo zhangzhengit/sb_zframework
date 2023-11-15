@@ -29,7 +29,7 @@ public class ZAsyncProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 10;
+	private Integer threadCount = Runtime.getRuntime().availableProcessors();
 
 	/**
 	 * 线程名称前缀
