@@ -45,7 +45,7 @@ public final class ZApplicationEventPublisher {
 			final Class<? extends ZApplicationEvent> e = el.value();
 			if (e.getCanonicalName().equals(event.getClass().getCanonicalName())) {
 				final Object object = this.beanMap.get(method);
-				this.invoke(method, object, event);
+				ZApplicationEventPublisher.invoke(method, object, event);
 			}
 		}
 	}
@@ -101,10 +101,11 @@ public final class ZApplicationEventPublisher {
 
 				final Parameter[] ps = m.getParameters();
 				if (ArrayUtil.isEmpty(ps) || ps.length != 1 || !ps[0].getType().equals(eventListener.value())) {
-					throw new StartupException(
-							"@" + ZEventListener.class.getSimpleName() + " 标记的方法[" + m.getName() + "]必须带带有参数["
-							+ eventListener.value().getSimpleName() + "]"
-							);
+					throw new StartupException("@" + ZEventListener.class.getSimpleName() + "方法["
+							+ cls.getSimpleName()
+							+ "."
+							+ m.getName()
+							+ "]必须有且只有一个[" + eventListener.value().getSimpleName() + "]参数");
 				}
 			}
 		}
