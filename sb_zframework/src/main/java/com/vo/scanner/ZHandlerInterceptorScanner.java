@@ -3,7 +3,9 @@ package com.vo.scanner;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,6 +83,22 @@ public class ZHandlerInterceptorScanner {
 	 */
 	public static List<ZHandlerInterceptor> match(final String requestURI) {
 
+		synchronized (requestURI.intern()) {
+			final List<ZHandlerInterceptor> v = map.get(requestURI);
+			if (v != null) {
+				return v;
+			}
+
+			final List<ZHandlerInterceptor> v2 = match0(requestURI);
+			map.put(requestURI, v2);
+			return v2;
+		}
+
+	}
+
+	static Map<String, List<ZHandlerInterceptor>> map = new WeakHashMap<>(4,1F);
+
+	private static List<ZHandlerInterceptor> match0(final String requestURI) {
 		final List<ZHandlerInterceptor> zhiRList = Lists.newArrayList();
 
 		final List<ZHandlerInterceptor> list = get();
