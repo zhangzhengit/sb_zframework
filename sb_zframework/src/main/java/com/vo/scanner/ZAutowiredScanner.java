@@ -12,6 +12,7 @@ import com.vo.anno.ZAutowired;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZController;
+import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZAOPScaner;
 import com.vo.core.ZContext;
@@ -44,6 +45,9 @@ public class ZAutowiredScanner {
 				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZComponent.class.getCanonicalName())) {
+				o2 = ZContext.getBean(cls.getCanonicalName());
+			}
+			if (targetClass.getCanonicalName().equals(ZService.class.getCanonicalName())) {
 				o2 = ZContext.getBean(cls.getCanonicalName());
 			}
 			if (targetClass.getCanonicalName().equals(ZConfiguration.class.getCanonicalName())) {

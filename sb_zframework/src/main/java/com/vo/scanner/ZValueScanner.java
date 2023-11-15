@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
+import com.vo.anno.ZService;
 import com.vo.anno.ZValue;
 import com.vo.conf.ZProperties;
 import com.vo.core.Task;
@@ -49,10 +50,12 @@ public class ZValueScanner {
 	public static void inject(final String... packageName) {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
 		final Set<Class<?>> zc2Set = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
+		final Set<Class<?>> zc3Set = ClassMap.scanPackageByAnnotation(ZService.class, packageName);
 
 		final List<Class<?>> clist = Lists.newArrayListWithCapacity(zcSet.size() + zc2Set.size());
 		clist.addAll(zcSet);
 		clist.addAll(zc2Set);
+		clist.addAll(zc3Set);
 
 		if (clist.isEmpty()) {
 			return;

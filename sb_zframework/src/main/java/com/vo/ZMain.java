@@ -10,6 +10,7 @@ import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZController;
+import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
@@ -81,7 +82,8 @@ public class ZMain {
 			ZObjectGeneratorStarter.start(packageName);
 
 			// 2 创建 @ZComponent 对象，如果类中有被代理的自定义注解，则创建此类的代理类
-			ZComponentScanner.scanAndCreate(packageName);
+			ZComponentScanner.scanAndCreate(ZComponent.class,packageName);
+			ZComponentScanner.scanAndCreate(ZService.class,packageName);
 
 			if (httpEnable) {
 				// 3 创建 @ZController 对象
@@ -93,6 +95,7 @@ public class ZMain {
 			}
 
 			// 4 扫描组件的 @ZAutowired 字段 并注入值
+			ZAutowiredScanner.inject(ZService.class, packageName);
 			ZAutowiredScanner.inject(ZComponent.class, packageName);
 			ZAutowiredScanner.inject(ZController.class, packageName);
 			ZAutowiredScanner.inject(ZConfiguration.class, packageName);

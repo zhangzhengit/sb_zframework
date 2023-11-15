@@ -1,5 +1,6 @@
 package com.vo.scanner;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -41,17 +42,23 @@ public class ZComponentScanner {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static void scanAndCreate(final String... packageName) {
+		scanAndCreate(ZComponent.class, packageName);
+	}
 
+	public static void scanAndCreate(final Class<? extends Annotation> cls,final String... packageName) {
+		scanAndCreate0(cls, packageName);
+	}
+
+	private static void scanAndCreate0(final Class<? extends Annotation> zc, final String... packageName) {
 		final Map<String, ZClass> map = ZAOPScaner.scanAndGenerateProxyClass1(packageName);
-
-		LOG.info("开始扫描带有[{}]注解的类", ZComponent.class.getCanonicalName());
-		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZComponent.class, packageName);
-		LOG.info("扫描到带有[{}]注解的类个数={}", ZComponent.class.getCanonicalName(),zcSet.size());
-		LOG.info("开始给带有[{}]注解的类创建对象",ZComponent.class.getCanonicalName());
+		LOG.info("开始扫描带有[{}]注解的类", zc.getCanonicalName());
+		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(zc, packageName);
+		LOG.info("扫描到带有[{}]注解的类个数={}", zc.getCanonicalName(),zcSet.size());
+		LOG.info("开始给带有[{}]注解的类创建对象",zc.getCanonicalName());
 		for (final Class<?> cls : zcSet) {
-			LOG.info("开始给待有[{}]注解的类[{}]创建对象",ZComponent.class.getCanonicalName(),cls.getCanonicalName());
+			LOG.info("开始给待有[{}]注解的类[{}]创建对象",zc.getCanonicalName(),cls.getCanonicalName());
 			final Object object = ZSingleton.getSingletonByClass(cls);
-			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", ZComponent.class.getCanonicalName(),
+			LOG.info("给带有[{}]注解的类[{}]创建对象[{}]完成", zc.getCanonicalName(),
 					cls.getCanonicalName(), object);
 
 			final Object newComponent = ZObjectGeneratorStarter.generate(cls);
@@ -83,7 +90,7 @@ public class ZComponentScanner {
 			}
 		}
 
-		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", ZComponent.class.getCanonicalName(), zcSet.size());
+		LOG.info("给带有[{}]注解的类创建对象完成,个数={}", zc.getCanonicalName(), zcSet.size());
 	}
 
 	private static void injectParentFieldForProxy(final Object newInstance) {
