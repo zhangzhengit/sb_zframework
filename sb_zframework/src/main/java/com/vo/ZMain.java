@@ -45,6 +45,10 @@ import cn.hutool.core.util.StrUtil;
 public class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	/**
+	 * 本应用所在的包
+	 */
 	public static final String COM_VO = "com.vo";
 
 	public static final String STATIC_RESOURCES_PROPERTY_NAME = "resource.path-" + UUID.randomUUID();
@@ -60,9 +64,11 @@ public class ZMain {
 
 		final String[] packageName = pns.toArray(new String[0]);
 
-		// 最先校验：校验注解用的字段是否支持
 		try {
+			// 最先校验：校验注解用的字段是否支持
 			ZValidator.start(packageName);
+
+			// 校验 @ZEventListener 方法
 			ZApplicationEventPublisher.start(packageName);
 
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
