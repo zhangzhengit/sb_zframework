@@ -39,9 +39,9 @@ public class ZApplication {
 	 * @param httpEnable
 	 * @param args
 	 */
-	public static void run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
+	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
-		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
+		LOG.info("ZApplication开始启动，scanPackageName={},	={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
 
 		if (CollUtil.isEmpty(scanPackageNameList)) {
@@ -82,6 +82,14 @@ public class ZApplication {
 						maxMemory / 1024/1024,
 						serverConfiguration
 					);
+
+
+		final ZApplicationContext context = new ZApplicationContext();
+		context.setScanPackageNameList(scanPackageNameList);
+		context.setHttpEnable(httpEnable);
+		context.setArgs(args);
+		context.setProperties(ZProperties.getInstance());
+		return context;
 	}
 
 
