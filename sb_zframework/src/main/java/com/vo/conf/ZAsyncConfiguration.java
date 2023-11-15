@@ -22,7 +22,7 @@ public class ZAsyncConfiguration {
 
 	@ZBean
 	public ZE zeZAsync() {
-		return ZES.newZE(this.zAsyncProperties.getThreadNamePrefix(), this.zAsyncProperties.getThreadNamePrefix());
+		return ZES.newZE(this.zAsyncProperties.getThreadCount(), this.zAsyncProperties.getThreadNamePrefix());
 	}
 
 }
