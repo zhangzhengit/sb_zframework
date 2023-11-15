@@ -123,7 +123,7 @@ public class ZAutowiredScanner {
 		ZAutowiredScanner.LOG.info("找到[{}]对象的[{}]字段={}", cls.getCanonicalName(),
 				ZAutowired.class.getCanonicalName(), f.getType().getCanonicalName());
 
-		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() : autowired.name();
+		final String name = StrUtil.isEmpty(autowired.name()) ? f.getType().getCanonicalName() + "@" + f.getName() : autowired.name();
 
 		// FIXME 2023年7月5日 下午8:02:09 zhanghen: TODO ： 如果getByName 有多个返回值，则提示一下要具体注入哪个
 		final Object object = cls.isAnnotationPresent(ZAOP.class)
@@ -178,10 +178,14 @@ public class ZAutowiredScanner {
 				f.setAccessible(true);
 				try {
 					final Object v = f.get(bean);
+					// 在此判断：如果 autowired.required() 并且字段不存在，则抛异常
 					if (v == null && autowired.required()) {
-						final String beanName = StrUtil.isEmpty(autowired.name()) ? f.getName() : autowired.name();
-//						throw new BeanNotExistException(beanName + ",bean = " + bean.getClass().getCanonicalName());
-						throw new BeanNotExistException(bean.getClass().getSimpleName() + "." + beanName + " 不存在，请检查 " + f.getType().getSimpleName() + " 是否正确配置了？");
+						final String beanName = StrUtil.isEmpty(autowired.name()) ?
+								f.getType().getCanonicalName() + "@" +
+								f.getName() : autowired.name();
+
+						final String message = bean.getClass().getSimpleName() + " 所依赖的bean " + beanName + " 不存在，请检查 " + f.getType().getSimpleName() + " 是否正确配置了？";
+						throw new BeanNotExistException(message);
 					}
 
 				} catch (IllegalArgumentException | IllegalAccessException e) {

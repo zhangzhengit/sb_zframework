@@ -74,7 +74,7 @@ public class ZConfigurationScanner {
 							ZBean.class.getSimpleName(), method.getName(), r);
 
 					ZContext.addBean(method.getName(), r);
-					ZContext.addBean(r.getClass().getCanonicalName(), r);
+					ZContext.addBean(r.getClass().getCanonicalName() + "@" + method.getName(), r);
 
 				} catch (final InvocationTargetException | IllegalAccessException | IllegalArgumentException e) {
 //					e.printStackTrace();

@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.vo.scanner.BeanAlreadyEexistsException;
 
 /**
  * 存取 Bean。可使用addBean方法手动注入一个bean让容器管理，使用getBean方法获取一个由容器管理的bean
@@ -18,34 +19,37 @@ public class ZContext {
 	private static final ConcurrentMap<String, ZClass> ZCLASS_MAP = Maps.newConcurrentMap();
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getBean(final Class<T> beanClass) {
+	public synchronized static <T> T getBean(final Class<T> beanClass) {
 		return (T) getBean(beanClass.getCanonicalName());
 	}
 
-	public static Object getBean(final String beanName) {
+	public synchronized static Object getBean(final String beanName) {
 		return BEAN_MAP.get(beanName);
 	}
 
-	public static ZClass getZClass(final String beanName) {
+	public synchronized static ZClass getZClass(final String beanName) {
 		return ZCLASS_MAP.get(beanName);
 	}
 
-	public static void addBean(final Class<?> className, final Object bean) {
+	public synchronized static void addBean(final Class<?> className, final Object bean) {
 		addBean(className.getCanonicalName(), bean);
 	}
 
-	public static synchronized void addZClassBean(final String beanName, final ZClass zClass, final Object bean) {
+	public synchronized static void addBean(final String beanName, final Object bean) {
+		final Object v = BEAN_MAP.get(beanName);
+		// 同样name已存在一个不同的
+		if (v != null && v != bean) {
+			throw new BeanAlreadyEexistsException(beanName);
+		}
 		BEAN_MAP.put(beanName, bean);
-		ZCLASS_MAP.put(beanName, zClass);
 	}
 
-	public static void addBean(final String beanName, final Object bean) {
-		BEAN_MAP.put(beanName, bean);
-
-	}
-
-	public static ImmutableMap<String, Object> all() {
+	public synchronized static ImmutableMap<String, Object> all() {
 		return ImmutableMap.copyOf(BEAN_MAP);
 	}
 
+	public synchronized static void addZClassBean(final String beanName, final ZClass zClass, final Object bean) {
+		addBean(beanName, bean);
+		ZCLASS_MAP.put(beanName, zClass);
+	}
 }

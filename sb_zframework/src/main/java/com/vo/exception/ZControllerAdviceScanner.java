@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
+import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
 import com.vo.validator.StartupException;
 
@@ -65,13 +66,8 @@ public class ZControllerAdviceScanner {
 							+ ",当前方法参数类型=" + ps[0].getType().getCanonicalName());
 				}
 
-				Object bean = null;
-				try {
-					bean = cls.newInstance();
-					ZContext.addBean(cls, bean);
-				} catch (InstantiationException | IllegalAccessException e1) {
-					e1.printStackTrace();
-				}
+				final Object bean = ZSingleton.getSingletonByClass(cls);
+				ZContext.addBean(cls, bean);
 				final ZControllerAdviceBody e = new ZControllerAdviceBody(bean, m, ec);
 				final Optional<ZControllerAdviceBody> findAny = LIST.stream()
 						.filter(z -> z.getThrowable().getCanonicalName().equals(ec.getCanonicalName())).findAny();
