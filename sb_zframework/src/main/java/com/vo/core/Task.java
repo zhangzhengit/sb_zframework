@@ -55,6 +55,8 @@ import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZControllerInterceptorScanner;
+import com.vo.scanner.ZHandlerInterceptor;
+import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.FormPairParseException;
@@ -415,8 +417,47 @@ public class Task {
 					}
 				}
 			} else {
-//				method.invoke(zController, arraygP);
-				r = method.invoke(zController, arraygP);
+				
+				// 在此zhi执行
+				final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
+				if (CollUtil.isEmpty(zhiList)) {
+					r = method.invoke(zController, arraygP);
+				} else {
+					final ZResponse response = new ZResponse(this.socketChannel);
+					final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
+							method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
+							Lists.newArrayList(arraygP), zController);
+
+					// 1 按从小到大执行pre
+					boolean stop = false;
+					for (final ZHandlerInterceptor zhi : zhiList) {
+						final boolean preHandle = zhi.preHandle(request, response, interceptorParameter, null);
+						if (!preHandle) {
+							stop=true;
+							break;
+						}
+					}
+
+					if (stop) {
+						return response;
+					}
+
+					if (!stop) {
+
+						r = method.invoke(zController, arraygP);
+
+						// 2 按从大到小执行post
+						for (int i = zhiList.size() - 1; i >= 0; i--) {
+							final ZHandlerInterceptor zhi = zhiList.get(i);
+							zhi.postHandle(request, response, interceptorParameter, null);
+						}
+						// 3 按从大到小执行after
+						for (int i = zhiList.size() - 1; i >= 0; i--) {
+							final ZHandlerInterceptor zhi = zhiList.get(i);
+							zhi.afterCompletion(request, response, interceptorParameter, null);
+						}
+					}
+				}
 			}
 		}
 

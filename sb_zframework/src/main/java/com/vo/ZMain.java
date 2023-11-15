@@ -32,6 +32,7 @@ import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.scanner.ZConfigurationScanner;
 import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZControllerScanner;
+import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZValueScanner;
 import com.vo.validator.ZValidator;
 
@@ -106,6 +107,7 @@ public class ZMain {
 			// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
 			ZValueScanner.inject(packageName);
 
+
 			ZCacheableValidator.validated(packageName);
 
 			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
@@ -114,13 +116,19 @@ public class ZMain {
 				System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 			}
 
+			// 验证缓存注解配置是否合理
 			ZCacheScanner.scanAndValidate();
 
+			// @ZAutowired 全部执行完了，判断一下必须的是否null
 			ZAutowiredScanner.after();
 
+			// 打印一下配置类信息
 			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getPrintConfigurationProperties())) {
 				printZConfigurationProperties();
 			}
+
+			// 扫描自定义拦截器
+			ZHandlerInterceptorScanner.scan();
 
 			// 执行 ZCommandLineRunner
 			for (final Object zclr : ZCommandLineRunnerScanner.scan(packageName)) {
