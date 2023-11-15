@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 import com.vo.enums.BeanModeEnum;
-import com.vo.validator.ZMin;
 
 /**
  *
