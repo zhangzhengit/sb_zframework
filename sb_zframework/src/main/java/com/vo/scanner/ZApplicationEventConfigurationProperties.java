@@ -29,7 +29,7 @@ public class ZApplicationEventConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 100)
-	private Integer threadCount = Runtime.getRuntime().availableProcessors();
+	private Integer threadCount = 2;
 
 	@ZNotEmtpy
 	private String threadNamePrefix = "applicationEvent-Thread-";
