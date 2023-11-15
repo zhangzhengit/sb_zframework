@@ -209,14 +209,4 @@ public class ZControllerMap {
 		}
 	}
 
-	private static final ConcurrentMap<Method, List<Class<? extends ZIAOP>>> M_A_MAP = Maps.newConcurrentMap();
-
-	public static void putMyAnnotation(final Method method, final Annotation annotation,
-			final List<Class<? extends ZIAOP>> ziaopSubClassList) {
-		M_A_MAP.put(method, ziaopSubClassList);
-	}
-
-	public static List<Class<? extends ZIAOP>> getZIAOPSubClassList(final Method method) {
-		return M_A_MAP.get(method);
-	}
 }

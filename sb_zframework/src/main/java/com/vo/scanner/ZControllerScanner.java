@@ -97,55 +97,11 @@ public class ZControllerScanner {
 					}
 				}
 
-
-				// FIXME 2023年8月30日 下午6:55:14 zhanghen: TODO 查找方法上的自定义A，看A是否被ZIAOP的子类拦截了，如果拦截了，则执行
-				final Annotation[] as = method.getAnnotations();
-				for (final Annotation annotation : as) {
-
-					final ServerConfiguration serverConfigurationx = ZContext.getBean(ServerConfiguration.class);
-					final Set<Class<?>> clsSet = ClassMap.scanPackage(serverConfigurationx.getScanPackage());
-
-					final List<Class<? extends ZIAOP>> ziaopSubClassList = findZIAOPSubClass(clsSet);
-					final List<Class<? extends ZIAOP>> collect = ziaopSubClassList.stream()
-							.filter(c -> c.getAnnotation(ZAOP.class) != null)
-							.filter(c -> c.getAnnotation(ZAOP.class).interceptType()
-								.getCanonicalName().equals(annotation.annotationType().getCanonicalName())
-							).collect(Collectors.toList());
-
-					if (CollUtil.isNotEmpty(collect)) {
-//						System.out.println("annotation = " + annotation);
-//						System.out.println("clsSet = " + clsSet);
-//						System.out.println("collect = " + collect);
-
-						ZControllerMap.putMyAnnotation(method, null, collect);
-					}
-				}
-
-
 			}
 
 		}
 
 		return zcSet;
-	}
-
-	private static List<Class<? extends ZIAOP>> findZIAOPSubClass(final Set<Class<?>> clsSet ) {
-		final List<Class<? extends ZIAOP>> r = Lists.newArrayList();
-		for (final Class<?> cls : clsSet) {
-			final Class<?>[] is = cls.getInterfaces();
-			if (ArrayUtil.isEmpty(is)) {
-				continue;
-			}
-
-			final List<Class<?>> ziaopSubClassList = Lists.newArrayList(is).stream()
-					.filter(i -> i.getCanonicalName().equals(ZIAOP.class.getCanonicalName()))
-					.collect(Collectors.toList());
-			if (CollUtil.isNotEmpty(ziaopSubClassList)) {
-				r.add((Class<? extends ZIAOP>) cls);
-			}
-		}
-
-		return r;
 	}
 
 	private static void checkNoVoidWithZResponse(final Method method) {

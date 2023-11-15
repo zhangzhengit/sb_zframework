@@ -33,12 +33,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.vo.anno.ZControllerInterceptor;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
-import com.vo.aop.AOPParameter;
 import com.vo.aop.InterceptorParameter;
-import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
 import com.vo.cache.J;
 import com.vo.conf.ServerConfiguration;
@@ -54,7 +51,6 @@ import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRequestParam;
-import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZHandlerInterceptor;
 import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.template.ZModel;
@@ -316,147 +312,51 @@ public class Task {
 
 		this.setZRequestAndZResponse(arraygP, request);
 
+		// 接口方法无返回值，直接返回 response对象
 		if (Task.VOID.equals(method.getReturnType().getCanonicalName())) {
-			final Set<ZControllerInterceptor> zciSet = ZControllerInterceptorScanner.get();
-			if (zciSet.isEmpty()) {
-
-				final List<Class<? extends ZIAOP>> ziaopSubClassList = ZControllerMap.getZIAOPSubClassList(method);
-				if (CollUtil.isNotEmpty(ziaopSubClassList)) {
-					for (final Class<? extends ZIAOP> ziaop : ziaopSubClassList) {
-						try {
-							final ZIAOP newInstance = ziaop.newInstance();
-							final AOPParameter parameter = new AOPParameter();
-							parameter.setIsVOID(true);
-							parameter.setTarget(zController);
-							parameter.setMethodName(method.getName());
-							parameter.setMethod(method);
-							parameter.setParameterList(com.google.common.collect.Lists.newArrayList(arraygP));
-
-							newInstance.before(parameter);
-							newInstance.around(parameter);
-							newInstance.after(parameter);
-
-
-//							final com.vo.aop.AOPParameter parameter = new com.vo.aop.AOPParameter();
-//							parameter.setIsVOID(false);
-//							parameter.setTarget(com.vo.core.ZSingleton.getSingletonByClass(this.getClass().getSuperclass()));
-//							parameter.setMethodName("index");
-//							final java.lang.reflect.Method m = com.vo.aop.ZAOPScaner.cmap.get("com.vo.test.C2@index");
-//							parameter.setMethod(m);
-//							parameter.setParameterList(com.google.common.collect.Lists.newArrayList());
-//							this.ziaop_index.before(parameter);
-//							final Object v = this.ziaop_index.around(parameter);
-//							this.ziaop_index.after(parameter);
-//							return (com.votool.common.CR) v;
-
-						} catch (InstantiationException | IllegalAccessException e) {
-							e.printStackTrace();
-						}
-					}
-				} else {
-					method.invoke(zController, arraygP);
-				}
-
-			} else {
-				final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
-						method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
-						Lists.newArrayList(arraygP), zController);
-				zciSet.forEach(zci -> zci.before(interceptorParameter));
-				for (final ZControllerInterceptor zciObject : zciSet) {
-					zciObject.around(interceptorParameter, null);
-				}
-				zciSet.forEach(zci -> zci.after(interceptorParameter));
-			}
+			method.invoke(zController, arraygP);
 			final ZResponse response = ZHttpContext.getZResponseAndRemove();
 			return response;
 		}
 
 		Object r = null;
-		final Set<ZControllerInterceptor> zciSet = ZControllerInterceptorScanner.get();
-		if (!zciSet.isEmpty()) {
+		// 在此zhi执行
+		final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
+		if (CollUtil.isEmpty(zhiList)) {
+			r = method.invoke(zController, arraygP);
+		} else {
+			final ZResponse response = new ZResponse(this.socketChannel);
 			final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
 					method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
 					Lists.newArrayList(arraygP), zController);
-			zciSet.forEach(zci -> zci.before(interceptorParameter));
-			for (final ZControllerInterceptor zciObject : zciSet) {
-				r = zciObject.around(interceptorParameter, null);
-			}
-			zciSet.forEach(zci -> zci.after(interceptorParameter));
-		} else {
-			final List<Class<? extends ZIAOP>> ziaopSubClassList = ZControllerMap.getZIAOPSubClassList(method);
-			if (CollUtil.isNotEmpty(ziaopSubClassList)) {
-				for (final Class<? extends ZIAOP> ziaop : ziaopSubClassList) {
-					try {
-						final ZIAOP newInstance = ziaop.newInstance();
-						final AOPParameter parameter = new AOPParameter();
-						parameter.setIsVOID(false);
-						parameter.setTarget(zController);
-						parameter.setMethodName(method.getName());
-						parameter.setMethod(method);
-						parameter.setParameterList(com.google.common.collect.Lists.newArrayList(arraygP));
-
-						newInstance.before(parameter);
-						r = newInstance.around(parameter);
-						newInstance.after(parameter);
-
-
-//						final com.vo.aop.AOPParameter parameter = new com.vo.aop.AOPParameter();
-//						parameter.setIsVOID(false);
-//						parameter.setTarget(com.vo.core.ZSingleton.getSingletonByClass(this.getClass().getSuperclass()));
-//						parameter.setMethodName("index");
-//						final java.lang.reflect.Method m = com.vo.aop.ZAOPScaner.cmap.get("com.vo.test.C2@index");
-//						parameter.setMethod(m);
-//						parameter.setParameterList(com.google.common.collect.Lists.newArrayList());
-//						this.ziaop_index.before(parameter);
-//						final Object v = this.ziaop_index.around(parameter);
-//						this.ziaop_index.after(parameter);
-//						return (com.votool.common.CR) v;
-
-					} catch (InstantiationException | IllegalAccessException e) {
-						e.printStackTrace();
-					}
+			// 1 按从小到大执行pre
+			boolean stop = false;
+			for (final ZHandlerInterceptor zhi : zhiList) {
+				final boolean preHandle = zhi.preHandle(request, response, interceptorParameter, null);
+				if (!preHandle) {
+					stop = true;
+					break;
 				}
-			} else {
-				
-				// 在此zhi执行
-				final List<ZHandlerInterceptor> zhiList = ZHandlerInterceptorScanner.match(request.getRequestURI());
-				if (CollUtil.isEmpty(zhiList)) {
-					r = method.invoke(zController, arraygP);
-				} else {
-					final ZResponse response = new ZResponse(this.socketChannel);
-					final InterceptorParameter interceptorParameter = new InterceptorParameter(method.getName(), method,
-							method.getReturnType().getCanonicalName().equals(Void.class.getCanonicalName()),
-							Lists.newArrayList(arraygP), zController);
+			}
 
-					// 1 按从小到大执行pre
-					boolean stop = false;
-					for (final ZHandlerInterceptor zhi : zhiList) {
-						final boolean preHandle = zhi.preHandle(request, response, interceptorParameter, null);
-						if (!preHandle) {
-							stop=true;
-							break;
-						}
-					}
+			// 有 preHandle 返回false，直接返回response（在preHandle可能设值了）
+			if (stop) {
+				return response;
+			}
 
-					if (stop) {
-						return response;
-					}
+			if (!stop) {
 
-					if (!stop) {
+				r = method.invoke(zController, arraygP);
 
-						r = method.invoke(zController, arraygP);
-
-						// 2 按从大到小执行post
-						for (int i = zhiList.size() - 1; i >= 0; i--) {
-							final ZHandlerInterceptor zhi = zhiList.get(i);
-							zhi.postHandle(request, response, interceptorParameter, null);
-						}
-						// 3 按从大到小执行after
-						for (int i = zhiList.size() - 1; i >= 0; i--) {
-							final ZHandlerInterceptor zhi = zhiList.get(i);
-							zhi.afterCompletion(request, response, interceptorParameter, null);
-						}
-					}
+				// 2 按从大到小执行post
+				for (int i = zhiList.size() - 1; i >= 0; i--) {
+					final ZHandlerInterceptor zhi = zhiList.get(i);
+					zhi.postHandle(request, response, interceptorParameter, null);
+				}
+				// 3 按从大到小执行after
+				for (int i = zhiList.size() - 1; i >= 0; i--) {
+					final ZHandlerInterceptor zhi = zhiList.get(i);
+					zhi.afterCompletion(request, response, interceptorParameter, null);
 				}
 			}
 		}

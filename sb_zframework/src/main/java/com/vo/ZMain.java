@@ -30,7 +30,6 @@ import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
 import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.scanner.ZConfigurationScanner;
-import com.vo.scanner.ZControllerInterceptorScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZValueScanner;
@@ -91,9 +90,7 @@ public class ZMain {
 			if (httpEnable) {
 				// 3 创建 @ZController 对象
 				ZControllerScanner.scanAndCreateObject(packageName);
-				// 3.1 创建 @ZController 的拦截器对象
-				ZControllerInterceptorScanner.scan(packageName);
-				// 3.2 扫描 @ZControllerAdvice 的类
+				// 3.1 扫描 @ZControllerAdvice 的类
 				ZControllerAdviceScanner.scan(packageName);
 			}
 
