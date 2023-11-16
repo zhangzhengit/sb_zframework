@@ -128,11 +128,13 @@ public class NioLongConnectionServer {
 							this.handleRead(key);
 						} else {
 							final String message = "服务器访问频繁，请稍后再试";
-							new ZResponse((SocketChannel) key.channel())
-							.contentType(HeaderEnum.JSON.getType())
-							.httpStatus(HttpStatus.HTTP_403.getCode())
-							.body(J.toJSONString(CR.error(message), Include.NON_NULL))
-							.write();
+							final SocketChannel channel = (SocketChannel) key.channel();
+							new ZResponse(channel)
+								.contentType(HeaderEnum.JSON.getType())
+								.httpStatus(HttpStatus.HTTP_403.getCode())
+								.body(J.toJSONString(CR.error(message), Include.NON_NULL))
+								.write();
+							socketChannelCloseAndKeyCancel(key, channel);
 						}
 					}
 				} catch (final Exception e) {
@@ -309,7 +311,7 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private static void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+	public static void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
 		try {
 			socketChannel.close();
 			key.cancel();
@@ -332,6 +334,7 @@ public class NioLongConnectionServer {
 				.contentType(HeaderEnum.JSON.getType())
 				.body(J.toJSONString(error, Include.NON_NULL))
 				.write();
+			socketChannelCloseAndKeyCancel(key, socketChannel);
 			return;
 		}
 
@@ -358,6 +361,7 @@ public class NioLongConnectionServer {
 
 				if (keepAlive) {
 					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
+					SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
 				}
 
 				final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
@@ -370,20 +374,16 @@ public class NioLongConnectionServer {
 
 				// 在此自动write，接口中可以不调用write
 				response.write();
+
+				if (!keepAlive) {
+					socketChannelCloseAndKeyCancel(key, socketChannel);
+				}
 			}
 		} catch (final Exception e) {
+			socketChannelCloseAndKeyCancel(key, socketChannel);
 			throw e;
 		}
 
-		if (keepAlive) {
-			SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
-		} else {
-			try {
-				socketChannel.close();
-			} catch (final IOException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	@Data
