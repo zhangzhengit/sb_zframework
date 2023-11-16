@@ -41,7 +41,7 @@ public class ZCacheConfiguration {
 
 		case MIXED:
 			final Byte memoryExpire = ZContext.getBean(ZMixConfigurationProperties.class).getMemoryExpire();
-			return new ZMixed(memoryExpire.longValue());
+			return new ZCacheMixed(memoryExpire.longValue());
 
 		default:
 			throw new TypeNotSupportedExcpetion(

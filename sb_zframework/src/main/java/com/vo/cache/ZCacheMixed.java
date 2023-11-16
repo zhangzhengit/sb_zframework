@@ -14,7 +14,7 @@ import cn.hutool.core.bean.BeanUtil;
  * @date 2023年11月8日
  *
  */
-public class ZMixed implements ZCache<ZCacheR> {
+public class ZCacheMixed implements ZCache<ZCacheR> {
 
 	private final ZCache<ZCacheR> memory;
 	private final ZCache<ZCacheR> redis;
@@ -29,7 +29,7 @@ public class ZMixed implements ZCache<ZCacheR> {
 	 *
 	 * @param expire
 	 */
-	public ZMixed(final long expire) {
+	public ZCacheMixed(final long expire) {
 		// FIXME 2023年11月16日 下午11:09:47 zhanghen: TODO 怎么判断 expire值?
 		this.expire = expire;
 		this.memory = new ZCacheMemory();
