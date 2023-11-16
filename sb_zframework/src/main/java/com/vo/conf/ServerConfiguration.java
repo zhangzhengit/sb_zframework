@@ -126,7 +126,7 @@ public class ServerConfiguration {
 	 */
 	@ZNotEmtpy
 	@ZCustom(cls = ZSessionStorageTypeValidator.class)
-	private String sessionStorageType;
+	private String sessionStorageType = ZSessionStorageTypeEnum.MEMORY.name();
 
 	/**
 	 * session超时秒数，超时此值则销毁session
