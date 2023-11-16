@@ -3,6 +3,7 @@ package com.vo.cache;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
+import com.vo.core.ZContext;
 import com.vo.validator.TypeNotSupportedExcpetion;
 
 /**
@@ -39,7 +40,8 @@ public class ZCacheConfiguration {
 			return new ZCacheRedis();
 
 		case MIXED:
-			return new ZMixed();
+			final Byte memoryExpire = ZContext.getBean(ZMixConfigurationProperties.class).getMemoryExpire();
+			return new ZMixed(memoryExpire.longValue());
 
 		default:
 			throw new TypeNotSupportedExcpetion(

@@ -104,6 +104,7 @@ public class ZValueScanner {
 
 			Object oldValue = null;
 			try {
+				field.setAccessible(true);
 				oldValue = field.get(object);
 				LOG.info("开始更新配置项key={},原value={},新value={}", name, oldValue, value);
 			} catch (IllegalArgumentException | IllegalAccessException e) {

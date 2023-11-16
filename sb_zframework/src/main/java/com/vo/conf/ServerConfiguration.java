@@ -8,6 +8,7 @@ import com.vo.core.ZServer;
 import com.vo.validator.ZCustom;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
+import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 import com.vo.validator.ZStartWith;
 
@@ -35,6 +36,12 @@ public class ServerConfiguration {
 	@ZMin(min = 1)
 	private Integer port = 80;
 
+	/**
+	 * response 响应头中是否包含 Cookie (ZSESSIONID)
+	 */
+	@ZNotNull
+	@ZValue(name = "server.response.z.session.id", listenForChanges = true)
+	private Boolean responseZSessionId = false;
 
 	/**
 	 * server的name，用于响应头中的Server字段
@@ -115,12 +122,20 @@ public class ServerConfiguration {
 	private Integer keepAliveTimeout = 60 * 10;
 
 	/**
+	 * session 存储类型
+	 */
+	@ZNotEmtpy
+	@ZCustom(cls = ZSessionStorageTypeValidator.class)
+	private String sessionStorageType;
+
+	/**
 	 * session超时秒数，超时此值则销毁session
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = Integer.MAX_VALUE)
-	private Long sessionTimeout = 60 * 60 * 24 * 10L;
+	@ZValue(name = "server.session.timeout", listenForChanges = true)
+	private Long sessionTimeout = 60 * 30L;
 
 	/**
 	 * 配置硬盘上的资源目录，如：E\\x
@@ -185,5 +200,6 @@ public class ServerConfiguration {
 		final String[] a = this.gzipTypes.split(",");
 		return a;
 	}
+
 
 }

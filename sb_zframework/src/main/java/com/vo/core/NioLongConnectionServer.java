@@ -266,20 +266,24 @@ public class NioLongConnectionServer {
 		NioLongConnectionServer.responseAsync(key, socketChannel, array.get());
 	}
 
-	private static void responseAsync(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
+	private synchronized static void responseAsync(final SelectionKey key, final SocketChannel socketChannel,
+			final byte[] requestData) {
 		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(key, socketChannel, requestData));
 	}
 
 	private static void response(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
 		synchronized (socketChannel) {
 
-//				System.out.println("requestData.length = " + requestData.length);
+//			System.out.println("requestData.length = " + requestData.length);
 			final String requestString = new String(requestData, CHARSET).intern();
 //				System.out.println("requestString = \n" + requestString);
 
+
 			final Task task = new Task(socketChannel);
+
 			try {
 				final ZRequest request = task.handleRead(requestString);
+
 				final String contentType = request.getContentType();
 				if (StrUtil.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
@@ -344,19 +348,20 @@ public class NioLongConnectionServer {
 						|| connection.toLowerCase().contains(ConnectionEnum.KEEP_ALIVE.getValue().toLowerCase()));
 
 		try {
+
 			final ZResponse response = task.invoke(request);
 			if (response != null && !response.getWrite().get()) {
 
-				response.header(SERVER, SERVER_VALUE);
-
-				final ZSession sessionFALSE = request.getSession(false);
-				if (sessionFALSE == null) {
-					final ZSession sessionTRUE = request.getSession(true);
-					final ZCookie cookie =
-							new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
-							.path("/")
-							.httpOnly(true);
-					response.cookie(cookie);
+				if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
+					final ZSession sessionFALSE = request.getSession(false);
+					if (sessionFALSE == null) {
+						final ZSession sessionTRUE = request.getSession(true);
+						final ZCookie cookie =
+								new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
+								.path("/")
+								.httpOnly(true);
+						response.cookie(cookie);
+					}
 				}
 
 				if (keepAlive) {
@@ -372,6 +377,7 @@ public class NioLongConnectionServer {
 					}
 				}
 
+				response.header(SERVER, SERVER_VALUE);
 				// 在此自动write，接口中可以不调用write
 				response.write();
 
@@ -380,7 +386,8 @@ public class NioLongConnectionServer {
 				}
 			}
 		} catch (final Exception e) {
-			socketChannelCloseAndKeyCancel(key, socketChannel);
+			// 这里不能关闭，因为外面的异常处理器类还要write
+			// socketChannelCloseAndKeyCancel(key, socketChannel);
 			throw e;
 		}
 

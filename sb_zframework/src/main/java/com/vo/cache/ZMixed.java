@@ -3,12 +3,12 @@ package com.vo.cache;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.vo.core.ZContext;
 
 import cn.hutool.core.bean.BeanUtil;
 
 /**
- * 组合内存和redis两种模式的缓存，优先从内存找，找不到再到redis找，在redis找到了则再add到内存中并返回，在redis也没找到则直接返回null
+ * 组合内存和redis两种模式的缓存，优先从内存找，找不到再到redis找，在redis找到了则再add到内存中并返回，
+ * 在redis也没找到则直接返回null
  *
  * @author zhangzhen
  * @date 2023年11月8日
@@ -19,7 +19,19 @@ public class ZMixed implements ZCache<ZCacheR> {
 	private final ZCache<ZCacheR> memory;
 	private final ZCache<ZCacheR> redis;
 
-	public ZMixed() {
+	/**
+	 * 过期时间毫秒数
+	 */
+	private final long expire;
+
+	/**
+	 * 使用本类需要指定一个超时时间，单位毫秒
+	 *
+	 * @param expire
+	 */
+	public ZMixed(final long expire) {
+		// FIXME 2023年11月16日 下午11:09:47 zhanghen: TODO 怎么判断 expire值?
+		this.expire = expire;
 		this.memory = new ZCacheMemory();
 		this.redis = new ZCacheRedis();
 	}
@@ -29,7 +41,7 @@ public class ZMixed implements ZCache<ZCacheR> {
 		synchronized (key.intern()) {
 			this.redis.add(key, value, expire);
 
-			final ZCacheR vM = ZMixed.copyVM(value);
+			final ZCacheR vM = this.copyVM(value);
 			this.memory.add(key, vM, vM.getExpire());
 		}
 	}
@@ -47,7 +59,7 @@ public class ZMixed implements ZCache<ZCacheR> {
 
 				final ZCacheR vR = this.redis.get(key);
 				if (vR != null) {
-					final ZCacheR vM = ZMixed.copyVM(vR);
+					final ZCacheR vM = this.copyVM(vR);
 					this.memory.add(key, vM, vM.getExpire());
 				}
 
@@ -56,10 +68,10 @@ public class ZMixed implements ZCache<ZCacheR> {
 		}
 	}
 
-	private static ZCacheR copyVM(final ZCacheR value) {
+	private ZCacheR copyVM(final ZCacheR value) {
 		final ZCacheR vM = BeanUtil.copyProperties(value, ZCacheR.class);
 		vM.setCurrentTimeMillis(System.currentTimeMillis());
-		vM.setExpire(ZContext.getBean(ZMixConfigurationProperties.class).getMemoryExpire());
+		vM.setExpire(this.expire);
 		return vM;
 	}
 
