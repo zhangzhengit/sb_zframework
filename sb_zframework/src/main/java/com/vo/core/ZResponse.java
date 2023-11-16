@@ -185,6 +185,7 @@ public class ZResponse {
 			this.writeOutputStream();
 		} else if (this.socketChannel != null) {
 			this.writeSocketChannel();
+			closeSocketChannelIfStatusNot200();
 		} else {
 			this.write.set(true);
 			throw new IllegalArgumentException(
@@ -192,6 +193,17 @@ public class ZResponse {
 		}
 
 		this.write.set(true);
+	}
+
+	private void closeSocketChannelIfStatusNot200() {
+		final Integer httpStatus = this.getHttpStatus().get();
+		if (!httpStatus.equals(HttpStatus.HTTP_200.getCode())) {
+			try {
+				this.socketChannel.close();
+			} catch (final IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private void writeSocketChannel() {
