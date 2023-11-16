@@ -717,19 +717,29 @@ public class Task {
 		// clientIp
 		request.setClientIp(getClientIp());
 
-
 		request.setRequestLine(requestLine);
 
 		return request;
 	}
 
 	private static String getClientIp() {
-		final SocketChannel socketChannel2 = SCTL.get();
-		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socketChannel2.socket().getRemoteSocketAddress();
-		final InetAddress address = inetSocketAddress.getAddress();
-		final String hostAddress = address.getHostAddress();
 
-		return hostAddress;
+		final SocketChannel socketChannel = SCTL.get();
+		if (socketChannel == null) {
+			return null;
+		}
+		// FIXME 2023年11月16日 下午2:47:38 zhanghen: ab 测试这里可能取不到,修复掉
+		final Socket socket = socketChannel.socket();
+		if (socket == null) {
+			return null;
+		}
+		final InetSocketAddress inetSocketAddress = (InetSocketAddress) socket.getRemoteSocketAddress();
+		if (inetSocketAddress == null) {
+			return null;
+		}
+
+		final InetAddress address = inetSocketAddress.getAddress();
+		return address.getHostAddress();
 	}
 
 	private static void parsePath(final String s, final ZRequest.RequestLine line, final int methodIndex) {
