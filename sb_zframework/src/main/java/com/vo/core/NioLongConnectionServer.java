@@ -119,22 +119,21 @@ public class NioLongConnectionServer {
 					continue;
 				}
 				try {
-
 					if (key.isAcceptable()) {
 						handleAccept(key, selector);
 					} else if (key.isReadable()) {
 						final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
-						if (allow) {
-							this.handleRead(key);
-						} else {
+						if (!allow) {
 							final String message = "服务器访问频繁，请稍后再试";
-							final SocketChannel channel = (SocketChannel) key.channel();
-							new ZResponse(channel)
-								.contentType(HeaderEnum.JSON.getType())
-								.httpStatus(HttpStatus.HTTP_403.getCode())
-								.body(J.toJSONString(CR.error(message), Include.NON_NULL))
-								.write();
-							socketChannelCloseAndKeyCancel(key, channel);
+							final SocketChannel socketChannel = (SocketChannel) key.channel();
+							final ZResponse response = new ZResponse(socketChannel);
+							response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_403.getCode())
+									.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+							response.write();
+
+							closeSocketChannelAndKeyCancel(key, socketChannel);
+						} else {
+							this.handleRead(key);
 						}
 					}
 				} catch (final Exception e) {
@@ -220,7 +219,7 @@ public class NioLongConnectionServer {
 			try {
 				tR = socketChannel.read(byteBuffer);
 			} catch (final IOException e) {
-				NioLongConnectionServer.socketChannelCloseAndKeyCancel(key, socketChannel);
+				NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 				break;
 			}
 			bytesRead += tR;
@@ -255,7 +254,7 @@ public class NioLongConnectionServer {
 		}
 
 		if (bytesRead <= 0) {
-			NioLongConnectionServer.socketChannelCloseAndKeyCancel(key, socketChannel);
+			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
 			return;
 		}
 
@@ -310,12 +309,12 @@ public class NioLongConnectionServer {
 						.body(J.toJSONString(r, Include.NON_NULL))
 						.write();
 
-				socketChannelCloseAndKeyCancel(key, socketChannel);
+				closeSocketChannelAndKeyCancel(key, socketChannel);
 			}
 		}
 	}
 
-	public static void socketChannelCloseAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
+	public static void closeSocketChannelAndKeyCancel(final SelectionKey key, final SocketChannel socketChannel) {
 		try {
 			socketChannel.close();
 			key.cancel();
@@ -338,7 +337,7 @@ public class NioLongConnectionServer {
 				.contentType(HeaderEnum.JSON.getType())
 				.body(J.toJSONString(error, Include.NON_NULL))
 				.write();
-			socketChannelCloseAndKeyCancel(key, socketChannel);
+			closeSocketChannelAndKeyCancel(key, socketChannel);
 			return;
 		}
 
@@ -382,7 +381,7 @@ public class NioLongConnectionServer {
 				response.write();
 
 				if (!keepAlive) {
-					socketChannelCloseAndKeyCancel(key, socketChannel);
+					closeSocketChannelAndKeyCancel(key, socketChannel);
 				}
 			}
 		} catch (final Exception e) {
