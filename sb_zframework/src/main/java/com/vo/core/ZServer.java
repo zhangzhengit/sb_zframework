@@ -1,6 +1,3 @@
-/*
- *
- */
 package com.vo.core;
 
 import java.io.FileInputStream;
@@ -13,10 +10,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -111,7 +104,7 @@ public class ZServer extends Thread {
 			while (true) {
 				final SSLSocket socket = (SSLSocket) serverSocket.accept();
 
-				final boolean allow = Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
+				final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
@@ -146,51 +139,4 @@ public class ZServer extends Thread {
 		}
 	}
 
-	/**
-	 * 一秒内是否超过允许的次数
-	 *
-	 * @author zhangzhen
-	 * @date 2023年7月1日
-	 *
-	 */
-	public static class Counter {
-
-		public static final int QPS_MIN = 100;
-
-		private static final Map<String, Long> map = new ConcurrentHashMap<>(4, 1F);
-
-		public static boolean allow(final String keyword, final long qps) {
-
-			if (qps <= 0) {
-				return false;
-			}
-
-			final long qP100MS = qps / QPS_MIN;
-
-			final long seconds = System.currentTimeMillis() / (1000 / (QPS_MIN));
-
-			final String key = keyword + "@" + seconds;
-
-			synchronized (keyword) {
-
-				final Long v = Counter.map.get(key);
-				if (v == null) {
-					Counter.map.put(key, 1L);
-					return true;
-				}
-
-				final List<String> removeKeyList = map.keySet().stream().filter(k -> k.startsWith(keyword)).collect(Collectors.toList());
-
-				for (final String k : removeKeyList) {
-					map.remove(k);
-				}
-
-				final long newCount = v + 1L;
-				Counter.map.put(key, newCount);
-
-				return newCount <= qP100MS;
-			}
-		}
-
-	}
 }

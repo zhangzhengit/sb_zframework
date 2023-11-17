@@ -26,7 +26,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
 import com.vo.cache.J;
 import com.vo.conf.ServerConfiguration;
-import com.vo.core.ZServer.Counter;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
@@ -124,7 +123,8 @@ public class NioLongConnectionServer {
 					if (key.isAcceptable()) {
 						handleAccept(key, selector);
 					} else if (key.isReadable()) {
-						if (Counter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
+						final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
+						if (allow) {
 							this.handleRead(key);
 						} else {
 							final String message = "服务器访问频繁，请稍后再试";

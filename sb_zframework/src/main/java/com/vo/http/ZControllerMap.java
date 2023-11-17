@@ -1,22 +1,18 @@
 package com.vo.http;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.vo.aop.ZIAOP;
+import com.vo.core.QPSCounter;
 import com.vo.core.ZContext;
-import com.vo.core.ZServer.Counter;
 import com.vo.enums.MethodEnum;
 
 import cn.hutool.core.util.StrUtil;
@@ -80,9 +76,9 @@ public class ZControllerMap {
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
 			}
 
-			if (qpsL < Counter.QPS_MIN) {
+			if (qpsL < QPSCounter.ZSERVER_QPS_MIN_VALUE) {
 				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能小于"
-						+ Counter.QPS_MIN + ",method = " + method.getName());
+						+ QPSCounter.ZSERVER_QPS_MIN_VALUE + ",method = " + method.getName());
 			}
 
 			if (qpsL > qps) {

@@ -38,7 +38,7 @@ public class ZGzip {
 			out.close();
 			gzip.close();
 
-			return new String(out.toByteArray(), DEFAULT_CHARSET);
+			return new String(out.toByteArray(), DEFAULT_CHARSET).intern();
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
