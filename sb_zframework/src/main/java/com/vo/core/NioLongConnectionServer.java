@@ -124,7 +124,7 @@ public class NioLongConnectionServer {
 					} else if (key.isReadable()) {
 						final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
 						if (!allow) {
-							final String message = "服务器访问频繁，请稍后再试";
+							final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
 							final SocketChannel socketChannel = (SocketChannel) key.channel();
 							final ZResponse response = new ZResponse(socketChannel);
 							response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_403.getCode())

@@ -105,6 +105,12 @@ public class ServerConfiguration {
 	private Integer qps = 10000 * 20;
 
 	/**
+	 * 访问超过 本类 qps限制时给客户端的提示语
+	 */
+	@ZNotEmtpy
+	private String qpsExceedMessage = "访问频繁，请稍后再试";
+
+	/**
 	 * 是否启用内置的 StaticController,
 	 * 注意：如果设为false不启用，则需要手动添加Controller处理 StaticController 类里的
 	 * 静态资源
