@@ -256,7 +256,13 @@ public class ResourcesLoader {
 			return (byte[]) v;
 		}
 
-		synchronized (resourceName) {
+		synchronized (("loadByteArray0" + resourceName).intern()) {
+
+			final Object vN = CACHE_TABLE.get(ResourcesTypeEnum.BINARY, resourceName);
+			if (vN != null) {
+				return (byte[]) vN;
+			}
+
 			final InputStream in = checkInputStream(resourceName);
 			final byte[] ba2 = readByteArray0(in);
 
