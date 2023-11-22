@@ -109,41 +109,39 @@ public class NioLongConnectionServer {
 			}
 
 			final Set<SelectionKey> selectedKeys = selector.selectedKeys();
-			final Iterator<SelectionKey> iterator = selectedKeys.iterator();
-
-			while (iterator.hasNext()) {
-				final SelectionKey key = iterator.next();
-				iterator.remove();
-
-				if (!key.isValid()) {
+			for (final SelectionKey selectionKey : selectedKeys) {
+				if (!selectionKey.isValid()) {
 					continue;
 				}
 
 				try {
-					if (key.isAcceptable()) {
-						handleAccept(key, selector);
-					} else if (key.isReadable()) {
+					if (selectionKey.isAcceptable()) {
+						handleAccept(selectionKey, selector);
+					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
 								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
-							final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
-							final SocketChannel socketChannel = (SocketChannel) key.channel();
-							final ZResponse response = new ZResponse(socketChannel);
-							response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_403.getCode())
-									.body(J.toJSONString(CR.error(message), Include.NON_NULL));
-							response.write();
-
-							closeSocketChannelAndKeyCancel(key, socketChannel);
+							NioLongConnectionServer.response429(selectionKey);
 						} else {
-							this.handleRead(key);
+							this.handleRead(selectionKey);
 						}
 					}
 				} catch (final Exception e) {
 					e.printStackTrace();
 					continue;
 				}
-
 			}
+			selectedKeys.clear();
 		}
+	}
+
+	private static void response429(final SelectionKey key) {
+		final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
+		final SocketChannel socketChannel = (SocketChannel) key.channel();
+		final ZResponse response = new ZResponse(socketChannel);
+		response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
+				.body(J.toJSONString(CR.error(message), Include.NON_NULL));
+		response.write();
+		closeSocketChannelAndKeyCancel(key, socketChannel);
 	}
 
 	private static void keepAliveTimeoutJOB() {
