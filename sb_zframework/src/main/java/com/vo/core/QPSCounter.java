@@ -1,9 +1,6 @@
 package com.vo.core;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import com.google.common.collect.HashBasedTable;
 
 /**
  * QPS计数器
@@ -24,7 +21,8 @@ public class QPSCounter {
 	}
 
 	public static final String PREFIX = "QPS";
-	private static final Map<String, Long> MAP = new ConcurrentHashMap<>(16, 1F);
+
+	private static final  HashBasedTable<String, Long, Integer> TABLE = HashBasedTable.create();
 
 	/**
 	 * 返回指定的K在的QPS是否超过了
@@ -48,21 +46,16 @@ public class QPSCounter {
 
 		synchronized (key.intern()) {
 
-			final Long v = QPSCounter.MAP.get(key);
+			final Integer v = TABLE.get(keyword, seconds);
 			if (v == null) {
-				QPSCounter.MAP.put(key, 1L);
+				TABLE.put(keyword, seconds, 1);
 				return true;
 			}
 
-			final List<String> removeKeyList = MAP.keySet().stream().filter(k -> k.startsWith(keyword))
-					.collect(Collectors.toList());
+			TABLE.rowMap().remove(keyword);
 
-			for (final String k : removeKeyList) {
-				MAP.remove(k);
-			}
-
-			final long newCount = v + 1L;
-			QPSCounter.MAP.put(key, newCount);
+			final int newCount = v.intValue() + 1;
+			TABLE.put(keyword, seconds, newCount);
 
 			return newCount <= qP100MS;
 		}
