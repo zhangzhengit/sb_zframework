@@ -118,12 +118,13 @@ public class NioLongConnectionServer {
 				if (!key.isValid()) {
 					continue;
 				}
+
 				try {
 					if (key.isAcceptable()) {
 						handleAccept(key, selector);
 					} else if (key.isReadable()) {
-						final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
-						if (!allow) {
+						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
+								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 							final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
 							final SocketChannel socketChannel = (SocketChannel) key.channel();
 							final ZResponse response = new ZResponse(socketChannel);

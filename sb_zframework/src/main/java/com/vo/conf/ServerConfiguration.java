@@ -93,6 +93,13 @@ public class ServerConfiguration {
 	@ZNotNull
 	private String scanPackage = "com.vo";
 
+	/**
+	 * 是否启用QPS限制 (server.qps)
+	 */
+	@ZNotNull
+	@ZValue(name = "server.qps.limit.enabled", listenForChanges = true)
+	private Boolean qpsLimitEnabled = true;
+
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
