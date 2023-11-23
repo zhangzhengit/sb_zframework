@@ -117,6 +117,12 @@ public class ServerConfiguration {
 	@ZNotEmtpy
 	private String qpsExceedMessage = "访问频繁，请稍后再试";
 
+
+	@ZMin(min = QPSCounter.ZSERVER_QPS_MIN_VALUE)
+	@ZMax(max = 50000)
+	@ZValue(name = "server.client.qps", listenForChanges = true)
+	private Integer clientQPS = 100;
+
 	/**
 	 * 是否启用内置的 StaticController,
 	 * 注意：如果设为false不启用，则需要手动添加Controller处理 StaticController 类里的

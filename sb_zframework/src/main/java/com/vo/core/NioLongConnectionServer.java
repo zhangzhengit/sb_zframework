@@ -76,7 +76,11 @@ public class NioLongConnectionServer {
 
 	private static final int BUFFER_SIZE = SERVER_CONFIGURATION.getByteBufferSize();
 
+	private final TaskRequestHandler requestHandler = new TaskRequestHandler();
+
 	public void startNIOServer(final Integer serverPort) {
+
+		this.requestHandler.start();
 
 		keepAliveTimeoutJOB();
 
@@ -122,7 +126,13 @@ public class NioLongConnectionServer {
 								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
 							NioLongConnectionServer.response429(selectionKey);
 						} else {
-							this.handleRead(selectionKey);
+							final ZArray array = this.handleRead(selectionKey);
+							if (array != null) {
+								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
+								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
+										array.get());
+								this.requestHandler.responseAsync(taskRequest);
+							}
 						}
 					}
 				} catch (final Exception e) {
@@ -134,7 +144,7 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	private static void response429(final SelectionKey key) {
+	public static void response429(final SelectionKey key) {
 		final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ZResponse response = new ZResponse(socketChannel);
@@ -203,10 +213,10 @@ public class NioLongConnectionServer {
 
 	}
 
-	private void handleRead(final SelectionKey key) {
+	private ZArray handleRead(final SelectionKey key) {
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		if (!socketChannel.isOpen()) {
-			return;
+			return null;
 		}
 
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(BUFFER_SIZE);
@@ -254,43 +264,37 @@ public class NioLongConnectionServer {
 
 		if (bytesRead <= 0) {
 			NioLongConnectionServer.closeSocketChannelAndKeyCancel(key, socketChannel);
-			return;
+			return null;
 		}
 
 		if (!socketChannel.isOpen()) {
-			return;
+			return null;
 		}
 
-		NioLongConnectionServer.responseAsync(key, socketChannel, array.get());
+		return array;
 	}
 
-	private synchronized static void responseAsync(final SelectionKey key, final SocketChannel socketChannel,
-			final byte[] requestData) {
-		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(key, socketChannel, requestData));
+	public synchronized static void responseAsync(final ZRequest request, final TaskRequest taskRequest) {
+		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
 	}
 
-	private static void response(final SelectionKey key, final SocketChannel socketChannel, final byte[] requestData) {
-		synchronized (socketChannel) {
+	private static void response(final ZRequest request, final TaskRequest taskRequest) {
 
-//			System.out.println("requestData.length = " + requestData.length);
-			final String requestString = new String(requestData, CHARSET).intern();
-//				System.out.println("requestString = \n" + requestString);
+		synchronized (taskRequest.getSocketChannel()) {
 
-
-			final Task task = new Task(socketChannel);
+			final Task task = new Task(taskRequest.getSocketChannel());
 
 			try {
-				final ZRequest request = task.handleRead(requestString);
-
 				final String contentType = request.getContentType();
 				if (StrUtil.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
 					// setOriginalRequestBytes方法会导致qps降低，FORM_DATA 才set
 					// 后续解析需要，或是不需要，再看.
-					request.setOriginalRequestBytes(requestData);
+					request.setOriginalRequestBytes(taskRequest.getRequestData());
 				}
-				if (socketChannel.isOpen()) {
-					NioLongConnectionServer.response(key, socketChannel, request, task);
+				if (taskRequest.getSocketChannel().isOpen()) {
+					NioLongConnectionServer.response(taskRequest.getSelectionKey(), taskRequest.getSocketChannel(),
+							request, task);
 				}
 
 			} catch (final Exception e) {
@@ -302,13 +306,13 @@ public class NioLongConnectionServer {
 				final ZControllerAdviceActuator a = ZContext.getBean(ZControllerAdviceActuator.class);
 
 				final Object r = a.execute(e);
-				new ZResponse(socketChannel)
+				new ZResponse(taskRequest.getSocketChannel())
 						.httpStatus(HttpStatus.HTTP_500.getCode())
 						.contentType(HeaderEnum.JSON.getType())
 						.body(J.toJSONString(r, Include.NON_NULL))
 						.write();
 
-				closeSocketChannelAndKeyCancel(key, socketChannel);
+				closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
 			}
 		}
 	}
