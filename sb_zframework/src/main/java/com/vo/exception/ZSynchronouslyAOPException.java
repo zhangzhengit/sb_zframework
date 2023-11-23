@@ -1,4 +1,4 @@
-package com.vo.core;
+package com.vo.exception;
 
 import com.vo.validator.ZFException;
 

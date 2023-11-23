@@ -10,7 +10,7 @@ import com.vo.conf.ServerConfiguration;
 import com.vo.conf.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-import com.vo.validator.StartupException;
+import com.vo.exception.StartupException;
 
 import cn.hutool.core.collection.CollUtil;
 

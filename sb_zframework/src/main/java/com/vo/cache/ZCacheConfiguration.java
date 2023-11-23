@@ -4,7 +4,7 @@ import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
 import com.vo.anno.ZConfiguration;
 import com.vo.core.ZContext;
-import com.vo.validator.TypeNotSupportedExcpetion;
+import com.vo.exception.TypeNotSupportedExcpetion;
 
 /**
  *	Cache配置

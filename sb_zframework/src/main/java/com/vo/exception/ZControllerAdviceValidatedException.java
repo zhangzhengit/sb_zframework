@@ -1,6 +1,5 @@
 package com.vo.exception;
 
-import com.vo.validator.ValidatedException;
 import com.votool.common.CR;
 
 /**

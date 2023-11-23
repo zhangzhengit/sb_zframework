@@ -3,7 +3,7 @@ package com.vo.conf;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import com.vo.validator.ValidatedException;
+import com.vo.exception.ValidatedException;
 import com.vo.validator.ZCustom;
 import com.vo.validator.ZCustomValidator;
 

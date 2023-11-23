@@ -14,7 +14,6 @@ import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
 import com.vo.scanner.ClassMap;
-import com.vo.validator.StartupException;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;

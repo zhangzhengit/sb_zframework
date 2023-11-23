@@ -17,6 +17,8 @@ import com.google.common.collect.Sets;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
+import com.vo.exception.TypeNotSupportedExcpetion;
+import com.vo.exception.ValidatedException;
 import com.vo.scanner.ClassMap;
 
 /**

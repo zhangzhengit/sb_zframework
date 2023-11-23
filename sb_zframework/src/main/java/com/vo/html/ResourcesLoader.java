@@ -23,7 +23,7 @@ import com.vo.core.ZContext;
 import com.vo.core.ZRequest;
 import com.vo.core.ZResponse;
 import com.vo.core.ZSingleton;
-import com.vo.validator.ResourceNotExistException;
+import com.vo.exception.ResourceNotExistException;
 
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;

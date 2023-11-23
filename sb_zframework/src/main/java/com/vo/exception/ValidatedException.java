@@ -1,4 +1,6 @@
-package com.vo.validator;
+package com.vo.exception;
+
+import com.vo.validator.ZFException;
 
 /**
  *

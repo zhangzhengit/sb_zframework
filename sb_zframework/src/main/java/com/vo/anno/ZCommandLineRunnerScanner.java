@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.core.ZContext;
-import com.vo.validator.StartupException;
+import com.vo.exception.StartupException;
 
 /**
  *

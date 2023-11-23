@@ -31,8 +31,8 @@ import com.vo.conf.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
-import com.vo.validator.StartupException;
-import com.vo.validator.TypeNotSupportedExcpetion;
+import com.vo.exception.StartupException;
+import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.validator.ZType;
 import com.vo.validator.ZValidator;
 

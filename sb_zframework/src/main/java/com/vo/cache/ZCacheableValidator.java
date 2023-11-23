@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import com.vo.exception.CacheKeyDeclarationException;
 import com.vo.scanner.ClassMap;
 
 /**

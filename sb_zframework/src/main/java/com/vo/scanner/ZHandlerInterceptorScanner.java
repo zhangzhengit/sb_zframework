@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZOrder;
 import com.vo.core.ZContext;
-import com.vo.validator.StartupException;
+import com.vo.exception.StartupException;
 
 import cn.hutool.core.collection.CollUtil;
 

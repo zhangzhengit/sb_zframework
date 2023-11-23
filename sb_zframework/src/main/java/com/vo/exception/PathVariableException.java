@@ -1,6 +1,7 @@
-package com.vo.validator;
+package com.vo.exception;
 
 import com.vo.core.ZPathVariable;
+import com.vo.validator.ZFException;
 
 /**
  * @ZPathVariable 解析异常
