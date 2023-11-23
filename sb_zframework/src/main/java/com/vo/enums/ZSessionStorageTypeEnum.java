@@ -1,4 +1,4 @@
-package com.vo.configuration;
+package com.vo.enums;
 
 /**
  * session 存储方法

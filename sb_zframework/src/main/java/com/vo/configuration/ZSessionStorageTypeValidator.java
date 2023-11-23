@@ -3,6 +3,7 @@ package com.vo.configuration;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import com.vo.enums.ZSessionStorageTypeEnum;
 import com.vo.exception.ValidatedException;
 import com.vo.validator.ZCustom;
 import com.vo.validator.ZCustomValidator;
