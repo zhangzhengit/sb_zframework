@@ -17,11 +17,15 @@ import com.vo.validator.StartupException;
  */
 public class TaskRequestHandler extends Thread {
 
+	public static final String NAME = "request-Dispatcher-Thread";
+
 	public static final String USER_AGENT = "User-Agent";
 	private final BlockingQueue<TaskRequest> queue = new LinkedBlockingQueue<>();
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
+		this.setName(NAME);
+
 		final ImmutableCollection<Object> beanConnection = ZContext.all().values();
 
 		final List<RequestValidatorAdapter> childList = beanConnection.stream()
@@ -38,7 +42,7 @@ public class TaskRequestHandler extends Thread {
 			if (childList.size() > 1) {
 				final String beanName = childList.stream().map(bean -> bean.getClass().getSimpleName())
 						.collect(Collectors.joining(","));
-				String message = RequestValidatorAdapter.class.getCanonicalName() + " 只能有一个子类，当前有["
+				final String message = RequestValidatorAdapter.class.getCanonicalName() + " 只能有一个子类，当前有["
 						+ childList.size() + "]个,[" + beanName + "]";
 				throw new StartupException(message);
 			}
