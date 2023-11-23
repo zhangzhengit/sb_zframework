@@ -1,6 +1,6 @@
 package com.vo.core;
 
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 
 /**
  *

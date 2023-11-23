@@ -22,7 +22,7 @@ import com.vo.anno.ZComponent;
 import com.vo.anno.ZController;
 import com.vo.anno.ZService;
 import com.vo.anno.ZValue;
-import com.vo.conf.ZProperties;
+import com.vo.configuration.ZProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;

@@ -1,4 +1,4 @@
-package com.vo.conf;
+package com.vo.configuration;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZMax;

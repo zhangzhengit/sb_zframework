@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.ZMain;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZContext;

@@ -16,7 +16,7 @@ import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;

@@ -1,11 +1,9 @@
-package com.vo.conf;
+package com.vo.validator;
 
 import java.lang.reflect.Field;
 
 import com.vo.core.QPSCounter;
 import com.vo.exception.ValidatedException;
-import com.vo.validator.ZCustom;
-import com.vo.validator.ZCustomValidator;
 
 /**
  * 必须可以被 ZServer.Counter.QPS_MIN 整除

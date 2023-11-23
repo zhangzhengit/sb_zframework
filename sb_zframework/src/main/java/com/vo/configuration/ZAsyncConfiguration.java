@@ -1,4 +1,4 @@
-package com.vo.conf;
+package com.vo.configuration;
 
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;

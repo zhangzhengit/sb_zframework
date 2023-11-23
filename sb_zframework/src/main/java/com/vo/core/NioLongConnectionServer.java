@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
 import com.vo.cache.J;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;

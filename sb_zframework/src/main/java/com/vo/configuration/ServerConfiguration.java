@@ -1,4 +1,4 @@
-package com.vo.conf;
+package com.vo.configuration;
 
 import java.util.Map;
 
@@ -6,6 +6,7 @@ import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
 import com.vo.core.QPSCounter;
 import com.vo.validator.ZCustom;
+import com.vo.validator.ZDivisibleByCounterQPS_MIN;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;

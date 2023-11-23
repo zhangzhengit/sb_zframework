@@ -17,7 +17,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import com.google.common.collect.ContiguousSet;
-import com.vo.conf.ZProperties;
+import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;

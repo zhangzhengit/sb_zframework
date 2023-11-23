@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
-import com.vo.conf.ZProperties;
+import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;

@@ -1,4 +1,4 @@
-package com.vo.conf;
+package com.vo.configuration;
 
 /**
  * session 存储方法

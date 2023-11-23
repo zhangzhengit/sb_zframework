@@ -16,7 +16,7 @@ import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;

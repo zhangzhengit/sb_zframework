@@ -1,7 +1,7 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.core.HeaderEnum;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;

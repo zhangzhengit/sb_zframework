@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

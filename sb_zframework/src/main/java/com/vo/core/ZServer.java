@@ -18,7 +18,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.J;
-import com.vo.conf.ServerConfiguration;
+import com.vo.configuration.ServerConfiguration;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 import com.votool.ze.ZE;

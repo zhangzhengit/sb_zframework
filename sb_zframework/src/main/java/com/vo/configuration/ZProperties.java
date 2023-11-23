@@ -1,4 +1,4 @@
-package com.vo.conf;
+package com.vo.configuration;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
