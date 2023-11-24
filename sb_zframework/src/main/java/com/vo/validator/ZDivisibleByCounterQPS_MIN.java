@@ -2,6 +2,7 @@ package com.vo.validator;
 
 import java.lang.reflect.Field;
 
+import com.vo.anno.ZValue;
 import com.vo.core.QPSCounter;
 import com.vo.core.QPSEnum;
 import com.vo.exception.ValidatedException;
@@ -30,9 +31,13 @@ public class ZDivisibleByCounterQPS_MIN implements ZCustomValidator {
 			if (v % QPSEnum.SERVER.getMinValue() != 0) {
 				final String message = field.getAnnotation(ZCustom.class).message();
 
-				final String t = object.getClass().getSimpleName() + "." + field.getName() + " 必须配置为可以被 "
+				final String pName = field.isAnnotationPresent(ZValue.class)
+						? "[" + field.getAnnotation(ZValue.class).name() + "]"
+						: "";
+				final String t = object.getClass().getSimpleName() + "." + field.getName() + " " + pName + " 必须配置为可以被 "
 						+ QPSEnum.SERVER.getMinValue() + " (" + QPSCounter.class.getCanonicalName() + ".QPS_MIN)"
 						+ " 整除";
+
 				final String format = String.format(message, t);
 				throw new ValidatedException(format);
 

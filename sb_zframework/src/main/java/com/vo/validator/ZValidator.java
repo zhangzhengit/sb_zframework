@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.Sets;
+import com.vo.anno.ZValue;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZSingleton;
@@ -92,8 +93,10 @@ public class ZValidator {
 		if (doubleValue <= 0D) {
 			final String message = ZPositive.MESSAGE;
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
-
-			final String format = String.format(message, t, v);
+			final String pName = field.isAnnotationPresent(ZValue.class)
+					? "[" + field.getAnnotation(ZValue.class).name() + "]"
+					: "";
+			final String format = String.format(message, t + pName, v);
 
 			throw new ValidatedException(format);
 		}
@@ -147,8 +150,11 @@ public class ZValidator {
 					? ZContext.getBean(ZLengthMessage.class).getMessage()
 					: zl.message();
 
+			final String pName = field.isAnnotationPresent(ZValue.class)
+					? "[" + field.getAnnotation(ZValue.class).name() + "]"
+					: "";
 			final String t = object.getClass().getSimpleName() + "." + field.getName();
-			final String format = String.format(message, t, String.valueOf(zl.min()), String.valueOf(zl.max()),
+			final String format = String.format(message, t + pName, String.valueOf(zl.min()), String.valueOf(zl.max()),
 					String.valueOf(s.length()));
 			throw new ValidatedException(format);
 		}
@@ -185,8 +191,10 @@ public class ZValidator {
 
 				final String message = ZStartWith.MESSAGE;
 				final String t = object.getClass().getSimpleName() + "." + field.getName();
-
-				final String format = String.format(message, t, prefix);
+				final String pName = field.isAnnotationPresent(ZValue.class)
+						? "[" + field.getAnnotation(ZValue.class).name() + "]"
+						: "";
+				final String format = String.format(message, t + pName, prefix);
 
 				throw new ValidatedException(format);
 			}
@@ -224,8 +232,10 @@ public class ZValidator {
 
 				final String message = ZEndsWith.MESSAGE;
 				final String t = object.getClass().getSimpleName() + "." + field.getName();
-
-				final String format = String.format(message, t, endsWith.suffix());
+				final String pName = field.isAnnotationPresent(ZValue.class)
+						? "[" + field.getAnnotation(ZValue.class).name() + "]"
+						: "";
+				final String format = String.format(message, t + pName, endsWith.suffix());
 
 				throw new ValidatedException(format);
 			}
@@ -402,7 +412,12 @@ public class ZValidator {
 	private static void throwZNotEmptyException(final Object object, final Field field) {
 		final String message = ZNotEmtpy.MESSAGE;
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t);
+
+		final String pName = field.isAnnotationPresent(ZValue.class)
+				? "[" + field.getAnnotation(ZValue.class).name() + "]"
+				: "";
+
+		final String format = String.format(message, t + pName);
 		throw new ValidatedException(format);
 	}
 
@@ -543,8 +558,11 @@ public class ZValidator {
 	private static void throwZMinMessage(final Object object, final Field field, final Object min,
 			final Object minFiledValue) {
 		final String message = ZMin.MESSAGE;
+		final String pName = field.isAnnotationPresent(ZValue.class)
+				? "[" + field.getAnnotation(ZValue.class).name() + "]"
+				: "";
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t, min, minFiledValue);
+		final String format = String.format(message, t + pName, min, minFiledValue);
 		throw new ValidatedException(format);
 	}
 
@@ -559,14 +577,22 @@ public class ZValidator {
 	private static void throwZNotNullException(final Object object, final Field field) {
 		final String message = ZNotNull.MESSAGE;
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t);
+
+		final String pName = field.isAnnotationPresent(ZValue.class)
+				? "[" + field.getAnnotation(ZValue.class).name() + "]"
+				: "";
+
+		final String format = String.format(message, t + pName);
 		throw new ValidatedException(format);
 	}
 
 	private static void throwZMaxMessage(final Object object, final Field field, final Object max, final Object maxFiledValue) {
 		final String message = ZMax.MESSAGE;
+		final String pName = field.isAnnotationPresent(ZValue.class)
+				? "[" + field.getAnnotation(ZValue.class).name() + "]"
+				: "";
 		final String t = object.getClass().getSimpleName() + "." + field.getName();
-		final String format = String.format(message, t, max, maxFiledValue);
+		final String format = String.format(message, t + pName, max, maxFiledValue);
 		throw new ValidatedException(format);
 	}
 
