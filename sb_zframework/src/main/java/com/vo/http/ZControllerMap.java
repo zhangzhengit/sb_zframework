@@ -11,7 +11,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.vo.core.QPSCounter;
+import com.vo.core.QPSEnum;
 import com.vo.core.ZContext;
 import com.vo.enums.MethodEnum;
 
@@ -76,9 +76,9 @@ public class ZControllerMap {
 						"@" + ZQPSLimitation.class.getSimpleName() + ".qps 必须大于0,method = " + method.getName());
 			}
 
-			if (qpsL < QPSCounter.ZSERVER_QPS_MIN_VALUE) {
+			if (qpsL < QPSEnum.SERVER.getMinValue()) {
 				throw new IllegalArgumentException("@" + ZQPSLimitation.class.getSimpleName() + ".qps 不能小于"
-						+ QPSCounter.ZSERVER_QPS_MIN_VALUE + ",method = " + method.getName());
+						+ QPSEnum.SERVER.getMinValue() + ",method = " + method.getName());
 			}
 
 			if (qpsL > qps) {

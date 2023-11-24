@@ -270,7 +270,7 @@ public class Task {
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 		// 是否超过 ZRequestMapping.qps
-		if (!QPSCounter.allow(controllerName + method.getName(), qps)) {
+		if (!QPSCounter.allow(controllerName + method.getName(), qps, QPSEnum.API_METHOD)) {
 
 			final String message = "访问频繁，请稍后再试";
 
@@ -293,7 +293,7 @@ public class Task {
 					+ "@" + method.getName()
 					+ "@ZQPSLimitation" + '_'
 					+ request.getSession().getId();
-				if (!QPSCounter.allow(keyword, zqpsLimitation.qps())) {
+				if (!QPSCounter.allow(keyword, zqpsLimitation.qps(), null)) {
 
 					final String message = "接口访问频繁，请稍后再试";
 

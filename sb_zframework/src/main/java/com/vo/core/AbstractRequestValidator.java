@@ -25,7 +25,7 @@ abstract class AbstractRequestValidator {
 	}
 
 	public int qps() {
-		return ZContext.getBean(ServerConfiguration.class).getClientQPS();
+		return ZContext.getBean(ServerConfiguration.class).getClientQps();
 	}
 
 	/**
@@ -40,7 +40,7 @@ abstract class AbstractRequestValidator {
 		final String clientIp = request.getClientIp();
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 		final String keyword = clientIp + "@" + userAgent;
-		final boolean allow = QPSCounter.allow(keyword, this.qps());
+		final boolean allow = QPSCounter.allow(keyword, this.qps(), QPSEnum.CLIENT);
 		return allow;
 	}
 

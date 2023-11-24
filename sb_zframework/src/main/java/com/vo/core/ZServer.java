@@ -104,7 +104,7 @@ public class ZServer extends Thread {
 			while (true) {
 				final SSLSocket socket = (SSLSocket) serverSocket.accept();
 
-				final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps());
+				final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER);
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());

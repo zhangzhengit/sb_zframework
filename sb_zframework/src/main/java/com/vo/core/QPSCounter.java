@@ -11,36 +11,27 @@ import com.google.common.collect.HashBasedTable;
  */
 public class QPSCounter {
 
-	/**
-	 * 服务器允许的QPS最小值
-	 */
-	public static final int ZSERVER_QPS_MIN_VALUE = 100;
-
-	public static int getQpsMin() {
-		return ZSERVER_QPS_MIN_VALUE;
-	}
-
 	public static final String PREFIX = "QPS";
 
-	private static final  HashBasedTable<String, Long, Integer> TABLE = HashBasedTable.create();
+	private static final HashBasedTable<String, Long, Integer> TABLE = HashBasedTable.create();
 
 	/**
-	 * 返回指定的K在的QPS是否超过了
+	 * 返回指定的K在的QPS是否超过了，用枚举限制 minValue不会大于1000
 	 *
 	 * @param keyword
 	 * @param qps
+	 * @param qpsEnum
 	 * @return
 	 *
 	 */
-	public static boolean allow(final String keyword, final long qps) {
+	public static boolean allow(final String keyword, final long qps, final QPSEnum qpsEnum) {
 
 		if (qps <= 0) {
 			return false;
 		}
 
-		final long qP100MS = qps / ZSERVER_QPS_MIN_VALUE;
-
-		final long seconds = System.currentTimeMillis() / (1000 / (ZSERVER_QPS_MIN_VALUE));
+		final long qP100MS = qps / qpsEnum.getMinValue();
+		final long seconds = System.currentTimeMillis() / (1000 / (qpsEnum.getMinValue()));
 
 		final String key = gKey(keyword, seconds);
 

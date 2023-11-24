@@ -123,7 +123,7 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps())) {
+								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER)) {
 							NioLongConnectionServer.response429(selectionKey);
 						} else {
 							final ZArray array = this.handleRead(selectionKey);

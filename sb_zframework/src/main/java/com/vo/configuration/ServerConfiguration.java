@@ -4,9 +4,10 @@ import java.util.Map;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZValue;
-import com.vo.core.QPSCounter;
+import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
 import com.vo.validator.ZCustom;
+import com.vo.validator.ZDivisibleByCounterClientQPS_MIN;
 import com.vo.validator.ZDivisibleByCounterQPS_MIN;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
@@ -105,13 +106,13 @@ public class ServerConfiguration {
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
-	@ZMin(min = QPSCounter.ZSERVER_QPS_MIN_VALUE)
-	@ZMax(max = 52000000)
+	@ZMin(min = ZDivisibleByCounterQPS_MIN.MIN_VALUE)
+	@ZMax(max = ZDivisibleByCounterQPS_MIN.MAX_VALUE)
 	@ZValue(name = "server.qps", listenForChanges = true)
 	@ZCustom(cls = ZDivisibleByCounterQPS_MIN.class)
 	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
 	// 如果不限制的话，是否其他ip的请求优先处理？
-	private Integer qps = 10000 * 20;
+	private Integer qps = QPSEnum.SERVER.getDefaultValue();
 
 	/**
 	 * 访问超过 本类 qps限制时给客户端的提示语
@@ -119,11 +120,11 @@ public class ServerConfiguration {
 	@ZNotEmtpy
 	private String qpsExceedMessage = "访问频繁，请稍后再试";
 
-
-	@ZMin(min = QPSCounter.ZSERVER_QPS_MIN_VALUE)
-	@ZMax(max = 50000)
+	@ZMin(min = ZDivisibleByCounterClientQPS_MIN.MIN_VALUE)
+	@ZMax(max = ZDivisibleByCounterClientQPS_MIN.MAX_VALUE)
 	@ZValue(name = "server.client.qps", listenForChanges = true)
-	private Integer clientQPS = 100;
+	@ZCustom(cls = ZDivisibleByCounterClientQPS_MIN.class)
+	private Integer clientQps = QPSEnum.CLIENT.getDefaultValue();
 
 	/**
 	 * 是否启用内置的 StaticController,
