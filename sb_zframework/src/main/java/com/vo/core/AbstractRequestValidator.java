@@ -15,7 +15,7 @@ import com.vo.configuration.ServerConfiguration;
  */
 abstract class AbstractRequestValidator {
 
-	public void hand(final ZRequest request, final TaskRequest taskRequest) {
+	public void handle(final ZRequest request, final TaskRequest taskRequest) {
 		final boolean validated = this.validated(request, taskRequest);
 		if (validated) {
 			this.passed(request, taskRequest);
@@ -29,14 +29,31 @@ abstract class AbstractRequestValidator {
 	}
 
 	/**
-	 * 校验 此请求是否放行，默认实现为 根据clientIp和User-Agent判断QPS不能超过 DEFAULT_QPS
+	 * 校验此请求是否放行，默认实现为：
+	 *
+	 * 1、如果启用了 响应 ZSESSIONID并且服务器中存在对应的session则按ZSESSIONID来判断为同一个客户端
+	 * 2、没启用ZSESSIONID，则根据clientIp和User-Agent来判断为同一个客户端
+	 *
+	 * 	判断QPS不能超过 配置的值
 	 *
 	 * @param request
-	 * @param taskRequest TODO
+	 * @param taskRequest
 	 * @return
 	 *
 	 */
 	public boolean validated(final ZRequest request, final TaskRequest taskRequest) {
+
+		// 如果启用了响应 ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
+		if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getResponseZSessionId())) {
+			final ZSession session = request.getSession(false);
+			if (session != null) {
+				final String keyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
+				final boolean allow = QPSCounter.allow(keyword, this.qps(), QPSEnum.CLIENT);
+				return allow;
+			}
+		}
+
+		// 启用了响应 ZSESSIONID，则认为 clientIp和User-Agent都相同就是同一个客户端
 		final String clientIp = request.getClientIp();
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 		final String keyword = clientIp + "@" + userAgent;

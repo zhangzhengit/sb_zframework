@@ -61,7 +61,7 @@ public class TaskRequestHandler extends Thread {
 						.intern();
 				final Task task = new Task(taskRequest.getSocketChannel());
 				final ZRequest request = task.handleRead(requestString);
-				this.requestValidator.hand(request, taskRequest);
+				this.requestValidator.handle(request, taskRequest);
 			} catch (final Exception e) {
 				e.printStackTrace();
 				continue;
