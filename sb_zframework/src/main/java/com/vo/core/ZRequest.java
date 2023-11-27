@@ -175,7 +175,7 @@ public class ZRequest {
 		if (ArrayUtil.isNotEmpty(cs)) {
 			for (final ZCookie zc : cs) {
 				if (ZRequest.Z_SESSION_ID.equals(zc.getName())) {
-					final ZSession session = ZSessionMap.getByZSessionId(zc.getValue());
+					final ZSession session = ZSessionMap.get(zc.getValue());
 
 					if (session != null) {
 						return session;

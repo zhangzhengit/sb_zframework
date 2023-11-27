@@ -18,8 +18,8 @@ public class ZDivisibleByCounterClientQPS_MIN implements ZCustomValidator {
 	/**
 	 * 针对于同一个客户端的QPS限制最小值
 	 */
-	public static final int MIN_VALUE = 100;
-	public static final int MAX_VALUE = 1000;
+	public static final int MIN_VALUE = 10;
+	public static final int MAX_VALUE = 10000;
 
 	public static final int DEFAULT_VALUE = 500;
 
