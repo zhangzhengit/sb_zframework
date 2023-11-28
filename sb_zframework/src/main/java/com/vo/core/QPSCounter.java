@@ -24,6 +24,10 @@ public class QPSCounter {
 	 * @return
 	 *
 	 */
+	// FIXME 2023年11月28日 下午5:51:56 zhanghen: TODO 加个参数：是否平滑。现在实现是平滑的。
+	// 但有的情况就是需要不平滑的处理请求，比如浏览器请求html页面，同一个页面会同时发起多个css js等请求
+	// 这种情况下，比如 server.client.qps=10，就很容易出现429，因为请求集中，但server.client.qps设大了
+	// 又容易被刷，所以这种情况就要不平滑地处理请求。所以此方法要改为可选是否平滑处理。
 	public static boolean allow(final String keyword, final long qps, final QPSEnum qpsEnum) {
 
 		if (qps <= 0) {
