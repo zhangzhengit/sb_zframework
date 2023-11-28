@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.vo.core.QPSEnum;
 import com.vo.core.ZContext;
 import com.vo.enums.MethodEnum;
+import com.vo.exception.StartupException;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -54,11 +55,16 @@ public class ZControllerMap {
 
 		objectMap.put(method, object);
 
-		final ZRequestMappingConf zrmConf = ZContext.getBean(ZRequestMappingConf.class);
+		final ZRequestMappingConfigurationProperties zrmConf = ZContext.getBean(ZRequestMappingConfigurationProperties.class);
 		final int qps = requestMapping.qps() == ZRequestMapping.DEFAULT_QPS ? zrmConf.getQps() : requestMapping.qps();
 		if (qps <= 0) {
-			throw new IllegalArgumentException(
-					"接口qps不能设为小于0,method = " + method.getName() + "\t" + "qps = " + qps);
+			throw new StartupException(
+					"接口qps必须大于0,method = " + method.getName() + ",\t" + "qps = " + qps);
+		}
+
+		if (qps % QPSEnum.API_METHOD.getMinValue() != 0) {
+			throw new StartupException("接口qps必须可以被 " + QPSEnum.API_METHOD.getMinValue() + "整除,method = "
+					+ method.getName() + ",\t" + "qps = " + qps);
 		}
 
 		methodQPSTable.put(object.getClass().getCanonicalName(), method.getName(), qps);

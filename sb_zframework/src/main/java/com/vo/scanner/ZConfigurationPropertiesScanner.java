@@ -426,23 +426,24 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static void checkModifiers(final Class<?> cs, final Field field) {
-		final int modifiers = field.getModifiers();
-		if (Modifier.isPublic(modifiers)) {
-			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用public修饰");
-		}
-		if (Modifier.isStatic(modifiers)) {
-			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用static修饰");
-		}
-		if (Modifier.isFinal(modifiers)) {
-			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用final修饰");
-		}
-		if (Modifier.isAbstract(modifiers)) {
-			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
-					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用abstract修饰");
-		}
+		// FIXME 2023年11月28日 下午5:31:44 zhanghen: XXX 下面的校验似乎不校验也可以？
+//		final int modifiers = field.getModifiers();
+//		if (Modifier.isPublic(modifiers)) {
+//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用public修饰");
+//		}
+//		if (Modifier.isStatic(modifiers)) {
+//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用static修饰");
+//		}
+//		if (Modifier.isFinal(modifiers)) {
+//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用final修饰");
+//		}
+//		if (Modifier.isAbstract(modifiers)) {
+//			throw new IllegalArgumentException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 "
+//					+ cs.getSimpleName() + " 的字段 " + field.getName() + " 不能用abstract修饰");
+//		}
 	}
 
 	public static Set<Class<?>> scanPackage(final String... packageName) {

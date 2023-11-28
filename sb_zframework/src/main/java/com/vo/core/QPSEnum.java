@@ -1,5 +1,6 @@
 package com.vo.core;
 
+import com.vo.http.ZRequestMappingConfigurationProperties;
 import com.vo.validator.ZDivisibleByCounterClientQPS_MIN;
 import com.vo.validator.ZDivisibleByCounterQPS_MIN;
 
@@ -21,20 +22,23 @@ public enum QPSEnum {
 	/**
 	 * 对于整个服务器的限制
 	 */
-	SERVER(ZDivisibleByCounterQPS_MIN.MIN_VALUE, ZDivisibleByCounterQPS_MIN.MAX_VALUE,
-			ZDivisibleByCounterQPS_MIN.DEFAULT_VALUE),
+	SERVER(ZDivisibleByCounterQPS_MIN.MIN_VALUE,
+		   ZDivisibleByCounterQPS_MIN.MAX_VALUE,
+	   ZDivisibleByCounterQPS_MIN.DEFAULT_VALUE),
 
 	/**
 	 * 对于一个接口方法的限制
 	 */
-	API_METHOD(SERVER.getMinValue(), SERVER.getMaxValue(), SERVER.getDefaultValue()),
+	API_METHOD(ZRequestMappingConfigurationProperties.MIN_VALUE,
+			   ZRequestMappingConfigurationProperties.MAX_VALUE,
+		   ZRequestMappingConfigurationProperties.DEFAULT_VALUE),
 
 	/**
 	 * 对于同一个客户端的限制
 	 */
 	CLIENT(ZDivisibleByCounterClientQPS_MIN.MIN_VALUE,
-			ZDivisibleByCounterClientQPS_MIN.MAX_VALUE,
-			ZDivisibleByCounterClientQPS_MIN.DEFAULT_VALUE),
+		   ZDivisibleByCounterClientQPS_MIN.MAX_VALUE,
+	   ZDivisibleByCounterClientQPS_MIN.DEFAULT_VALUE),
 
 	;
 
