@@ -3,6 +3,7 @@ package com.vo.scanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -135,12 +136,27 @@ public class ZComponentScanner {
 			final String a = argList.stream().map(ma ->  ma.getName()).collect(Collectors.joining(","));
 			final Class<?> returnType = m.getReturnType();
 			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
-				final String insertBody =
-						"if (zvdto.getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
-						+  "for (final " + Field.class.getCanonicalName() + " field : zvdto.getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-						+  		 ZValidator.class.getCanonicalName() + ".validatedAll(zvdto, field);"  + Task.NEW_LINE
-						+   "}" + Task.NEW_LINE
-						+ "}";
+
+				final StringBuilder insert = new StringBuilder();
+				final Parameter[] ps = m.getParameters();
+				for (final Parameter p : ps) {
+					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);;
+					if (!annotationPresent) {
+						continue;
+					}
+
+					final String name = p.getName();
+					final String insertBody =
+							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
+							+  "for (final " + Field.class.getCanonicalName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+							+  		 ZValidator.class.getCanonicalName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
+							+   "}" + Task.NEW_LINE
+							+ "}";
+
+					insert.append(insertBody);
+				}
+
+				final String insertBody = insert.toString();
 
 				final String body =
 						ZAOPScaner.VOID.equals(returnType.getName())
