@@ -18,7 +18,7 @@ public class ZDivisibleByCounterQPS_MIN implements ZCustomValidator {
 
 	public static final int MIN_VALUE = 100;
 	public static final int MAX_VALUE = 10000 * 100;
-	public static final int DEFAULT_VALUE = 10000 * 5;
+	public static final int DEFAULT_VALUE = 10000 * 20;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {
