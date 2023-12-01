@@ -207,14 +207,8 @@ public class ZConfigurationPropertiesScanner {
 		}
 		System.out.println("set = " + set);
 		try {
-			field.setAccessible(true);
-			// set为null，为了走下面的校验 @ZNotNull的流程
-			if (set.isEmpty()) {
-				final Object object2 = field.get(object);
-				if (object2 == null) {
-					field.set(object, null);
-				}
-			} else {
+			if (!set.isEmpty()) {
+				field.setAccessible(true);
 				field.set(object, set);
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -279,9 +273,11 @@ public class ZConfigurationPropertiesScanner {
 		System.out.println("list = " + subList);
 
 		try {
-			field.setAccessible(true);
-			// set为null，为了走下面的校验 @ZNotNull的流程
-			field.set(object, CollUtil.isEmpty(subList) ? null : subList);
+			if (CollUtil.isNotEmpty(subList)) {
+				field.setAccessible(true);
+				field.set(object, subList);
+			}
+
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
@@ -366,9 +362,11 @@ public class ZConfigurationPropertiesScanner {
 		}
 
 		try {
-			field.setAccessible(true);
-			// set为null，为了走后面的校验ZNotNull流程
-			field.set(object, map.isEmpty() ? null : map);
+			if (!map.isEmpty()) {
+				field.setAccessible(true);
+				field.set(object, map);
+			}
+
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
