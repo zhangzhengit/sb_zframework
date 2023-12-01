@@ -40,6 +40,11 @@ public enum QPSEnum {
 		   ZDivisibleByCounterClientQPS_MIN.MAX_VALUE,
 	   ZDivisibleByCounterClientQPS_MIN.DEFAULT_VALUE),
 
+	/**
+	 * [不]平滑处理
+	 */
+	UNEVEN(1, Integer.MAX_VALUE, 10000),
+
 	;
 
 	private Integer minValue;
