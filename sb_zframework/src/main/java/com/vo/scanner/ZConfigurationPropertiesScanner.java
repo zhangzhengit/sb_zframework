@@ -2,7 +2,6 @@ package com.vo.scanner;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -26,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.anno.ZConfigurationPropertiesRegistry;
 import com.vo.anno.ZValue;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
@@ -84,6 +84,7 @@ public class ZConfigurationPropertiesScanner {
 			ZContext.addBean(cs.getCanonicalName(), object);
 		}
 
+
 		for (final Class<?> cls : csSet) {
 			// 如果Class有 @ZAutowired 字段，则先生成对应的的对象，然后注入进来
 			Lists.newArrayList(cls.getDeclaredFields()).stream()
@@ -95,6 +96,16 @@ public class ZConfigurationPropertiesScanner {
 				.filter(f -> f.isAnnotationPresent(ZValue.class))
 				.forEach(f -> ZValueScanner.inject(cls, f));
 		}
+		
+		final List<Object> zcpList = ZContext.all().values().stream()
+				.filter(b -> b.getClass().isAnnotationPresent(ZConfigurationProperties.class))
+				.collect(Collectors.toList());
+		final ZConfigurationPropertiesRegistry configurationPropertiesRegistry = ZSingleton.getSingletonByClass(ZConfigurationPropertiesRegistry.class);
+		for (final Object zcp : zcpList) {
+			configurationPropertiesRegistry.addConfigurationPropertie(zcp);
+		}
+		ZContext.addBean(ZConfigurationPropertiesRegistry.class, configurationPropertiesRegistry);
+		
 	}
 
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) throws Exception {

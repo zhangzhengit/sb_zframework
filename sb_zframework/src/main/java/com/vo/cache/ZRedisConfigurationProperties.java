@@ -36,6 +36,9 @@ public class ZRedisConfigurationProperties {
 	@ZNotNull
 	private Integer maxIdle = 2;
 
+	/**
+	 * 密码，可以为空，不做限制，也无默认值
+	 */
 	private String password;
 
 }

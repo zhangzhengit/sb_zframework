@@ -7,7 +7,10 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZBean;
+import com.vo.anno.ZCondition;
+import com.vo.anno.ZConditional;
 import com.vo.anno.ZConfiguration;
+import com.vo.anno.ZConfigurationPropertiesRegistry;
 import com.vo.anno.ZValue;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -59,6 +62,18 @@ public class ZConfigurationScanner {
 					continue;
 				}
 
+				boolean matches = false;
+				final ZConditional conditional = method.getAnnotation(ZConditional.class);
+				if (conditional != null) {
+					final Class<? extends ZCondition> value = conditional.value();
+					final ZConfigurationPropertiesRegistry configurationPropertiesRegistry = ZContext
+							.getBean(ZConfigurationPropertiesRegistry.class);
+					matches = ZSingleton.getSingletonByClass(value).matches(configurationPropertiesRegistry);
+					if (!matches) {
+						continue;
+					}
+				}
+
 				check(method);
 
 				try {
@@ -67,7 +82,14 @@ public class ZConfigurationScanner {
 
 					final Object r = method.invoke(newInstance, null);
 					if (r == null) {
-						throw new RuntimeException("@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不能返回null");
+						if (matches) {
+							throw new RuntimeException(
+									"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName()
+									+ " 通过了@" + ZConditional.class.getSimpleName() + "校验，但是返回了null："
+									+ " 不能返回null");
+						}
+						throw new RuntimeException(
+								"@" + ZBean.class.getSimpleName() + " 方法 " + method.getName() + " 不能返回null");
 					}
 
 					LOG.info("@{}类[{}]的@{}方法{},创建bean完成,bean={}", ZConfiguration.class.getSimpleName(), cls.getSimpleName(),
