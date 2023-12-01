@@ -270,7 +270,7 @@ public class Task {
 		final String controllerName = zController.getClass().getCanonicalName();
 		final Integer qps = ZControllerMap.getQPSByControllerNameAndMethodName(controllerName, method.getName());
 		// 是否超过 ZRequestMapping.qps
-		if (!QPSCounter.allow(controllerName + method.getName(), qps, QPSEnum.API_METHOD)) {
+		if (!QPSCounter.allow("API" + controllerName + method.getName(), qps, QPSEnum.API_METHOD)) {
 
 			final String message = "访问频繁，请稍后再试";
 
