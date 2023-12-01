@@ -96,7 +96,7 @@ public class ZConfigurationPropertiesScanner {
 				.filter(f -> f.isAnnotationPresent(ZValue.class))
 				.forEach(f -> ZValueScanner.inject(cls, f));
 		}
-		
+
 		final List<Object> zcpList = ZContext.all().values().stream()
 				.filter(b -> b.getClass().isAnnotationPresent(ZConfigurationProperties.class))
 				.collect(Collectors.toList());
@@ -105,7 +105,7 @@ public class ZConfigurationPropertiesScanner {
 			configurationPropertiesRegistry.addConfigurationPropertie(zcp);
 		}
 		ZContext.addBean(ZConfigurationPropertiesRegistry.class, configurationPropertiesRegistry);
-		
+
 	}
 
 	private static void findValueAndSetValue(final String prefix, final Object object, final Field field) throws Exception {
@@ -209,7 +209,14 @@ public class ZConfigurationPropertiesScanner {
 		try {
 			field.setAccessible(true);
 			// set为null，为了走下面的校验 @ZNotNull的流程
-			field.set(object, set.isEmpty() ? null : set);
+			if (set.isEmpty()) {
+				final Object object2 = field.get(object);
+				if (object2 == null) {
+					field.set(object, null);
+				}
+			} else {
+				field.set(object, set);
+			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
