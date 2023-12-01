@@ -22,7 +22,10 @@ public class ZCacheConfiguration {
 
 	public static final String MIXED = "MIXED";
 
-	public static final String DEFAULT = MIXED;
+	/**
+	 * 默认方式为MEMORY
+	 */
+	public static final String DEFAULT = MEMORY;
 
 	@ZAutowired
 	private ZCacheConfigurationProperties cacheConfigurationProperties;
