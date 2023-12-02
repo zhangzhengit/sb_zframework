@@ -147,7 +147,7 @@ public class ZValidator {
 		if (s.length() < zl.min() || s.length() > zl.max()) {
 
 			final String message = ZLength.MESSAGE_DEFAULT.equals(zl.message())
-					? ZContext.getBean(ZLengthMessage.class).getMessage()
+					? ZContext.getBean(ZLengthMessageConfigurationProperties.class).getMessage()
 					: zl.message();
 
 			final String pName = field.isAnnotationPresent(ZValue.class)

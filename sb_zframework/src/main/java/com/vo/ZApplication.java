@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.collect.Lists;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
@@ -73,7 +73,7 @@ public class ZApplication {
 		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
-		final Object serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final Object serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		LOG.info("ZApplication启动成功,耗时{}秒,freeMemory={}MB,totalMemory={}MB,maxMemory={}MB,ServerConfiguration={}",
 						((t2 - t1) / 1000),

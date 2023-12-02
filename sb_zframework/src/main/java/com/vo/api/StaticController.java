@@ -1,7 +1,7 @@
 package com.vo.api;
 
 import com.vo.anno.ZController;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.HeaderEnum;
 import com.vo.core.ZGzip;
 import com.vo.core.ZMappingRegex;
@@ -74,7 +74,7 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.CSS.getType());
@@ -117,7 +117,7 @@ public class StaticController {
 			return;
 		}
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final Boolean gzipEnable = serverConfiguration.getGzipEnable();
 		final boolean gzipContains = serverConfiguration.gzipContains(HeaderEnum.HTML.getType());
 		final String html = ResourcesLoader.loadStaticResourceString(resourceName);

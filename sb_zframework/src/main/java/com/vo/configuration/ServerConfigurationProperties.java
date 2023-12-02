@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
-public class ServerConfiguration {
+public class ServerConfigurationProperties {
 
 	/**
 	 * 启动的端口号

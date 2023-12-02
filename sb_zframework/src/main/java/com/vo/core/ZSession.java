@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,7 +34,7 @@ public class ZSession {
 		this.id = id;
 		this.createTime = createTime;
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final Long sessionTimeout = serverConfiguration.getSessionTimeout();
 		this.setMaxInactiveInterval(sessionTimeout);
 	}

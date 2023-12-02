@@ -16,7 +16,7 @@ import com.vo.anno.ZController;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
@@ -54,7 +54,7 @@ public class ZControllerScanner {
 		final Set<Class<?>> zcSet = ClassMap.scanPackageByAnnotation(ZController.class, packageName);
 		ZControllerScanner.LOG.info("带有[{}]的类个数={}", ZController.class.getCanonicalName(), zcSet.size());
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		for (final Class<?> cls : zcSet) {
 			final Boolean staticControllerEnable = serverConfiguration.getStaticControllerEnable();

@@ -16,7 +16,7 @@ import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
@@ -107,7 +107,7 @@ public class ZMain {
 
 			ZCacheableValidator.validated(packageName);
 
-			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
 				System.setProperty(STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
 				System.out.println("staticPath = " + serverConfiguration.getStaticPath());
@@ -120,7 +120,7 @@ public class ZMain {
 			ZAutowiredScanner.after();
 
 			// 打印一下配置类信息
-			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getPrintConfigurationProperties())) {
+			if (Boolean.TRUE.equals(ZContext.getBean(ServerConfigurationProperties.class).getPrintConfigurationProperties())) {
 				printZConfigurationProperties();
 			}
 

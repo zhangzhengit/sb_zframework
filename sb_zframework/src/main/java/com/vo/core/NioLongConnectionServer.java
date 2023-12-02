@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.Lists;
 import com.vo.cache.J;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.enums.ConnectionEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.ZControllerAdviceActuator;
@@ -57,7 +57,7 @@ public class NioLongConnectionServer {
 
 	public static final String SERVER = HttpHeaderEnum.SERVER.getValue();
 
-	public static final String SERVER_VALUE = ZContext.getBean(ServerConfiguration.class).getName();
+	public static final String SERVER_VALUE = ZContext.getBean(ServerConfigurationProperties.class).getName();
 	public static final String CONNECTION = HttpHeaderEnum.CONNECTION.getValue();
 
 	/**
@@ -72,7 +72,7 @@ public class NioLongConnectionServer {
 	// FIXME 2023年7月5日 上午6:56:44 zhanghen: 改为自最后一次活动后开始计时，超时后关闭
 	private final static Map<Long, SS> SOCKET_CHANNEL_MAP = new ConcurrentHashMap<>(16, 1F);
 
-	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 	private static final int BUFFER_SIZE = SERVER_CONFIGURATION.getByteBufferSize();
 

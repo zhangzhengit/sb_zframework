@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "validator.constraints.length")
-public class ZLengthMessage {
+public class ZLengthMessageConfigurationProperties {
 
 //	@ZNotEmtpy
 	// FIXME 2023年11月1日 下午6:51:35 zhanghen: 如果此值配置为 validator.constraints.length.message=validator.constraints.length.message

@@ -18,7 +18,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.J;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
 import com.votool.ze.ZE;
@@ -44,15 +44,15 @@ public class ZServer extends Thread {
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
-	private static final ServerConfiguration SERVER_CONFIGURATION = ZSingleton
-			.getSingletonByClass(ServerConfiguration.class);
+	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZSingleton
+			.getSingletonByClass(ServerConfigurationProperties.class);
 
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATION.getThreadCount(),
 			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
 
 	@Override
 	public void run() {
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		if (serverConfiguration.getSslEnable()) {
 			LOG.trace("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
 			ZServer.startSSLServer();

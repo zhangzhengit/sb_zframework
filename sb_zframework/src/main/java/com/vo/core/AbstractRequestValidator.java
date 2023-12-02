@@ -2,7 +2,7 @@ package com.vo.core;
 
 import java.util.Optional;
 
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -29,7 +29,7 @@ abstract class AbstractRequestValidator {
 	}
 
 	public int qps() {
-		return ZContext.getBean(ServerConfiguration.class).getClientQps();
+		return ZContext.getBean(ServerConfigurationProperties.class).getClientQps();
 	}
 
 	/**
@@ -49,7 +49,7 @@ abstract class AbstractRequestValidator {
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 
 		// 启用了响应 ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
-		if (Boolean.TRUE.equals(ZContext.getBean(ServerConfiguration.class).getResponseZSessionId())) {
+		if (Boolean.TRUE.equals(ZContext.getBean(ServerConfigurationProperties.class).getResponseZSessionId())) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
 				final String keyword = ZRequest.Z_SESSION_ID + "@" + session.getId();

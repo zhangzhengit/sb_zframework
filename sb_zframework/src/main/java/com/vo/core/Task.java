@@ -38,7 +38,7 @@ import com.vo.anno.ZRequestHeader;
 import com.vo.aop.InterceptorParameter;
 import com.vo.api.StaticController;
 import com.vo.cache.J;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.ZRequest.RequestLine;
 import com.vo.core.ZRequest.RequestParam;
 import com.vo.enums.MethodEnum;
@@ -371,7 +371,7 @@ public class Task {
 
 				final String html = ZTemplate.freemarker(htmlContent);
 
-				final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+				final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 				if (serverConfiguration.getGzipEnable()
 						&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
 						&& request.isSupportGZIP()) {
@@ -394,7 +394,7 @@ public class Task {
 		}
 
 		final String json = J.toJSONString(r, Include.NON_NULL);
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		if (serverConfiguration.getGzipEnable()
 				&& serverConfiguration.gzipContains(DEFAULT_CONTENT_TYPE.getType())
 				&& request.isSupportGZIP()) {

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.collect.HashBasedTable;
 import com.vo.ZMain;
-import com.vo.configuration.ServerConfiguration;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.HeaderEnum;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -38,7 +38,7 @@ import cn.hutool.core.util.StrUtil;
  */
 public class ResourcesLoader {
 
-	private static ServerConfiguration SERVER_CONFIGURATION= ZContext.getBean(ServerConfiguration.class);
+	private static ServerConfigurationProperties SERVER_CONFIGURATION= ZContext.getBean(ServerConfigurationProperties.class);
 
 	private final static HashBasedTable<ResourcesTypeEnum, String, Object> CACHE_TABLE = HashBasedTable.create();
 
@@ -75,7 +75,7 @@ public class ResourcesLoader {
 				e.printStackTrace();
 			}
 		} else {
-			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 
@@ -98,7 +98,7 @@ public class ResourcesLoader {
 	 */
 	public static long writeResourceToOutputStreamThenClose(final String resourceName, final HeaderEnum cte, final ZResponse response) {
 
-		final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		final String staticPrefix = serverConfiguration.getStaticPrefix();
 		final String key = staticPrefix + resourceName;
 
@@ -235,7 +235,7 @@ public class ResourcesLoader {
 			}
 		} else {
 
-			final ServerConfiguration serverConfiguration = ZSingleton.getSingletonByClass(ServerConfiguration.class);
+			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 			final String staticPrefix = serverConfiguration.getStaticPrefix();
 			final String key = staticPrefix + resourceName;
 
