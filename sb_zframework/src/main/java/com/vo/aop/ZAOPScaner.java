@@ -3,6 +3,7 @@ package com.vo.aop;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -181,13 +182,26 @@ public class ZAOPScaner {
 			// 无自定义注解的情况：
 			// 1 看此方法参数是否有 @ZValidated 注解，有则给此方法body插入 校验代码
 			if (Lists.newArrayList(m.getParameterTypes()).stream().filter(pa -> pa.isAnnotationPresent(ZValidated.class)).findAny().isPresent()) {
-				final String insertBody =
-						"if (zvdto.getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
-						+  "for (final " + Field.class.getCanonicalName() + " field : zvdto.getClass().getDeclaredFields()) {"  + Task.NEW_LINE
-						+  		 ZValidator.class.getCanonicalName() + ".validatedAll(zvdto, field);"  + Task.NEW_LINE
-						+   "}" + Task.NEW_LINE
-						+ "}";
 
+				final StringBuilder insert = new StringBuilder();
+				final Parameter[] ps = m.getParameters();
+				for (final Parameter p : ps) {
+					final boolean annotationPresent = p.getType().isAnnotationPresent(ZValidated.class);;
+					if (!annotationPresent) {
+						continue;
+					}
+
+					final String name = p.getName();
+					final String insertBody =
+							"if ("+ name +".getClass().isAnnotationPresent(" + ZValidated.class.getCanonicalName() + ".class)) {"  + Task.NEW_LINE
+							+  "for (final " + Field.class.getCanonicalName() + " field : " + name + ".getClass().getDeclaredFields()) {"  + Task.NEW_LINE
+							+  		 ZValidator.class.getCanonicalName() + ".validatedAll("+name+", field);"  + Task.NEW_LINE
+							+   "}" + Task.NEW_LINE
+							+ "}";
+
+					insert.append(insertBody);
+				}
+				final String insertBody = insert.toString();
 				final String body =
 						VOID.equals(returnType.getName())
 						? "super." + m.getName() + "(" + a + ");"
