@@ -33,6 +33,16 @@ public @interface ZController {
 	 */
 	String prefix() default "";
 
+	/**
+	 * 描述，仅用于生成API文档，对于程序代码来说无任何用途
+	 *
+	 * @return
+	 *
+	 */
+	// FIXME 2023年12月2日 下午10:48:40 zhanghen: 
+	// TODO 做一个类似swagger的功能，扫描本程序所有注解来生成一个详细的文档
+	String description() default "";
+
 	BeanModeEnum modeEnum() default BeanModeEnum.SINGLETON;
 
 }
