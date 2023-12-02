@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
-import com.vo.aop.ZAOP;
-import com.vo.aop.ZIAOP;
 import com.vo.api.StaticController;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
@@ -31,7 +29,6 @@ import com.vo.http.ZControllerMap;
 import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -82,6 +79,9 @@ public class ZControllerScanner {
 
 				final Object controllerObject = ZControllerScanner.getSingleton(cls);
 
+				final ZController controller = cls.getAnnotation(ZController.class);
+				final String prefix = n(controller.prefix());
+
 				// 校验 @ZRequestMapping
 				final ZRequestMapping requestMappingAnnotation = method.getAnnotation(ZRequestMapping.class);
 				if (requestMappingAnnotation != null) {
@@ -93,7 +93,7 @@ public class ZControllerScanner {
 					for (int i = 0; i < requestMappingArray.length; i++) {
 						final String mapping = requestMappingArray[i];
 						final MethodEnum methodEnum = requestMappingAnnotation.method();
-						ZControllerMap.put(methodEnum, mapping, method, controllerObject, isRegex[i]);
+						ZControllerMap.put(methodEnum, prefix + mapping, method, controllerObject, isRegex[i]);
 					}
 				}
 
@@ -102,6 +102,34 @@ public class ZControllerScanner {
 		}
 
 		return zcSet;
+	}
+
+	/**
+	 * 简单判断一下prefix 以/开头不以/结尾
+	 * TODO 使用正则表达式来判断
+	 *
+	 * @param prefix
+	 * @return
+	 *
+	 */
+	private static String n(final String prefix) {
+		if (StrUtil.isEmpty(prefix)) {
+			return "";
+		}
+
+		if (!prefix.equals(prefix.trim())) {
+			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 不能是blank");
+		}
+
+		if (prefix.charAt(0) != '/') {
+			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 必须以/开头");
+		}
+
+		if (prefix.charAt(prefix.length() - 1) == '/') {
+			throw new StartupException("@" + ZController.class.getSimpleName() + ".prefix" + " 不能以/结尾");
+		}
+
+		return prefix;
 	}
 
 	private static void checkNoVoidWithZResponse(final Method method) {

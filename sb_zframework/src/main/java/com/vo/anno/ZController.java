@@ -32,13 +32,16 @@ import com.vo.enums.BeanModeEnum;
 public @interface ZController {
 
 	/**
-	 * 匹配的路径前缀
+	 * 接口的路径前缀，如：/test，
+	 * 则本类下的接口如： @ZRequestMapping(mapping = { "/ok" })
+	 * 则次接口 mapping值为加入/test后的：/test/ok。
+	 *
+	 * 本属性值默认为""
 	 *
 	 * @return
 	 *
 	 */
-	// FIXME 2023年7月9日 上午10:19:32 zhanghen: 暂未实现，注释掉
-//	String prefix() default "";
+	String prefix() default "";
 
 	BeanModeEnum modeEnum() default BeanModeEnum.SINGLETON;
 
