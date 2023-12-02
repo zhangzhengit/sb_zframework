@@ -1,17 +1,17 @@
 package com.vo;
 
-import java.util.List;
-
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.vo.core.ZContext;
+import com.vo.scanner.ZApplicationEvent;
+import com.vo.scanner.ZApplicationEventPublisher;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 程序启动的信息
@@ -22,28 +22,27 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public final class ZApplicationContext {
 
 	/**
 	 * 程序启动扫描的包铭
 	 */
-	private List<String> scanPackageNameList;
+	private final ImmutableList<String> scanPackageNameList;
 
 	/**
 	 * 是否启用http服务器
 	 */
-	private boolean httpEnable;
+	private final boolean httpEnable;
 
 	/**
 	 * java命令行中传来的参数
 	 */
-	private String[] args;
+	private final String[] args;
 
 	/**
 	 * 配置文件信息
 	 */
-	private PropertiesConfiguration properties;
+	private final PropertiesConfiguration properties;
 
 	/**
 	 * 获取容器中所有的bean
@@ -100,6 +99,16 @@ public final class ZApplicationContext {
 	 */
 	public void registerBeanDefinition(final String beanName, final Object bean) {
 		ZContext.addBean(beanName, bean);
+	}
+
+	/**
+	 * 发布一个事件
+	 *
+	 * @param event
+	 *
+	 */
+	public void publishEvent(final ZApplicationEvent event) {
+		ZContext.getBean(ZApplicationEventPublisher.class).publishEvent(event);
 	}
 
 }

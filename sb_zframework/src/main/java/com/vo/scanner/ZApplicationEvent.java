@@ -6,7 +6,7 @@ import lombok.Getter;
 
 /**
  *
- * 应用程序事件
+ * 应用程序事件，所有需要被监听的事件类都要继承本类
  *
  * @author zhangzhen
  * @date 2023年11月14日

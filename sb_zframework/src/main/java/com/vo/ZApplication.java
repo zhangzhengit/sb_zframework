@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
@@ -83,12 +84,8 @@ public class ZApplication {
 						serverConfiguration
 					);
 
-
-		final ZApplicationContext context = new ZApplicationContext();
-		context.setScanPackageNameList(scanPackageNameList);
-		context.setHttpEnable(httpEnable);
-		context.setArgs(args);
-		context.setProperties(ZProperties.getInstance());
+		final ZApplicationContext context =
+		new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList), httpEnable, args, ZProperties.getInstance());
 		return context;
 	}
 
