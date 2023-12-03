@@ -440,7 +440,16 @@ public class Task {
 				parametersArray[pI++] = model;
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
 				final String body = request.getBody();
+				if (StrUtil.isEmpty(body)) {
+					final String simpleName = p.getType().getSimpleName();
+					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 不存在");
+				}
+
 				final Object object = J.parseObject(body, p.getType());
+				if (object == null) {
+					final String simpleName = p.getType().getSimpleName();
+					throw new FormPairParseException("@" + ZRequestBody.class.getSimpleName() + " 参数 " + simpleName + " 错误");
+				}
 
 				Task.checkZValidated(p, object);
 
