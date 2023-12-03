@@ -44,7 +44,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZValue(name = "server.response.z.session.id", listenForChanges = true)
-	private Boolean responseZSessionId = false;
+	private Boolean responseZSessionId = true;
 
 	/**
 	 * server的name，用于响应头中的Server字段
