@@ -21,7 +21,7 @@ import lombok.Data;
 @Data
 public class ZSession {
 
-	private final Map<String, Object> map = new HashMap<>(2, 1F);
+	private Map<String, Object> map;
 
 	private final String id;
 	private final Date createTime;
@@ -75,12 +75,18 @@ public class ZSession {
     }
 
     public void setAttribute(final String name, final Object value) {
-    	this.checkInvalidate();
+		this.checkInvalidate();
+		if (this.map == null) {
+			this.map = new HashMap<>(2, 1F);
+		}
     	this.map.put(name, value);
     }
 
     public Object getAttribute(final String name) {
     	this.checkInvalidate();
+		if (this.map == null) {
+			return null;
+		}
     	return this.map.get(name);
     }
 
