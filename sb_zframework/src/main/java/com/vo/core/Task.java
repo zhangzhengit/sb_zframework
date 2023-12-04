@@ -18,6 +18,7 @@ import java.net.URLDecoder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.vo.anno.ZCookieValue;
 import com.vo.anno.ZRequestBody;
 import com.vo.anno.ZRequestHeader;
 import com.vo.aop.InterceptorParameter;
@@ -49,6 +51,7 @@ import com.vo.html.ResourcesLoader;
 import com.vo.http.HttpStatus;
 import com.vo.http.LineMap;
 import com.vo.http.ZControllerMap;
+import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
 import com.vo.http.ZPVTL;
 import com.vo.http.ZQPSLimitation;
@@ -64,6 +67,7 @@ import com.vo.validator.ZValidator;
 import com.votool.common.CR;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -430,6 +434,32 @@ public class Task {
 					throw new FormPairParseException("请求方法[" + path + "]的header[" + p.getName() + "]不存在");
 				}
 				parametersArray[pI++] = headerValue;
+			} else if (p.isAnnotationPresent(ZCookieValue.class)) {
+				final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
+				final String cookieName = StrUtil.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
+				final ZCookie[] cookies = request.getCookies();
+				if (ArrayUtil.isEmpty(cookies)) {
+					if (cookieValue.required()) {
+						throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
+					}
+				} else {
+
+					final Optional<ZCookie> c = Arrays.stream(cookies)
+							.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
+					if (c.isPresent()) {
+						if (p.getType().getCanonicalName().equals(String.class.getCanonicalName())) {
+							parametersArray[pI++] = c.get().getValue();
+						} else if (p.getType().getCanonicalName().equals(ZCookie.class.getCanonicalName())) {
+							parametersArray[pI++] = c.get();
+						}
+					} else {
+						if (cookieValue.required()) {
+							throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
+						}
+						parametersArray[pI++] = null;
+					}
+				}
+
 			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
 				parametersArray[pI++] = request;
 			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
@@ -643,7 +673,11 @@ public class Task {
 
 		boolean sR = false;
 		for (final Object object : arraygP) {
-			if (object.getClass().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
+			if (object == null) {
+				continue;
+			}
+
+			if (ZResponse.class.getCanonicalName().equals(object.getClass().getCanonicalName())) {
 				ZHttpContext.setZResponse((ZResponse) object);
 				sR = true;
 				break;

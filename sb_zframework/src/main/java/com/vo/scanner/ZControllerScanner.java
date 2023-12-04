@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZController;
+import com.vo.anno.ZCookieValue;
 import com.vo.api.StaticController;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
@@ -26,6 +27,7 @@ import com.vo.enums.BeanModeEnum;
 import com.vo.enums.MethodEnum;
 import com.vo.exception.StartupException;
 import com.vo.http.ZControllerMap;
+import com.vo.http.ZCookie;
 import com.vo.http.ZHtml;
 import com.vo.http.ZRequestMapping;
 
@@ -153,6 +155,34 @@ public class ZControllerScanner {
 			throw new StartupException("接口方法 " + method.getName() + " mapping值不能为空");
 		}
 
+		final Parameter[] ps = method.getParameters();
+
+		// @ZCookieValue 校验
+		final Optional<Parameter> zcvO = Arrays.stream(ps).filter(p -> p.isAnnotationPresent(ZCookieValue.class))
+				.findAny();
+		if (zcvO.isPresent()) {
+			final Class<?> type = zcvO.get().getType();
+			final ZCookieValue cookieValue = zcvO.get().getAnnotation(ZCookieValue.class);
+			if (type.equals(String.class)) {
+				if (StrUtil.isEmpty(cookieValue.name())) {
+					throw new StartupException("接口方法[" + method.getName() + "]的@" + ZCookieValue.class.getSimpleName()
+							+ " 参数用于 String 类型时，" + zcvO.get().getName() + " 名称表示的是 Cookie的value，所以"
+							+ "请声明@" + ZCookieValue.class.getSimpleName() + ".name() 属性来表示Cookie的name");
+				}
+
+			} else if (type.equals(ZCookie.class)) {
+				if (StrUtil.isEmpty(cookieValue.name())) {
+					throw new StartupException("接口方法[" + method.getName() + "]的@" + ZCookieValue.class.getSimpleName()
+							+ " 参数用于 "+ZCookie.class.getSimpleName()+" 类型时，" + zcvO.get().getName() + " 名称表示的是 "+ZCookie.class.getSimpleName()+"对象，所以"
+							+ "请声明@" + ZCookieValue.class.getSimpleName() + ".name() 属性来表示Cookie的name");
+				}
+			} else {
+				throw new StartupException("接口方法[" + method.getName() + "] @" + ZCookieValue.class.getSimpleName()
+						+ " 注解只能用于 String 或 " + ZCookie.class.getSimpleName()
+						+ " 类型，当前用于 " + type.getSimpleName() + " 类型");
+			}
+		}
+
 		// requestMappingArray 如果有 @ZPathVariable，则长度只能为1
 		for (final String mapping : requestMappingArray) {
 			final String p1 = mapping.replaceAll("//+", "/");
@@ -177,7 +207,6 @@ public class ZControllerScanner {
 					}
 				}
 			}
-			final Parameter[] ps = method.getParameters();
 
 			final List<Parameter> zpvPList = Lists.newArrayList(ps).stream()
 					.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).collect(Collectors.toList());
