@@ -653,7 +653,7 @@ public class ZValidator {
 
 	}
 
-	private static void throwTypeNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,
+	public static void throwTypeNotSupportedExcpetion(final Class<?> cls, final Class<? extends Annotation> annoCls,
 			final Field f) {
 		throw new TypeNotSupportedExcpetion(cls.getName() + "." + f.getName() + "类型为" + f.getType().getSimpleName()
 				+ ",校验注解为" + "@" + annoCls.getSimpleName());
