@@ -87,8 +87,7 @@ public class ZRequest {
 	}
 
 	public String getMethod() {
-		final RequestLine ppp = this.ppp();
-		return ppp.getMethodEnum().getMethod();
+		return this.ppp().getMethodEnum().getMethod();
 	}
 
 	public String getBody() {
@@ -108,8 +107,7 @@ public class ZRequest {
 
 	public int getServerPort() {
 
-		final RequestLine requestLine = this.ppp();
-		final String host = requestLine.getHeaderMap().get(ZRequest.HOST);
+		final String host = this.ppp().getHeaderMap().get(ZRequest.HOST);
 
 		final int i = host.indexOf(":");
 		if (i > -1) {
@@ -121,31 +119,24 @@ public class ZRequest {
 	}
 
 	public String getRequestURL() {
-		final RequestLine requestLine = this.ppp();
 		final String serverName = this.getServerName();
-		return serverName + requestLine.getPath();
+		return serverName + this.ppp().getPath();
 	}
 
 	public String getRequestURI() {
-		final RequestLine requestLine = this.ppp();
-		final String path = requestLine.getPath();
-		return path;
+		return this.ppp().getPath();
 	}
 
 	public String getQueryString() {
-		final RequestLine requestLine = this.ppp();
-		return requestLine.getQueryString();
+		return this.ppp().getQueryString();
 	}
 
 	private RequestLine ppp() {
-		final RequestLine requestLine = Task.parseRequest(this).getRequestLine();
-		return requestLine;
+		return Task.parseRequest(this).getRequestLine();
 	}
 
 	public String getContentType() {
-		final RequestLine requestLine = this.ppp();
-		final String ct = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
-		return ct;
+		return this.ppp().getHeaderMap().get(ZRequest.CONTENT_TYPE);
 	}
 
 
@@ -213,15 +204,13 @@ public class ZRequest {
 	}
 
 	public int getContentLength() {
-		final RequestLine requestLine = this.ppp();
-		final String s = requestLine.getHeaderMap().get(ZRequest.CONTENT_LENGTH);
+		final String s = this.ppp().getHeaderMap().get(ZRequest.CONTENT_LENGTH);
 		return s == null ? -1 : Integer.parseInt(s);
 	}
 
 	public ZCookie[] getCookies() {
 
-		final RequestLine requestLine = this.ppp();
-		final String cookisString = requestLine.getHeaderMap().get(ZRequest.COOKIE);
+		final String cookisString = this.ppp().getHeaderMap().get(ZRequest.COOKIE);
 		if (StrUtil.isEmpty(cookisString)) {
 			return null;
 		}
@@ -255,14 +244,12 @@ public class ZRequest {
 	}
 
 	public String getHeader(final String name) {
-		final RequestLine requestLine = this.ppp();
-		final String header = requestLine.getHeaderMap().get(name);
+		final String header = this.ppp().getHeaderMap().get(name);
 		return header;
 	}
 
 	public Object getParameter(final String name) {
-		final RequestLine requestLine = this.ppp();
-		final Set<RequestParam> ps = requestLine.getParamSet();
+		final Set<RequestParam> ps = this.ppp().getParamSet();
 		if (CollUtil.isEmpty(ps)) {
 			return null;
 		}
