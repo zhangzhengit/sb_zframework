@@ -4,10 +4,13 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.util.StrUtil;
 
 /**
  * 启动类
@@ -89,7 +92,11 @@ public final class ZMain {
 			// 执行 ZCommandLineRunner
 			processor.runCommandLineRunner(startupInfo);
 
-			processor.startHttpServer(startupInfo);
+			final String serverPortProperty = System.getProperty("server.port");
+			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
+			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? ZContext.getBean(ServerConfigurationProperties.class).getPort() : Integer.valueOf(serverPortProperty);
+
+			processor.startHttpServer(serverPort, startupInfo);
 
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);

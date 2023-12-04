@@ -50,6 +50,12 @@ public class ZServer extends Thread {
 	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATION.getThreadCount(),
 			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
 
+	private final int httpPort;
+
+	public ZServer(final int httpPort) {
+		this.httpPort = httpPort;
+	}
+
 	@Override
 	public void run() {
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
@@ -57,13 +63,9 @@ public class ZServer extends Thread {
 			LOG.trace("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
 			ZServer.startSSLServer();
 		} else {
-			final Integer port = SERVER_CONFIGURATION.getPort();
-			final String serverPortProperty = System.getProperty("server.port");
-			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? port : Integer.valueOf(serverPortProperty);
-
-			LOG.trace("启动Server,port={}", serverPort);
+			LOG.trace("启动Server,port={}", this.httpPort);
 			final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
-			nioLongConnectionServer.startNIOServer(serverPort);
+			nioLongConnectionServer.startNIOServer(this.httpPort);
 		}
 	}
 

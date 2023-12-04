@@ -147,10 +147,11 @@ public interface ZApplicationStartupProcessor {
 
 	/**
 	 * 启动http服务器
-	 *
+	 * 
+	 * @param httpPort
 	 * @param startupInfo
 	 *
 	 */
-	void startHttpServer(ZApplicationStartupInfo startupInfo);
+	void startHttpServer(int httpPort, ZApplicationStartupInfo startupInfo);
 
 }

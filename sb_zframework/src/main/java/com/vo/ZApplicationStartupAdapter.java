@@ -173,9 +173,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	}
 
 	@Override
-	public void startHttpServer(final ZApplicationStartupInfo startupInfo) {
+	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
-			final ZServer zs = new ZServer();
+			final ZServer zs = new ZServer(httpPort);
 			zs.setName(ZMain.Z_SERVER_THREAD);
 			zs.start();
 			ZSessionMap.sessionTimeoutJOB();
