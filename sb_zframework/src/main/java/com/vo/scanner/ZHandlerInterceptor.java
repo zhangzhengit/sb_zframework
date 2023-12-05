@@ -51,12 +51,10 @@ public interface ZHandlerInterceptor {
 	 * @param request
 	 * @param response
 	 * @param interceptorParameter
-	 * @param modelAndView
 	 * @return
 	 *
 	 */
-	default boolean preHandle(final ZRequest request, final ZResponse response, final InterceptorParameter interceptorParameter,
-			final ZModelAndView modelAndView) {
+	default boolean preHandle(final ZRequest request, final ZResponse response, final InterceptorParameter interceptorParameter) {
 
 		return true;
 	}

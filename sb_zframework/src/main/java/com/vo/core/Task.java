@@ -336,7 +336,7 @@ public class Task {
 			// 1 按从小到大执行pre
 			boolean stop = false;
 			for (final ZHandlerInterceptor zhi : zhiList) {
-				final boolean preHandle = zhi.preHandle(request, response, interceptorParameter, null);
+				final boolean preHandle = zhi.preHandle(request, response, interceptorParameter);
 				if (!preHandle) {
 					stop = true;
 					break;
