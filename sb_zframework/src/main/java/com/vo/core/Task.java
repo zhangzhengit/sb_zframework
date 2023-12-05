@@ -58,6 +58,7 @@ import com.vo.http.ZQPSLimitation;
 import com.vo.http.ZRequestParam;
 import com.vo.scanner.ZHandlerInterceptor;
 import com.vo.scanner.ZHandlerInterceptorScanner;
+import com.vo.scanner.ZModelAndView;
 import com.vo.template.ZModel;
 import com.vo.template.ZTemplate;
 import com.vo.validator.ZMin;
@@ -351,52 +352,35 @@ public class Task {
 			if (!stop) {
 
 				r = method.invoke(zController, arraygP);
+				final ZModelAndView modelAndView = isMethodAnnotationPresentZHtml(method)
+						? new ZModelAndView(true, String.valueOf(r), readHtmlContent(r), ZModel.get(),
+								(ZModel) Arrays.stream(arraygP).filter(arg -> arg.getClass().equals(ZModel.class))
+										.findAny().orElse(null),
+								null)
+						: new ZModelAndView(false, null, null, null, (ZModel) null, r);
 
 				// 2 按从大到小执行post
 				for (int i = zhiList.size() - 1; i >= 0; i--) {
 					final ZHandlerInterceptor zhi = zhiList.get(i);
-					zhi.postHandle(request, response, interceptorParameter, null);
+					zhi.postHandle(request, response, interceptorParameter, modelAndView);
 				}
 				// 3 按从大到小执行after
 				for (int i = zhiList.size() - 1; i >= 0; i--) {
 					final ZHandlerInterceptor zhi = zhiList.get(i);
-					zhi.afterCompletion(request, response, interceptorParameter, null);
+					zhi.afterCompletion(request, response, interceptorParameter, modelAndView);
 				}
 			}
 		}
 
 		// 响应
 		if (isMethodAnnotationPresentZHtml(method)) {
-			final String ss = String.valueOf(r);
-			final String htmlName = ss.charAt(0) == '/' ? ss : '/' + ss;
-			try {
-
-				final String htmlContent = ResourcesLoader.loadStaticResourceString(htmlName);
-
-				final String html = ZTemplate.freemarker(htmlContent);
-
-				final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-				if (serverConfiguration.getGzipEnable()
-						&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
-						&& request.isSupportGZIP()) {
-					final byte[] compress = ZGzip.compress(html);
-
-					return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.HTML.getType())
-							.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
-				}
-
-				return new ZResponse(this.outputStream, this.socketChannel)
-						.contentType(HeaderEnum.HTML.getType()).body(html);
-
-			} catch (final Exception e) {
-				e.printStackTrace();
-				return new ZResponse(this.outputStream, this.socketChannel)
-					.httpStatus(HttpStatus.HTTP_500.getCode())
-					.contentType(DEFAULT_CONTENT_TYPE.getType())
-					.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
-			}
+			return this.responseHtml(request, r);
 		}
 
+		return this.responseDefault_JSON(request, r);
+	}
+
+	private ZResponse responseDefault_JSON(final ZRequest request, final Object r) {
 		final String json = J.toJSONString(r, Include.NON_NULL);
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		if (serverConfiguration.getGzipEnable()
@@ -412,6 +396,43 @@ public class Task {
 
 		return new ZResponse(this.outputStream, this.socketChannel).contentType(DEFAULT_CONTENT_TYPE.getType())
 				.body(json);
+	}
+
+	private ZResponse responseHtml(final ZRequest request, final Object r) {
+		try {
+
+			final String htmlContent = readHtmlContent(r);
+
+			final String html = ZTemplate.freemarker(htmlContent);
+			ZModel.clear();
+
+			final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
+			if (serverConfiguration.getGzipEnable()
+					&& serverConfiguration.gzipContains(HeaderEnum.HTML.getType())
+					&& request.isSupportGZIP()) {
+				final byte[] compress = ZGzip.compress(html);
+
+				return new ZResponse(this.outputStream, this.socketChannel).contentType(HeaderEnum.HTML.getType())
+						.header(StaticController.CONTENT_ENCODING, ZRequest.GZIP).body(compress);
+			}
+
+			return new ZResponse(this.outputStream, this.socketChannel)
+					.contentType(HeaderEnum.HTML.getType()).body(html);
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+			return new ZResponse(this.outputStream, this.socketChannel)
+				.httpStatus(HttpStatus.HTTP_500.getCode())
+				.contentType(DEFAULT_CONTENT_TYPE.getType())
+				.body(CR.error(HTTP_STATUS_500 + INTERNAL_SERVER_ERROR));
+		}
+	}
+
+	private static String readHtmlContent(final Object r) {
+		final String ss = String.valueOf(r);
+		final String htmlName = ss.charAt(0) == '/' ? ss : '/' + ss;
+		final String htmlContent = ResourcesLoader.loadStaticResourceString(htmlName);
+		return htmlContent;
 	}
 
 	private Object[] generateParameters(final Method method, final Object[] parametersArray, final ZRequest request,

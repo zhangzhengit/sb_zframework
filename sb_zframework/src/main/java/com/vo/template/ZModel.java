@@ -1,5 +1,6 @@
 package com.vo.template;
 
+import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -28,6 +29,10 @@ public class ZModel {
 
 	public Object get(final String name) {
 		return ZModel.tl.get().get(name);
+	}
+
+	public static void clear() {
+		 tl.set(Collections.emptyMap());
 	}
 
 }
