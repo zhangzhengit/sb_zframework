@@ -33,10 +33,12 @@ import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
 import com.vo.exception.TypeNotSupportedExcpetion;
+import com.vo.validator.ZConfigurationPropertiesException;
 import com.vo.validator.ZType;
 import com.vo.validator.ZValidator;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -196,13 +198,27 @@ public class ZConfigurationPropertiesScanner {
 
 		// 从1-N个[i]
 		final Set<Object> set = Sets.newLinkedHashSet();
+
+		final Class<?>[] ts = ZCU.getGenericType(field);
+		if (ArrayUtil.isEmpty(ts)) {
+			final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型必须加入泛型参数" ;
+			throw new ZConfigurationPropertiesException(message);
+		}
+
 		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
 			final String suffix = "[" + (i - 1) + "]";
 			final Iterator<String> sk = p.getKeys(key + suffix);
 			while (sk.hasNext()) {
 				final String xa = sk.next();
-				// FIXME 2023年10月18日 下午8:56:51 zhanghen: XXX Set和Map是否校验重复？新增一个校验重复的注解？
-				final boolean add = set.add(p.getString(xa));
+
+				final Class<?> gType = ts[0];
+				final Object value = getSetFiledValue(p, xa, gType);
+
+				if (!set.add(value)) {
+					final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
+							+ xa + "" + ",value=" + value;
+					throw new ZConfigurationPropertiesException(message);
+				}
 			}
 		}
 		System.out.println("set = " + set);
@@ -214,6 +230,34 @@ public class ZConfigurationPropertiesScanner {
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static Object getSetFiledValue(final PropertiesConfiguration p, final String xa, final Class<?> gType) {
+		Object value = null;
+		if (gType.equals(String.class)) {
+			value = p.getString(xa);
+		} else if (gType.equals(Byte.class)) {
+			value = p.getByte(xa);
+		} else if (gType.equals(Short.class)) {
+			value = p.getShort(xa);
+		} else if (gType.equals(Integer.class)) {
+			value = p.getInteger(xa, null);
+		} else if (gType.equals(Long.class)) {
+			value = p.getLong(xa);
+		} else if (gType.equals(Float.class)) {
+			value = p.getFloat(xa);
+		} else if (gType.equals(Double.class)) {
+			value = p.getDouble(xa);
+		} else if (gType.equals(Character.class)) {
+			value = StrUtil.isEmpty(p.getString(xa)) ? null : p.getString(xa).charAt(0);
+		} else if (gType.equals(Boolean.class)) {
+			value = p.getBoolean(xa);
+		} else {
+			final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " Set类型的泛型参数不支持,type = "
+					+ gType.getCanonicalName();
+			throw new ZConfigurationPropertiesException(message);
+		}
+		return value;
 	}
 
 	private static void setList(final Object object, final Field field, final PropertiesConfiguration p,

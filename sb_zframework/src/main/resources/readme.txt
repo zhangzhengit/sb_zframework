@@ -44,15 +44,20 @@
 			
 		支持的字段类型：@see ZConfigurationProperties 
 			List 类型：支持配置为空，如:
-				private List<String> list;
+				private List<User> list;
 				配置：
-				xx.list[0]=A
-				xx.list[2]=C
+				xx.list[0].name=zhang
+				xx.list[0].id=200
+				xx.list[2].name=一
+				xx.list[2].id=1
 				等同于
-				private List<String> list = {A,null,C};
+				private List<User> list = {配置的第一个,null,配置的第三个};
 				配置中不存在1，代码中list 1的位置为null
+				
+				List 用来配置自定义对象类型
 			
 			Set 类型：使用LinkedHashSet支持按 0 1 2 3 顺序来配置值
+				Set 默认配置java内置的类型如String、Integer等等
 			
 		支持在字段上使用校验注解：@see # 校验注解
 		
