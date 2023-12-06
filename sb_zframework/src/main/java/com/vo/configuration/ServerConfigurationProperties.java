@@ -3,6 +3,7 @@ package com.vo.configuration;
 import java.util.Map;
 
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.anno.ZOrder;
 import com.vo.anno.ZValue;
 import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
@@ -30,6 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @ZConfigurationProperties(prefix = "server")
+@ZOrder(value = Integer.MIN_VALUE)
 public class ServerConfigurationProperties {
 
 	/**

@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +27,8 @@ import com.google.common.collect.Sets;
 import com.vo.anno.ZAutowired;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZConfigurationPropertiesRegistry;
+import com.vo.anno.ZOrder;
+import com.vo.anno.ZOrderComparator;
 import com.vo.anno.ZValue;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
@@ -65,7 +68,19 @@ public class ZConfigurationPropertiesScanner {
 			return;
 		}
 
-		for (final Class<?> cs : csSet) {
+		final ArrayList<Class<?>> cl = Lists.newArrayList(csSet);
+		final Set<Integer> valueSet = Sets.newHashSet();
+		for (final Class<?> cls : cl) {
+			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
+			if ((annotation != null) && !valueSet.add(annotation.value())) {
+				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
+						+ ZOrder.class.getSimpleName() + ".value" + "[" + annotation.value() + "]" + "重复，请检查代码");
+			}
+		}
+
+		final List<Class<?>> sl = cl.stream().sorted(new ZOrderComparator<>()).collect(Collectors.toList());
+
+		for (final Class<?> cs : sl) {
 
 			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
