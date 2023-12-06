@@ -34,7 +34,6 @@ import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
 import com.vo.exception.TypeNotSupportedExcpetion;
 import com.vo.validator.ZConfigurationPropertiesException;
-import com.vo.validator.ZType;
 import com.vo.validator.ZValidator;
 
 import cn.hutool.core.collection.CollUtil;
@@ -124,38 +123,42 @@ public class ZConfigurationPropertiesScanner {
 			return;
 		}
 
-		// 无 java 字段直接对应的 配置项,则 把[orderCount]转为[order.count]再试
 		final String convert = convert(key);
 		keyAR.set(convert);
-		if (!p.containsKey(convert)) {
-			// XXX 上面一行!contains逻辑待定，能走到此的list set map 都是直接匹配k匹配不到需要特殊处理取k的
+
+		// 无 java 字段直接对应的 配置项,则 把[orderCount]转为[order.count]再试，如果包含了则继续赋值
+		if (p.containsKey(convert)) {
+			setValueByType(object, field, p, type, keyAR);
+		} else {
+			// 到此 [orderCount]和[order.count]形式的名称都不匹配，说明是List、Map、Set三种类型了，开始匹配这三种类型
 
 			if (field.getType().getCanonicalName().equals(Map.class.getCanonicalName())) {
 				setMap(object, field, p, key);
 			} else if (field.getType().getCanonicalName().equals(List.class.getCanonicalName())) {
 				// FIXME 2023年11月9日 上午12:13:59 zhanghen: 支持三种类型要支持什么类型
 
-				final ZType zType = field.getAnnotation(ZType.class);
-				if (zType == null) {
-					throw new StartupException(object.getClass().getSimpleName() + "." + field.getName() + " 缺少@"
-							+ ZType.class.getSimpleName() + "注解");
+				final Class<?>[] ts = ZCU.getGenericType(field);
+				if (ArrayUtil.isEmpty(ts)) {
+					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型必须加入泛型参数";
+					throw new ZConfigurationPropertiesException(message);
 				}
 
-				final boolean contains = LIST_TYPE.contains(zType.type().getCanonicalName());
-				if (!contains && zType.type().getCanonicalName().startsWith("java")) {
-					throw new StartupException(object.getClass().getSimpleName() + "." + field.getName() + " @"
-							+ ZType.class.getSimpleName() + "的类型不支持,type=" + zType.type().getSimpleName() + ",支持类型为" + LIST_TYPE);
+				final boolean isJavaType = LIST_T_FIELD_TYPE.contains(ts[0].getCanonicalName());
+				final boolean isUserType = !isJavaType
+						&& !ts[0].getCanonicalName().startsWith("java");
+				if (!isUserType) {
+					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型只支持用户自定义类型"
+							+ ","
+							+ "当前类型=" + ts[0].getCanonicalName()
+							;
+					throw new ZConfigurationPropertiesException(message);
 				}
 
-				if (!contains) {
-					final Field[] ztfs = zType.type().getDeclaredFields();
-					for (final Field f : ztfs) {
-						final boolean contains2 = LIST_TYPE.contains(f.getType().getCanonicalName());
-						if (!contains2) {
-							throw new StartupException("@" + ZType.class.getSimpleName() + ".type["
-									+ zType.type().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
-									+ f.getName() + "]类型不支持,支持字段类型为" + LIST_TYPE);
-						}
+				for (final Field f : ts[0].getDeclaredFields()) {
+					if (!LIST_T_FIELD_TYPE.contains(f.getType().getCanonicalName())) {
+						throw new StartupException(
+								ts[0].getClass().getSimpleName() + "] 中的字段[" + f.getType().getCanonicalName() + " "
+										+ f.getName() + "]类型不支持,支持字段类型为" + LIST_T_FIELD_TYPE);
 					}
 				}
 
@@ -163,20 +166,18 @@ public class ZConfigurationPropertiesScanner {
 			} else if (field.getType().getCanonicalName().equals(Set.class.getCanonicalName())) {
 				setSet(object, field, p, key);
 			}
-			// 把[orderCount]转为[order.count]后，仍无对应的配置项，
-			// 则看 是否有ZNotNull,有则抛异常
-//			ZValidator.validatedZNotNull(object, field);
 
 			ZValidator.validatedAll(object, field);
 
-		} else {
-			setValueByType(object, field, p, type, keyAR);
 		}
 
 	}
 
+	/**
+	 * 	List的泛型参数对象里支持的字段类型
+	 */
 	public static final
-		ImmutableList<String> LIST_TYPE = ImmutableList.copyOf(
+		ImmutableList<String> LIST_T_FIELD_TYPE = ImmutableList.copyOf(
 					Lists.newArrayList(
 								Byte.class.getCanonicalName(),
 								Short.class.getCanonicalName(),
@@ -267,12 +268,7 @@ public class ZConfigurationPropertiesScanner {
 		final List<Object> list = Lists.newArrayList();
 
 
-		final boolean isJavaType = LIST_TYPE.contains(field.getAnnotation(ZType.class).type().getCanonicalName());
-
-		final boolean isUserType = !isJavaType && !field.getAnnotation(ZType.class).type().getCanonicalName().startsWith("java");
-
 		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
-
 
 			final String suffix = "[" + (i - 1) + "]";
 			final String fullKey = key + suffix;
@@ -281,19 +277,21 @@ public class ZConfigurationPropertiesScanner {
 			if (sk.hasNext()) {
 				final String xa = sk.next();
 				final String xaValue = p.getString(xa);
-				if (isJavaType) {
-					list.add(xaValue);
-				} else if (isUserType) {
-					final Object newInstance = newInstance(field);
+				final Object newInstance = newInstance(field);
+				try {
 					setValue(newInstance, fullKey, xa, xaValue);
-
-					while (sk.hasNext()) {
-						final String xa2 = sk.next();
-						final String xaValue2 = p.getString(xa2);
-						setValue(newInstance, fullKey, xa2, xaValue2);
-					}
-					list.add(newInstance);
+				} catch (final Exception e) {
+					final String message = "@" + ZConfigurationProperties.class.getSimpleName()
+							+ " List类型参数初始化异常，key=" + xa;
+					throw new ZConfigurationPropertiesException(message);
 				}
+
+				while (sk.hasNext()) {
+					final String xa2 = sk.next();
+					final String xaValue2 = p.getString(xa2);
+					setValue(newInstance, fullKey, xa2, xaValue2);
+				}
+				list.add(newInstance);
 			} else {
 				// 为空也add null，占一个位置，为了这种需求：
 				// [0]=A [2]=C 就是不配置第二个位置让其为空，
@@ -378,8 +376,7 @@ public class ZConfigurationPropertiesScanner {
 	}
 
 	private static Object newInstance(final Field field)  {
-		final ZType zType = field.getAnnotation(ZType.class);
-		final Class<?> type2 = zType.type();
+		final Class<?> type2 = ZCU.getGenericType(field)[0];
 		System.out.println("type = " + type2);
 		Object newInstance = null;
 		try {

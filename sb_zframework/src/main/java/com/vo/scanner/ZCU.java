@@ -33,13 +33,15 @@ public class ZCU {
 			}
 
 			final Class<?>[] a = new Class[typeArguments.length];
+			boolean isC = false;
 			for (int i = 0; i < a.length; i++) {
 				if (typeArguments[i] instanceof Class) {
 					a[i] = (Class<?>) typeArguments[i];
+					isC = true;
 				}
 			}
 
-			return a;
+			return isC ? a : null;
 		}
 
 		return null;
