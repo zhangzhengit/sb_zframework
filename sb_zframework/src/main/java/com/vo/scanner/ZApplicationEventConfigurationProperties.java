@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- *
+ * ZApplicationEventPublisher 的配置信息
  *
  * @author zhangzhen
  * @date 2023年11月15日
@@ -29,7 +29,7 @@ public class ZApplicationEventConfigurationProperties {
 	@ZNotNull
 	@ZMin(min = 1)
 	@ZMax(max = 100)
-	private Integer threadCount = 2;
+	private Integer threadCount = 4;
 
 	@ZNotEmtpy
 	private String threadNamePrefix = "applicationEvent-Thread-";
