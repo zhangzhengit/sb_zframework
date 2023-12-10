@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -124,7 +124,8 @@ public class NioLongConnectionServer {
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
 								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER)) {
-							NioLongConnectionServer.response429(selectionKey);
+//							NioLongConnectionServer.response429(selectionKey);
+							NioLongConnectionServer.response429Async(selectionKey);
 						} else {
 							final ZArray array = this.handleRead(selectionKey);
 							if (array != null) {
@@ -142,6 +143,10 @@ public class NioLongConnectionServer {
 			}
 			selectedKeys.clear();
 		}
+	}
+
+	public static void response429Async(final SelectionKey key) {
+		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key));
 	}
 
 	public static void response429(final SelectionKey key) {
@@ -358,11 +363,14 @@ public class NioLongConnectionServer {
 					final ZSession sessionFALSE = request.getSession(false);
 					if (sessionFALSE == null) {
 						final ZSession sessionTRUE = request.getSession(true);
+						sessionTRUE.setLastAccessedTime(new Date());
 						final ZCookie cookie =
 								new ZCookie(ZRequest.Z_SESSION_ID, sessionTRUE.getId())
 								.path("/")
 								.httpOnly(true);
 						response.cookie(cookie);
+					} else {
+						sessionFALSE.setLastAccessedTime(new Date());
 					}
 				}
 
