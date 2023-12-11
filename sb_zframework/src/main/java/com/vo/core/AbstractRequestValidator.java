@@ -28,7 +28,11 @@ abstract class AbstractRequestValidator {
 		}
 	}
 
-	public int qps() {
+	public int getSessionIdQps() {
+		return ZContext.getBean(ServerConfigurationProperties.class).getSessionIdQps();
+	}
+
+	public int getClientQps() {
 		return ZContext.getBean(ServerConfigurationProperties.class).getClientQps();
 	}
 
@@ -49,7 +53,7 @@ abstract class AbstractRequestValidator {
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 
 		// 启用了响应 ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
-		if (Boolean.TRUE.equals(ZContext.getBean(ServerConfigurationProperties.class).getResponseZSessionId())) {
+		if (this.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
 				final String keyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
@@ -62,19 +66,31 @@ abstract class AbstractRequestValidator {
 							.findAny();
 					if (findAny.isPresent()) {
 						// ua 包含在配置的，则[不]平滑处理
-						return QPSCounter.allow(keyword, this.qps(), QPSEnum.UNEVEN);
+						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
 					}
 				}
 
 				// ua 不包含在配置的，则平滑处理
-				return QPSCounter.allow(keyword, this.qps(), QPSEnum.CLIENT);
+				return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
 			}
 		}
 
+		// -------------------------------------------------
 		// [没]启用响应 ZSESSIONID，则认为 clientIp和User-Agent都相同就是同一个客户端
+		// -------------------------------------------------
 		final String clientIp = request.getClientIp();
 		final String keyword = clientIp + "@" + userAgent;
-		return QPSCounter.allow(keyword, this.qps(), QPSEnum.CLIENT);
+		return QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
+	}
+
+	/**
+	 * 返回是否对请求进行相应 ZRequest.Z_SESSION_ID
+	 *
+	 * @return
+	 *
+	 */
+	public boolean responseZSessionId() {
+		return Boolean.TRUE.equals(ZContext.getBean(ServerConfigurationProperties.class).getResponseZSessionId());
 	}
 
 	/**

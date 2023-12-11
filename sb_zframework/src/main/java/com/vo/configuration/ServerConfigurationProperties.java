@@ -14,6 +14,7 @@ import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
+import com.vo.validator.ZSessionIdQPSValidator;
 import com.vo.validator.ZStartWith;
 
 import lombok.AllArgsConstructor;
@@ -127,6 +128,12 @@ public class ServerConfigurationProperties {
 	@ZValue(name = "server.client.qps", listenForChanges = true)
 	@ZCustom(cls = ZDivisibleByCounterClientQPS_MIN.class)
 	private Integer clientQps = QPSEnum.CLIENT.getDefaultValue();
+
+	@ZMin(min = ZSessionIdQPSValidator.MIN_VALUE)
+	@ZMax(max = ZSessionIdQPSValidator.MAX_VALUE)
+	@ZValue(name = "server.session.id.qps", listenForChanges = true)
+	@ZCustom(cls = ZSessionIdQPSValidator.class)
+	private Integer sessionIdQps = QPSEnum.Z_SESSION_ID.getDefaultValue();
 
 	/**
 	 * 是否启用内置的 StaticController,

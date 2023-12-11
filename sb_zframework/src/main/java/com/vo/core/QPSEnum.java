@@ -3,6 +3,7 @@ package com.vo.core;
 import com.vo.http.ZRequestMappingConfigurationProperties;
 import com.vo.validator.ZDivisibleByCounterClientQPS_MIN;
 import com.vo.validator.ZDivisibleByCounterQPS_MIN;
+import com.vo.validator.ZSessionIdQPSValidator;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,12 +34,21 @@ public enum QPSEnum {
 			   ZRequestMappingConfigurationProperties.MAX_VALUE,
 		   ZRequestMappingConfigurationProperties.DEFAULT_VALUE),
 
+
 	/**
 	 * 对于同一个客户端的限制
 	 */
 	CLIENT(ZDivisibleByCounterClientQPS_MIN.MIN_VALUE,
 		   ZDivisibleByCounterClientQPS_MIN.MAX_VALUE,
 	   ZDivisibleByCounterClientQPS_MIN.DEFAULT_VALUE),
+
+
+	/**
+	 * 对于同一个Cookie(ZRequest.Z_SESSION_ID)的限制
+	 */
+	Z_SESSION_ID(ZSessionIdQPSValidator.MIN_VALUE,
+				ZSessionIdQPSValidator.MAX_VALUE,
+			ZSessionIdQPSValidator.DEFAULT_VALUE),
 
 	/**
 	 * [不]平滑处理
