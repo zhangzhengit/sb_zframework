@@ -9,7 +9,7 @@ import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
 import com.vo.validator.ZCustom;
 import com.vo.validator.ZClientQPSValidator;
-import com.vo.validator.ZDivisibleByCounterQPS_MIN;
+import com.vo.validator.ZServerQPSValidator;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
@@ -109,10 +109,10 @@ public class ServerConfigurationProperties {
 	@ZNotNull
 	// FIXME 2023年7月1日 上午4:21:59 zhanghen:  @ZMin在此设为0作为一个feature？可以配置为0让应用拒绝一切服务
 //	@ZMin(min = 0)
-	@ZMin(min = ZDivisibleByCounterQPS_MIN.MIN_VALUE)
-	@ZMax(max = ZDivisibleByCounterQPS_MIN.MAX_VALUE)
+	@ZMin(min = ZServerQPSValidator.MIN_VALUE)
+	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.qps", listenForChanges = true)
-	@ZCustom(cls = ZDivisibleByCounterQPS_MIN.class)
+	@ZCustom(cls = ZServerQPSValidator.class)
 	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
 	// 如果不限制的话，是否其他ip的请求优先处理？
 	private Integer qps = QPSEnum.SERVER.getDefaultValue();

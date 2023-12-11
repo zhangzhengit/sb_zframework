@@ -14,7 +14,7 @@ import com.vo.exception.ValidatedException;
  * @date 2023年11月14日
  *
  */
-public class ZDivisibleByCounterQPS_MIN implements ZCustomValidator {
+public class ZServerQPSValidator implements ZCustomValidator {
 
 	public static final int MIN_VALUE = 100;
 	public static final int MAX_VALUE = 10000 * 100;
