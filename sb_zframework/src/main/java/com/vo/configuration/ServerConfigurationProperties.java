@@ -8,7 +8,7 @@ import com.vo.anno.ZValue;
 import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
 import com.vo.validator.ZCustom;
-import com.vo.validator.ZDivisibleByCounterClientQPS_MIN;
+import com.vo.validator.ZClientQPSValidator;
 import com.vo.validator.ZDivisibleByCounterQPS_MIN;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
@@ -123,10 +123,10 @@ public class ServerConfigurationProperties {
 	@ZNotEmtpy
 	private String qpsExceedMessage = "访问频繁，请稍后再试";
 
-	@ZMin(min = ZDivisibleByCounterClientQPS_MIN.MIN_VALUE)
-	@ZMax(max = ZDivisibleByCounterClientQPS_MIN.MAX_VALUE)
+	@ZMin(min = ZClientQPSValidator.MIN_VALUE)
+	@ZMax(max = ZClientQPSValidator.MAX_VALUE)
 	@ZValue(name = "server.client.qps", listenForChanges = true)
-	@ZCustom(cls = ZDivisibleByCounterClientQPS_MIN.class)
+	@ZCustom(cls = ZClientQPSValidator.class)
 	private Integer clientQps = QPSEnum.CLIENT.getDefaultValue();
 
 	@ZMin(min = ZSessionIdQPSValidator.MIN_VALUE)

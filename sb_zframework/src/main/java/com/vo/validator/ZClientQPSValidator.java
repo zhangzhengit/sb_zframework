@@ -13,7 +13,7 @@ import com.vo.exception.ValidatedException;
  * @date 2023年11月24日
  *
  */
-public class ZDivisibleByCounterClientQPS_MIN implements ZCustomValidator {
+public class ZClientQPSValidator implements ZCustomValidator {
 
 	/**
 	 * 针对于同一个客户端的QPS限制最小值
