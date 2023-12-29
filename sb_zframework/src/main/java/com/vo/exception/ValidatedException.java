@@ -4,7 +4,7 @@ import com.vo.validator.ZFException;
 
 /**
  *
- * @Validated 所校验的注解所抛出的异常
+ * @ZValidated 所校验的注解所抛出的异常
  *
  * @author zhangzhen
  * @date 2023年10月22日
