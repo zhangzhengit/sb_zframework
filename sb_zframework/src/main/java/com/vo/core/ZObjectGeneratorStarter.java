@@ -21,17 +21,11 @@ import cn.hutool.core.collection.CollectionUtil;
  */
 public class ZObjectGeneratorStarter {
 
-//	public static void main(final String[] args) {
-//		start();
-//	}
-
 	private static final List<ZObjectGenerator> glis = Lists.newArrayList();
 
 	public static Object generate(final Class<?> cls) {
 		final List<ZObjectGenerator> ol = getGenerator();
 		Object o = null;
-		// FIXME 2023年6月19日 下午8:56:10 zhanghen: TODO
-		// 支持多个ZObjectGenerator的子类，按顺序执行，定义一个ZOrder注解
 		for (final ZObjectGenerator zog : ol) {
 			o = zog.generate(cls);
 		}
