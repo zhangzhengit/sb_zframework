@@ -121,6 +121,7 @@ public class ServerConfigurationProperties {
 	 * 访问超过 本类 qps限制时给客户端的提示语
 	 */
 	@ZNotEmtpy
+	@ZValue(name = "server.qps.exceed.message", listenForChanges = true)
 	private String qpsExceedMessage = "访问频繁，请稍后再试";
 
 	@ZMin(min = ZClientQPSValidator.MIN_VALUE)
