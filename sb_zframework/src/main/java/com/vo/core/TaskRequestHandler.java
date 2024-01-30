@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableCollection;
+import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.exception.StartupException;
 
 /**
@@ -20,10 +21,13 @@ public class TaskRequestHandler extends Thread {
 	public static final String NAME = "request-Dispatcher-Thread";
 
 	public static final String USER_AGENT = "User-Agent";
-	private final BlockingQueue<TaskRequest> queue = new LinkedBlockingQueue<>();
+
+	private final BlockingQueue<TaskRequest> queue = new LinkedBlockingQueue<>(ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
+	
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
+
 		this.setName(NAME);
 
 		final ImmutableCollection<Object> beanConnection = ZContext.all().values();
@@ -69,7 +73,8 @@ public class TaskRequestHandler extends Thread {
 		}
 	}
 
-	public void responseAsync(final TaskRequest taskRequest) {
-		this.queue.add(taskRequest);
+	public boolean responseAsync(final TaskRequest taskRequest) {
+		final boolean offer = this.queue.offer(taskRequest);
+		return offer;
 	}
 }

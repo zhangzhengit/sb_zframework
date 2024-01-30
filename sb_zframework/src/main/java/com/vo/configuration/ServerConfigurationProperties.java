@@ -40,7 +40,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	private Integer port = 80;
+	private Integer port = 80; 
 
 	/**
 	 * response 响应头中是否包含 Cookie (ZSESSIONID)
@@ -116,6 +116,17 @@ public class ServerConfigurationProperties {
 	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
 	// 如果不限制的话，是否其他ip的请求优先处理？
 	private Integer qps = QPSEnum.SERVER.getDefaultValue();
+
+	/**
+	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = ZServerQPSValidator.MAX_VALUE)
+	// FIXME 2024年1月30日 下午7:28:32 zhanghen: 此值按现在的代码逻辑不好实现自动更新，
+	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
+	// 考虑是否这么做？还是不用自动更新
+//	@ZValue(name = "server.pending.tasks", listenForChanges = true)
+	private Integer pendingTasks = QPSEnum.SERVER.getDefaultValue();
 
 	/**
 	 * 访问超过 本类 qps限制时给客户端的提示语

@@ -124,7 +124,6 @@ public class NioLongConnectionServer {
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
 								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER)) {
-//							NioLongConnectionServer.response429(selectionKey);
 							NioLongConnectionServer.response429Async(selectionKey);
 						} else {
 							final ZArray array = this.handleRead(selectionKey);
@@ -132,7 +131,11 @@ public class NioLongConnectionServer {
 								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
 										array.get());
-								this.requestHandler.responseAsync(taskRequest);
+								final boolean responseAsync = this.requestHandler.responseAsync(taskRequest);
+								if (!responseAsync) {
+									// FIXME 2024年1月30日 下午7:38:41 zhanghen: 配置多个提示信息：与上面的qps提示信息区分开
+									NioLongConnectionServer.response429Async(selectionKey);
+								}
 							}
 						}
 					}
