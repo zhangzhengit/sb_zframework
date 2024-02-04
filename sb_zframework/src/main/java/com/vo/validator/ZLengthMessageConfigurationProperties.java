@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ZConfigurationProperties(prefix = "validator.constraints.length")
+//@ZConfigurationProperties(prefix = "validator.constraints.length")
 public class ZLengthMessageConfigurationProperties {
 
 //	@ZNotEmtpy
