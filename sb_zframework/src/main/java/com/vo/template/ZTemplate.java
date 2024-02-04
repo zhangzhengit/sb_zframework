@@ -34,6 +34,9 @@ public class ZTemplate {
 	private static String freemarker0(final String templateString) {
 
 		try {
+
+			CFG.setClassForTemplateLoading(ZTemplate.class, "/static");
+
 			final Template template = new Template("template-" + templateString.hashCode(), templateString, CFG);
 			final StringWriter writer = new StringWriter();
 			final Map<String, Object> dataModel = ZModel.get();
