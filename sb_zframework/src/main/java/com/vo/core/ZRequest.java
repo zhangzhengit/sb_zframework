@@ -150,6 +150,17 @@ public class ZRequest {
 		return hash.toString();
 	}
 
+	/**
+	 * 返回指定名称的session，无则返回null
+	 *
+	 * @param name
+	 * @return
+	 *
+	 */
+	public ZSession getSession(final String name) {
+		return ZSessionMap.get(name);
+	}
+
 	public ZSession getSession() {
 		return this.getSession(true);
 	}
