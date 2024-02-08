@@ -40,7 +40,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	private Integer port = 80; 
+	private Integer port = 80;
 
 	/**
 	 * response 响应头中是否包含 Cookie (ZSESSIONID)
@@ -126,7 +126,8 @@ public class ServerConfigurationProperties {
 	// 因为 queue 是程序启动时就初始化了的，改变此值时，若直接set一个新的容量的queue，则有可能queue中有带处理的
 	// 考虑是否这么做？还是不用自动更新
 //	@ZValue(name = "server.pending.tasks", listenForChanges = true)
-	private Integer pendingTasks = QPSEnum.SERVER.getDefaultValue();
+	// XXX 考虑好默认为什么比较好
+	private Integer pendingTasks = Runtime.getRuntime().availableProcessors();
 
 	/**
 	 * 访问超过 本类 qps限制时给客户端的提示语
