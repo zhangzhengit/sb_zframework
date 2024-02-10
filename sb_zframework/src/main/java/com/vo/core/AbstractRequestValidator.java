@@ -3,6 +3,7 @@ package com.vo.core;
 import java.util.Optional;
 
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.TaskResponsiveModeEnum;
 
 import cn.hutool.core.util.StrUtil;
 
@@ -26,6 +27,19 @@ abstract class AbstractRequestValidator {
 		} else {
 			this.failed(request, taskRequest);
 		}
+	}
+
+	public boolean timeout(final TaskRequest taskRequest) {
+
+		final Integer taskTimeoutMilliseconds = ZContext.getBean(ServerConfigurationProperties.class)
+				.getTaskTimeoutMilliseconds();
+
+		final long now = System.currentTimeMillis();
+		if (now - taskRequest.getRequestTime().getTime() > taskTimeoutMilliseconds.intValue()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public int getSessionIdQps() {
@@ -110,7 +124,38 @@ abstract class AbstractRequestValidator {
 	 *
 	 */
 	public void passed(final ZRequest request, final TaskRequest taskRequest) {
-		NioLongConnectionServer.responseAsync(request, taskRequest);
+
+		final String mode = ZContext.getBean(ServerConfigurationProperties.class).getTaskResponsiveMode();
+
+		if (TaskResponsiveModeEnum.QUEUE.name().equals(mode)) {
+			// 直接放入线程队列等待处理
+			ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
+		} else if (TaskResponsiveModeEnum.IMMEDIATELY.name().equals(mode)) {
+
+			// 使用池中空闲线程处理，有空闲的则直接处理
+			// 无空闲的则先看此时是否超过任务等待毫秒数，超过则 提示 message
+			// 没超过则把请求重新放入队列等待后续继续使用空闲线程处理
+
+			final boolean executeImmediately = ZServer.ZE
+					.executeImmediately(() -> NioLongConnectionServer.response(request, taskRequest));
+			if (!executeImmediately) {
+				if (this.timeout(taskRequest)) {
+					// FIXME 2024年2月10日 下午11:41:27 zhanghen: 各个messge都改为配置项，并给一个默认值
+					final String message = "服务器忙：当前无空闲线程&处理超时："
+							+ ZContext.getBean(ServerConfigurationProperties.class).getTaskTimeoutMilliseconds();
+					NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
+				} else {
+					final TaskRequestHandler taskRequestHandler = ZContext.getBean(TaskRequestHandler.class);
+
+					final boolean add = taskRequestHandler.add(taskRequest);
+					if (!add) {
+						final String message = "服务器忙：当前无空闲线程&任务队列满";
+						NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
+					}
+				}
+			}
+		}
+
 	}
 
 }

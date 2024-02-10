@@ -19,12 +19,12 @@ import javax.net.ssl.TrustManagerFactory;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.vo.cache.J;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.TaskResponsiveModeEnum;
 import com.vo.http.HttpStatus;
 import com.votool.common.CR;
+import com.votool.ze.ThreadModeEnum;
 import com.votool.ze.ZE;
 import com.votool.ze.ZES;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  *
@@ -47,12 +47,30 @@ public class ZServer extends Thread {
 	private static final ServerConfigurationProperties SERVER_CONFIGURATION = ZSingleton
 			.getSingletonByClass(ServerConfigurationProperties.class);
 
-	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATION.getThreadCount(),
-			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
+	public final static ZE ZE = ZES.newZE(
+			SERVER_CONFIGURATION.getThreadCount(),
+			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX,
+			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())
+					? ThreadModeEnum.IMMEDIATELY
+					: ThreadModeEnum.LAZY
+		);
+
+//	public final static ZE ZE = ZES.newZE(SERVER_CONFIGURATION.getThreadCount(),
+//			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX);
 
 	private final int httpPort;
 
 	public ZServer(final int httpPort) {
+
+		final ThreadModeEnum threadMode = TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())
+				? ThreadModeEnum.IMMEDIATELY
+				: ThreadModeEnum.LAZY;
+
+		if(TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())) {
+
+		}
+
+
 		this.httpPort = httpPort;
 	}
 

@@ -83,7 +83,7 @@ public class ServerConfigurationProperties {
 	 */
 	@ZNotNull
 	@ZMin(min = 1)
-	@ZMax(max = Integer.MAX_VALUE)
+	@ZMax(max = 2000)
 	private Integer threadCount = Runtime.getRuntime().availableProcessors() * 2;
 
 	/**
@@ -128,6 +128,25 @@ public class ServerConfigurationProperties {
 //	@ZValue(name = "server.pending.tasks", listenForChanges = true)
 	// XXX 考虑好默认为什么比较好
 	private Integer pendingTasks = Runtime.getRuntime().availableProcessors();
+
+	/**
+	 * 对于请求的响应模式
+	 */
+	@ZCustom(cls = TaskResponsiveModeValidator.class)
+	@ZNotEmtpy
+	private String taskResponsiveMode = TaskResponsiveModeEnum.QUEUE.name();
+	// FIXME 2024年2月10日 下午11:55:37 zhanghen: 新增的两个taskXX readmetxt添加上
+
+	/**
+	 * 从服务器接收到请求的时间点开始，到处理本次请求的时间点截止，超过此值就返回【服务器忙】的信息。单位：毫秒
+	 *
+	 * 注意：仅 taskResponsiveMode=IMMEDIATELY 时，本配置项才生效
+	 *
+	 */
+	@ZMin(min = 1)
+	@ZMax(max = 1000 * 100)
+	@ZValue(name = "server.task.timeout.milliseconds", listenForChanges = true)
+	private Integer taskTimeoutMilliseconds = 100;
 
 	/**
 	 * 访问超过 本类 qps限制时给客户端的提示语

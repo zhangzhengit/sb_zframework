@@ -2,6 +2,7 @@ package com.vo.core;
 
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.Date;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,4 +20,9 @@ public class TaskRequest {
 	final SelectionKey selectionKey;
 	final SocketChannel socketChannel;
 	final byte[] requestData;
+
+	/**
+	 * 接收到请求的时间点
+	 */
+	final Date requestTime;
 }

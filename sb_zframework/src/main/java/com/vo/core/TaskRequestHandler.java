@@ -16,14 +16,14 @@ import com.vo.exception.StartupException;
  * @date 2023年11月23日
  *
  */
-public class TaskRequestHandler extends Thread {
+public final class TaskRequestHandler extends Thread {
 
 	public static final String NAME = "request-Dispatcher-Thread";
 
 	public static final String USER_AGENT = "User-Agent";
 
 	private final BlockingQueue<TaskRequest> queue = new LinkedBlockingQueue<>(ZContext.getBean(ServerConfigurationProperties.class).getPendingTasks());
-	
+
 	private final AbstractRequestValidator requestValidator;
 
 	public TaskRequestHandler() {
@@ -73,7 +73,16 @@ public class TaskRequestHandler extends Thread {
 		}
 	}
 
-	public boolean responseAsync(final TaskRequest taskRequest) {
+	/**
+	 *	把请求放入待处理队列：
+	 *	如果当前待处理任务个数 < pendingTasks (server.pending.tasks 配置项)则放入队列等待处理并且返回true；
+	 *	否则返回false
+	 *
+	 * @param taskRequest
+	 * @return
+	 *
+	 */
+	public boolean add(final TaskRequest taskRequest) {
 		final boolean offer = this.queue.offer(taskRequest);
 		return offer;
 	}

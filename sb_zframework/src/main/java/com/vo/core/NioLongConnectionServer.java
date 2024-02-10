@@ -81,6 +81,7 @@ public class NioLongConnectionServer {
 	public void startNIOServer(final Integer serverPort) {
 
 		this.requestHandler.start();
+		ZContext.addBean(this.requestHandler.getClass(), this.requestHandler);
 
 		keepAliveTimeoutJOB();
 
@@ -130,8 +131,8 @@ public class NioLongConnectionServer {
 							if (array != null) {
 								final SocketChannel socketChannel = (SocketChannel) selectionKey.channel();
 								final TaskRequest taskRequest = new TaskRequest(selectionKey, socketChannel,
-										array.get());
-								final boolean responseAsync = this.requestHandler.responseAsync(taskRequest);
+										array.get(),new Date());
+								final boolean responseAsync = this.requestHandler.add(taskRequest);
 								if (!responseAsync) {
 									// FIXME 2024年1月30日 下午7:38:41 zhanghen: 配置多个提示信息：与上面的qps提示信息区分开
 									NioLongConnectionServer.response429Async(selectionKey);
@@ -152,14 +153,19 @@ public class NioLongConnectionServer {
 		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key));
 	}
 
-	public static void response429(final SelectionKey key) {
-		final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
+	public static void response429(final SelectionKey key, final String message) {
+
 		final SocketChannel socketChannel = (SocketChannel) key.channel();
 		final ZResponse response = new ZResponse(socketChannel);
 		response.contentType(HeaderEnum.JSON.getType()).httpStatus(HttpStatus.HTTP_429.getCode())
 				.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 		response.write();
 		closeSocketChannelAndKeyCancel(key, socketChannel);
+	}
+
+	public static void response429(final SelectionKey key) {
+		final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
+		response429(key, message);
 	}
 
 	private static void keepAliveTimeoutJOB() {
@@ -282,11 +288,7 @@ public class NioLongConnectionServer {
 		return array;
 	}
 
-	public synchronized static void responseAsync(final ZRequest request, final TaskRequest taskRequest) {
-		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response(request, taskRequest));
-	}
-
-	private static void response(final ZRequest request, final TaskRequest taskRequest) {
+	public static void response(final ZRequest request, final TaskRequest taskRequest) {
 
 		synchronized (taskRequest.getSocketChannel()) {
 
