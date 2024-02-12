@@ -146,7 +146,7 @@ public class ZServer extends Thread {
 							// FIXME 2023年10月21日 下午7:46:20 zhanghen: ssl暂不支持了，
 							// 修改此处，或者改用nio ssl server
 							task.invoke(request);
-						} catch (IllegalAccessException | InvocationTargetException e) {
+						} catch (final Exception e) {
 							e.printStackTrace();
 						}
 					});

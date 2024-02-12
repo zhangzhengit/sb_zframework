@@ -141,11 +141,10 @@ public class Task {
 	 *
 	 * @param request 请求体
 	 * @return 响应结果，已根据具体的方法处理好header、cookie、body等内容，只是没write
-	 * @throws InvocationTargetException
-	 * @throws IllegalAccessException
+	 * @throws Exception
 	 *
 	 */
-	public ZResponse invoke(final ZRequest request) throws IllegalAccessException, InvocationTargetException {
+	public ZResponse invoke(final ZRequest request) throws Exception {
 		// 匹配path
 		final RequestLine requestLine = request.getRequestLine();
 		if (CollUtil.isEmpty(request.getLineList())) {
@@ -179,7 +178,7 @@ public class Task {
 
 	}
 
-	private ZResponse handleNoMethodMatche(final ZRequest request, final RequestLine requestLine, final String path) {
+	private ZResponse handleNoMethodMatche(final ZRequest request, final RequestLine requestLine, final String path) throws Exception {
 		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
 		if (CollUtil.isNotEmpty(methodMap)) {
 			final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
@@ -206,7 +205,9 @@ public class Task {
 					final ZResponse invokeAndResponse = this.invokeAndResponse(methodTarget, arraygP, object, request);
 					return invokeAndResponse;
 				} catch (IllegalAccessException | InvocationTargetException | UnsupportedEncodingException e) {
-					e.printStackTrace();
+//					e.printStackTrace();
+					// 继续抛出，抛给默认的异常处理器来处理
+					throw e;
 				}
 			}
 		}
