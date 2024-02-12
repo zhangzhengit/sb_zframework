@@ -292,9 +292,10 @@ public class NioLongConnectionServer {
 
 		synchronized (taskRequest.getSocketChannel()) {
 
-			final Task task = new Task(taskRequest.getSocketChannel());
-
 			try {
+				ReqeustInfo.set(request);
+
+				final Task task = new Task(taskRequest.getSocketChannel());
 				final String contentType = request.getContentType();
 				if (StrUtil.isNotEmpty(contentType)
 						&& contentType.toLowerCase().startsWith(HeaderEnum.FORM_DATA.getType().toLowerCase())) {
@@ -323,6 +324,8 @@ public class NioLongConnectionServer {
 						.write();
 
 				closeSocketChannelAndKeyCancel(taskRequest.getSelectionKey(), taskRequest.getSocketChannel());
+			} finally {
+				ReqeustInfo.remove();
 			}
 		}
 	}
