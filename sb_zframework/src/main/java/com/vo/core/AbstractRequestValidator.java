@@ -147,6 +147,7 @@ abstract class AbstractRequestValidator {
 				} else {
 					final TaskRequestHandler taskRequestHandler = ZContext.getBean(TaskRequestHandler.class);
 
+					// FIXME 2024年2月12日 下午5:55:22 zhanghen: 任务队列改用双向队列，好在此放入队头部优先执行此任务？
 					final boolean add = taskRequestHandler.add(taskRequest);
 					if (!add) {
 						final String message = "服务器忙：当前无空闲线程&任务队列满";
