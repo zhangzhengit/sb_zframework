@@ -11,7 +11,7 @@ package com.vo.configuration;
 public enum TaskResponsiveModeEnum {
 
 	/**
-	 * 立即响应，如果当前有空闲线程，则立即执行；否则返回错误码
+	 * 立即响应，如果当前有空闲线程，则立即执行；否则重新入列等待执行，知道超时了返回错误码
 	 */
 	IMMEDIATELY,
 
