@@ -35,6 +35,8 @@ public class ZTemplate {
 
 		try {
 
+			// FIXME 2024年2月13日 下午5:29:45 zhanghen: 目录不能在此写死，改为配置项，并且考虑好如果配置了读取硬盘上的
+			// 的静态文件（包括html）时，是否优先使用静态文件的目录
 			CFG.setClassForTemplateLoading(ZTemplate.class, "/static");
 
 			final Template template = new Template("template-" + templateString.hashCode(), templateString, CFG);
