@@ -43,20 +43,20 @@
 			prefix 属性：表示匹配的zframework.properties 中的前缀
 			
 		支持的字段类型：@see ZConfigurationProperties 
-			List 类型：支持配置为空，如:
-				private List<User> list;
-				配置：
-				xx.list[0].name=zhang
-				xx.list[0].id=200
-				xx.list[2].name=一
-				xx.list[2].id=1
-				等同于
-				private List<User> list = {配置的第一个,null,配置的第三个};
-				配置中不存在1，代码中list 1的位置为null
-				
-				List 用来配置自定义对象类型
+			List：
+				用来配置自定义对象类型，如:
+					private List<User> list;
+					配置：
+					xx.list[0].userName=zhang
+					xx.list[0].id=200
+					xx.list[1].userName=一
+					xx.list[1].id=1
+					等同于
+					private List<User> list = {配置的第一个,配置的第二个};
 			
-			Set 类型：使用LinkedHashSet支持按 0 1 2 3 顺序来配置值
+			Set ：
+				用来配置配置java内置的类型如String、Integer等等
+				使用LinkedHashSet支持按 0 1 2 3 顺序来配置值
 				Set 默认配置java内置的类型如String、Integer等等
 			
 		支持在字段上使用校验注解：@see # 校验注解

@@ -297,41 +297,60 @@ public class ZConfigurationPropertiesScanner {
 		// 从1-N个[i]
 		final List<Object> list = Lists.newArrayList();
 
-
 		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
 
-			final String suffix = "[" + (i - 1) + "]";
-			final String fullKey = key + suffix;
-			final Iterator<String> sk = p.getKeys(fullKey);
+			final Object newInstance = newInstance(field);
 
-			if (sk.hasNext()) {
-				final String xa = sk.next();
-				final String xaValue = p.getString(xa);
-				final Object newInstance = newInstance(field);
-				try {
-					setValue(newInstance, fullKey, xa, xaValue);
-				} catch (final Exception e) {
-					final String message = "@" + ZConfigurationProperties.class.getSimpleName()
-							+ " List类型参数初始化异常，key=" + xa;
+			final String suffix = "[" + (i - 1) + "]";
+			final String fullKey1 = key + suffix;
+			final Iterator<String> sk1 = p.getKeys(fullKey1);
+
+			final String fullKey2 = convert(key) + suffix;
+			final Iterator<String> sk2 = p.getKeys(fullKey2);
+
+
+			boolean e = false;
+
+			if (sk1.hasNext()) {
+				e = true;
+				iteratorList(field, p, list, fullKey1, sk1, newInstance);
+			}
+
+			if (sk2.hasNext()) {
+				if (e) {
+					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型参数初始化异常，key："
+							+ fullKey1 + " 和 " + fullKey2 + " 配置重复，请只使用其中一种方式，建议使用 " + fullKey2 + " 的形式";
 					throw new ZConfigurationPropertiesException(message);
 				}
-
-				while (sk.hasNext()) {
-					final String xa2 = sk.next();
-					final String xaValue2 = p.getString(xa2);
-					setValue(newInstance, fullKey, xa2, xaValue2);
-				}
-				list.add(newInstance);
-			} else {
-				// 为空也add null，占一个位置，为了这种需求：
-				// [0]=A [2]=C 就是不配置第二个位置让其为空，
-				// 这样取的时候list.get(1) 取得的第二个就是null
-				list.add(null);
+				e = true;
+				iteratorList(field, p, list, fullKey2, sk2, newInstance);
 			}
+
+			if (e) {
+				list.add(newInstance);
+			}
+
+			// FIXME 2024年2月16日 下午7:35:20 zhanghen: 下面的之前考虑的可以 0配置 1配置null 2配置
+			// 形成 List list = {配置1,null,配置2}的这种形式还待考虑怎么实现好，或者不做这个功能了
+//			else {
+//				// 为空也add null，占一个位置，为了这种需求：
+//				// [0]=A [2]=C 就是不配置第二个位置让其为空，
+//				// 这样取的时候list.get(1) 取得的第二个就是null
+//
+////				list.add(null);
+//			}
+
+//			list.add(newInstance);
+		}
+
+
+		if (list.isEmpty()) {
+			return;
 		}
 
 		// 最后去除后面的所有的null
-		int i = list.size() - 1;
+		int i = list.size();
+//		int i = list.size() - 1;
 		while (i > 1) {
 			if (list.get(i - 1) == null) {
 				i--;
@@ -353,6 +372,30 @@ public class ZConfigurationPropertiesScanner {
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private static Object iteratorList(final Field field, final PropertiesConfiguration p, final List<Object> list,
+			final String fullKey1, final Iterator<String> sk1, final Object newInstance) throws Exception {
+		final String xa = sk1.next();
+		final String xaValue = p.getString(xa);
+//		final Object newInstance = newInstance(field);
+		try {
+			setValue(newInstance, fullKey1, xa, xaValue);
+		} catch (final Exception e) {
+			final String message = "@" + ZConfigurationProperties.class.getSimpleName()
+					+ " List类型参数初始化异常，key=" + xa;
+			throw new ZConfigurationPropertiesException(message);
+		}
+
+		while (sk1.hasNext()) {
+			final String xa2 = sk1.next();
+			final String xaValue2 = p.getString(xa2);
+			if (xaValue2 != null) {
+				setValue(newInstance, fullKey1, xa2, xaValue2);
+			}
+		}
+//		list.add(newInstance);
+		return newInstance;
 	}
 
 	private static void setValue(final Object newInstance, final String fullKey, final String key,
@@ -407,14 +450,12 @@ public class ZConfigurationPropertiesScanner {
 
 	private static Object newInstance(final Field field)  {
 		final Class<?> type2 = ZCU.getGenericType(field)[0];
-		System.out.println("type = " + type2);
 		Object newInstance = null;
 		try {
 			newInstance = type2.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
-		System.out.println("newInstance = " + newInstance);
 
 		return newInstance;
 	}
