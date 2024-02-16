@@ -223,17 +223,15 @@ public class ZConfigurationPropertiesScanner {
 
 		for (int i = 1; i <= PROPERTY_INDEX + 1; i++) {
 			final String suffix = "[" + (i - 1) + "]";
-			final Iterator<String> sk = p.getKeys(key + suffix);
-			while (sk.hasNext()) {
-				final String xa = sk.next();
+			final String k1 = key + suffix;
 
-				final Class<?> gType = ts[0];
-				final Object value = getSetFiledValue(p, xa, gType);
+			if (p.containsKey(k1)) {
+				iteratorSet(object, field, p, set, ts, k1);
+			} else {
 
-				if (!set.add(value)) {
-					final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
-							+ xa + "" + ",value=" + value;
-					throw new ZConfigurationPropertiesException(message);
+				final String k2 = convert(key) + suffix;
+				if (p.containsKey(k2)) {
+					iteratorSet(object, field, p, set, ts, k2);
 				}
 			}
 		}
@@ -245,6 +243,23 @@ public class ZConfigurationPropertiesScanner {
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private static void iteratorSet(final Object object, final Field field, final PropertiesConfiguration p,
+			final Set<Object> set, final Class<?>[] ts, final String k1) {
+		final Iterator<String> sk = p.getKeys(k1);
+		while (sk.hasNext()) {
+			final String xa = sk.next();
+
+			final Class<?> gType = ts[0];
+			final Object value = getSetFiledValue(p, xa, gType);
+
+			if (!set.add(value)) {
+				final String message = object.getClass().getSimpleName() + "." + field.getName() + " Set类型值重复：key="
+						+ xa + "" + ",value=" + value;
+				throw new ZConfigurationPropertiesException(message);
+			}
 		}
 	}
 
