@@ -303,6 +303,7 @@ public class NioLongConnectionServer {
 					// 后续解析需要，或是不需要，再看.
 					request.setOriginalRequestBytes(taskRequest.getRequestData());
 				}
+
 				if (taskRequest.getSocketChannel().isOpen()) {
 					NioLongConnectionServer.response(taskRequest.getSelectionKey(), taskRequest.getSocketChannel(),
 							request, task);

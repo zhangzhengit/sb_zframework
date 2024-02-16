@@ -18,6 +18,8 @@ import com.vo.exception.StartupException;
  */
 public final class TaskRequestHandler extends Thread {
 
+	private static final ZLog2 LOG = ZLog2.getInstance();
+
 	public static final String NAME = "request-Dispatcher-Thread";
 
 	public static final String USER_AGENT = "User-Agent";
@@ -58,6 +60,9 @@ public final class TaskRequestHandler extends Thread {
 
 	@Override
 	public void run() {
+
+		final RequestValidatorConfigurationProperties p = ZContext.getBean(RequestValidatorConfigurationProperties.class);
+
 		while (true) {
 			try {
 				final TaskRequest taskRequest = this.queue.take();
@@ -65,6 +70,11 @@ public final class TaskRequestHandler extends Thread {
 						.intern();
 				final Task task = new Task(taskRequest.getSocketChannel());
 				final ZRequest request = task.handleRead(requestString);
+
+				if (Boolean.TRUE.equals(p.getPrintHttp())) {
+					LOG.debug("httpRequest={}", System.lineSeparator() + requestString);
+				}
+
 				this.requestValidator.handle(request, taskRequest);
 			} catch (final Exception e) {
 				e.printStackTrace();

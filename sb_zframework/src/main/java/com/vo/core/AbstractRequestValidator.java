@@ -21,11 +21,11 @@ import cn.hutool.core.util.StrUtil;
 abstract class AbstractRequestValidator {
 
 	public void handle(final ZRequest request, final TaskRequest taskRequest) {
-		final boolean validated = this.validated(request, taskRequest);
-		if (validated) {
+		final RequestVerificationResult r = this.validated(request, taskRequest);
+		if (r.isPassed()) {
 			this.passed(request, taskRequest);
 		} else {
-			this.failed(request, taskRequest);
+			this.failed(request, taskRequest, r.getMessage());
 		}
 	}
 
@@ -63,14 +63,14 @@ abstract class AbstractRequestValidator {
 	 * @return
 	 *
 	 */
-	public boolean validated(final ZRequest request, final TaskRequest taskRequest) {
+	public RequestVerificationResult validated(final ZRequest request, final TaskRequest taskRequest) {
 		final String userAgent = request.getHeader(TaskRequestHandler.USER_AGENT);
 
 		// 启用了响应 ZSESSIONID，则认为ZSESSIONID相同就是同一个客户端(前提是服务器中存在对应的session，因为session可能是伪造的等，服务器重启就重启就认为是无效session)
 		if (this.responseZSessionId()) {
 			final ZSession session = request.getSession(false);
 			if (session != null) {
-				final String keyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
+				final String smoothUserAgentKeyword = ZRequest.Z_SESSION_ID + "@" + session.getId();
 
 				if (StrUtil.isNotEmpty(userAgent)) {
 					final RequestValidatorConfigurationProperties requestValidatorConfigurationProperties = ZContext
@@ -80,12 +80,20 @@ abstract class AbstractRequestValidator {
 							.findAny();
 					if (findAny.isPresent()) {
 						// ua 包含在配置的，则[不]平滑处理
-						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
+//						return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
+						final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.UNEVEN);
+						final RequestVerificationResult r = new RequestVerificationResult(allow,
+								allow ? "" : "SmoothUserAgent-ZSESSIONID访问频繁");
+						return r;
 					}
 				}
 
 				// ua 不包含在配置的，则平滑处理
-				return QPSCounter.allow(keyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
+//				return QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
+				final boolean allow = QPSCounter.allow(smoothUserAgentKeyword, this.getSessionIdQps(), QPSEnum.Z_SESSION_ID);
+				 final RequestVerificationResult r = new RequestVerificationResult(allow,
+							allow ? "" : "ZSESSIONID访问频繁");
+				return r;
 			}
 		}
 
@@ -94,7 +102,12 @@ abstract class AbstractRequestValidator {
 		// -------------------------------------------------
 		final String clientIp = request.getClientIp();
 		final String keyword = clientIp + "@" + userAgent;
-		return QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
+
+		 final boolean allow = QPSCounter.allow(keyword, this.getClientQps(), QPSEnum.CLIENT);
+
+		 final RequestVerificationResult r = new RequestVerificationResult(allow,
+					allow ? "" : "CLIENT访问频繁");
+		return r;
 	}
 
 	/**
@@ -111,10 +124,11 @@ abstract class AbstractRequestValidator {
 	 * 不放行怎么处理，默认实现为返回 429 并且关闭连接
 	 *
 	 * @param request
+	 * @param message 
 	 *
 	 */
-	public void failed(final ZRequest request, final TaskRequest taskRequest) {
-		NioLongConnectionServer.response429(taskRequest.getSelectionKey());
+	public void failed(final ZRequest request, final TaskRequest taskRequest, final String message) {
+		NioLongConnectionServer.response429(taskRequest.getSelectionKey(), message);
 	}
 
 	/**

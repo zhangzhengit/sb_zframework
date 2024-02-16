@@ -115,6 +115,8 @@ public class ServerConfigurationProperties {
 	@ZCustom(cls = ZServerQPSValidator.class)
 	// FIXME 2023年11月15日 下午3:02:12 zhanghen: TODO 是否限制同一个clientip短时间内高频率访问（脚本刷）？
 	// 如果不限制的话，是否其他ip的请求优先处理？
+
+	// FIXME 2024年2月15日 下午6:14:59 zhanghen: 最先判断是否超过server.qps 似乎不合理，应该先判断ZSESSIONID或者client是否超对应的qps，然后判断是否超server.qps
 	private Integer qps = QPSEnum.SERVER.getDefaultValue();
 
 	/**

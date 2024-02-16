@@ -21,7 +21,7 @@ public class ZClientQPSValidator implements ZCustomValidator {
 	public static final int MIN_VALUE = 10;
 	public static final int MAX_VALUE = 10000 * 20;
 
-	public static final int DEFAULT_VALUE = 10000;
+	public static final int DEFAULT_VALUE = 5000;
 
 	@Override
 	public void validated(final Object object, final Field field) throws Exception {

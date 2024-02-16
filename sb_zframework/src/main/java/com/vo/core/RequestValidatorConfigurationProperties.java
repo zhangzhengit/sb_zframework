@@ -5,6 +5,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.validator.ZNotEmtpy;
+import com.vo.validator.ZNotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,5 +35,11 @@ public class RequestValidatorConfigurationProperties {
 	@ZNotEmtpy
 	private Set<String> smoothUserAgent = Sets.newHashSet("Safari", "Chrome", "Firefox", "Edge", "Edg", "Opera",
 			"OPR");
+
+	/**
+	 * 是否打印http请求头（日志输出）
+	 */
+	@ZNotNull
+	private Boolean printHttp = false;
 
 }
