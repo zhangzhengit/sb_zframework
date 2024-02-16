@@ -120,6 +120,13 @@ public class ServerConfigurationProperties {
 	private Integer qps = QPSEnum.SERVER.getDefaultValue();
 
 	/**
+	 * 访问超过 本类 [server.qps] 配置值限制时给客户端的提示语
+	 */
+	@ZNotEmtpy
+	@ZValue(name = "server.qps.exceed.message", listenForChanges = true)
+	private String qpsExceedMessage = "访问频繁，请稍后再试";
+
+	/**
 	 * 当前待处理的请求数最大值限制，来新请求时如果当前待处理请求数已经达到此值，则拒绝本次请求并返回错误码
 	 */
 	@ZMin(min = 1)
@@ -130,6 +137,13 @@ public class ServerConfigurationProperties {
 //	@ZValue(name = "server.pending.tasks", listenForChanges = true)
 	// XXX 考虑好默认为什么比较好
 	private Integer pendingTasks = Runtime.getRuntime().availableProcessors();
+
+	/**
+	 *	请求超过 [server.pending.tasks] 配置值时给客户端的提示信息
+	 */
+	@ZNotEmtpy
+	@ZValue(name = "server.pending.tasks.exceed.message", listenForChanges = true)
+	private String pendingTasksExceedMessage = "待处理请求队列已满，请稍后再试";
 
 	/**
 	 * 对于请求的响应模式
@@ -150,12 +164,6 @@ public class ServerConfigurationProperties {
 	@ZValue(name = "server.task.timeout.milliseconds", listenForChanges = true)
 	private Integer taskTimeoutMilliseconds = 100;
 
-	/**
-	 * 访问超过 本类 qps限制时给客户端的提示语
-	 */
-	@ZNotEmtpy
-	@ZValue(name = "server.qps.exceed.message", listenForChanges = true)
-	private String qpsExceedMessage = "访问频繁，请稍后再试";
 
 	@ZMin(min = ZClientQPSValidator.MIN_VALUE)
 	@ZMax(max = ZClientQPSValidator.MAX_VALUE)

@@ -124,8 +124,10 @@ public class NioLongConnectionServer {
 						handleAccept(selectionKey, selector);
 					} else if (selectionKey.isReadable()) {
 						if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getQpsLimitEnabled())
-								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER)) {
-							NioLongConnectionServer.response429Async(selectionKey);
+								&& !QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(),
+										QPSEnum.SERVER)) {
+							final ServerConfigurationProperties p = ZContext.getBean(ServerConfigurationProperties.class);
+							NioLongConnectionServer.response429Async(selectionKey,p.getQpsExceedMessage());
 						} else {
 							final ZArray array = this.handleRead(selectionKey);
 							if (array != null) {
@@ -134,8 +136,9 @@ public class NioLongConnectionServer {
 										array.get(),new Date());
 								final boolean responseAsync = this.requestHandler.add(taskRequest);
 								if (!responseAsync) {
-									// FIXME 2024年1月30日 下午7:38:41 zhanghen: 配置多个提示信息：与上面的qps提示信息区分开
-									NioLongConnectionServer.response429Async(selectionKey);
+									final ServerConfigurationProperties p = ZContext
+											.getBean(ServerConfigurationProperties.class);
+									NioLongConnectionServer.response429Async(selectionKey, p.getPendingTasksExceedMessage());
 								}
 							}
 						}
@@ -149,8 +152,8 @@ public class NioLongConnectionServer {
 		}
 	}
 
-	public static void response429Async(final SelectionKey key) {
-		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key));
+	public static void response429Async(final SelectionKey key, final String message) {
+		ZServer.ZE.executeInQueue(() -> NioLongConnectionServer.response429(key, message));
 	}
 
 	public static void response429(final SelectionKey key, final String message) {
@@ -161,11 +164,6 @@ public class NioLongConnectionServer {
 				.body(J.toJSONString(CR.error(message), Include.NON_NULL));
 		response.write();
 		closeSocketChannelAndKeyCancel(key, socketChannel);
-	}
-
-	public static void response429(final SelectionKey key) {
-		final String message = SERVER_CONFIGURATION.getQpsExceedMessage();
-		response429(key, message);
 	}
 
 	private static void keepAliveTimeoutJOB() {
