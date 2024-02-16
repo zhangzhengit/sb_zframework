@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.vo.anno.ZConfigurationProperties;
+import com.vo.anno.ZValue;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
 
@@ -40,6 +41,7 @@ public class RequestValidatorConfigurationProperties {
 	 * 是否打印http请求头（日志输出）
 	 */
 	@ZNotNull
+	@ZValue(name = "request.print.http", listenForChanges = true)
 	private Boolean printHttp = false;
 
 }
