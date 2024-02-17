@@ -1,14 +1,20 @@
 package com.vo;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.vo.configuration.CommonConfigurationProperties;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
+import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
@@ -70,6 +76,8 @@ public class ZApplication {
 		ZMain.start(Lists.newArrayList(scanPackageNameList), httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
+		loadStarter();
+
 		final long freeMemory = Runtime.getRuntime().freeMemory();
 		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
@@ -87,6 +95,42 @@ public class ZApplication {
 		final ZApplicationContext context =
 		new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList), httpEnable, args, ZProperties.getInstance());
 		return context;
+	}
+
+
+	/**
+	 *	TODO 做一个类似spring.factories的功能，给zf做几个starter。先把zf中的通用类提取出来 一个common工程，然后zf也是依赖此common工程
+	 *
+	 * @author zhangzhen
+	 * @date 2024年2月17日
+	 */
+	private static void loadStarter() {
+		final ClassLoader classLoader = ZApplication.class.getClassLoader();
+		try {
+			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
+			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
+			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
+
+//			int c = 0;
+			while (resources.hasMoreElements()) {
+				final URL url = resources.nextElement();
+				final Properties properties = new Properties();
+				properties.load(url.openStream());
+
+				final int size = properties.size();
+//				c = size;
+
+				LOG.debug("/resources/META-INF/下文件size={}", size);
+				// FIXME 2024年2月17日 下午7:40:59 zhanghen: 读取，使用 @ZCP的读取方式。然后启动对应的类，先让启动类必须实现一个接口
+			}
+//			if (c == 0) {
+//				LOG.debug("/resources/META-INF/下无文件:{}", common.getStarterName());
+//			}else {
+//				LOG.debug("/resources/META-INF/文件个数=:{}", common.getStarterName());
+//			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 
