@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,7 +73,7 @@ public class ZConfigurationPropertiesScanner {
 		final Set<Integer> valueSet = Sets.newHashSet();
 		for (final Class<?> cls : cl) {
 			final ZOrder annotation = cls.getAnnotation(ZOrder.class);
-			if ((annotation != null) && !valueSet.add(annotation.value())) {
+			if (annotation != null && !valueSet.add(annotation.value())) {
 				throw new StartupException("@" + ZConfigurationProperties.class.getSimpleName() + " 类 " + "@"
 						+ ZOrder.class.getSimpleName() + ".value" + "[" + annotation.value() + "]" + "重复，请检查代码");
 			}
@@ -85,7 +86,7 @@ public class ZConfigurationPropertiesScanner {
 			final ZConfigurationProperties zcp = cs.getAnnotation(ZConfigurationProperties.class);
 
 			final String prefix = StrUtil.isEmpty(zcp.prefix()) ? ""
-					: (zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".");
+					: zcp.prefix().endsWith(".") ? zcp.prefix() : zcp.prefix() + ".";
 
 			final Object object = ZSingleton.getSingletonByClass(cs);
 			final Field[] fs = cs.getDeclaredFields();
@@ -305,28 +306,32 @@ public class ZConfigurationPropertiesScanner {
 			final String fullKey1 = key + suffix;
 			final Iterator<String> sk1 = p.getKeys(fullKey1);
 
-			final String fullKey2 = convert(key) + suffix;
-			final Iterator<String> sk2 = p.getKeys(fullKey2);
 
-
-			boolean e = false;
+			boolean sk1HasNext = false;
 
 			if (sk1.hasNext()) {
-				e = true;
+				sk1HasNext = true;
 				iteratorList(field, p, list, fullKey1, sk1, newInstance);
 			}
 
-			if (sk2.hasNext()) {
-				if (e) {
-					final String message = "@" + ZConfigurationProperties.class.getSimpleName() + " List类型参数初始化异常，key："
-							+ fullKey1 + " 和 " + fullKey2 + " 配置重复，请只使用其中一种方式，建议使用 " + fullKey2 + " 的形式";
-					throw new ZConfigurationPropertiesException(message);
+			final String fullKey2 = convert(key) + suffix;
+			if (!Objects.equals(fullKey1, fullKey2)) {
+
+				final Iterator<String> sk2 = p.getKeys(fullKey2);
+
+				if (sk2.hasNext()) {
+					if (sk1HasNext) {
+						final String message = "@" + ZConfigurationProperties.class.getSimpleName()
+								+ " List类型参数初始化异常，key：" + fullKey1 + " 和 " + fullKey2 + " 配置重复，请只使用其中一种方式，建议使用 "
+								+ fullKey2 + " 的形式";
+						throw new ZConfigurationPropertiesException(message);
+					}
+					sk1HasNext = true;
+					iteratorList(field, p, list, fullKey2, sk2, newInstance);
 				}
-				e = true;
-				iteratorList(field, p, list, fullKey2, sk2, newInstance);
 			}
 
-			if (e) {
+			if (sk1HasNext) {
 				list.add(newInstance);
 			}
 
@@ -352,11 +357,10 @@ public class ZConfigurationPropertiesScanner {
 		int i = list.size();
 //		int i = list.size() - 1;
 		while (i > 1) {
-			if (list.get(i - 1) == null) {
-				i--;
-			} else {
+			if (list.get(i - 1) != null) {
 				break;
 			}
+			i--;
 		}
 
 		final List<Object> subList = i <= 0 ? null : list.subList(0, i);
