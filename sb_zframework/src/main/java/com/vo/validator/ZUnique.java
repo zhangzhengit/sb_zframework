@@ -14,10 +14,6 @@ import java.lang.annotation.Target;
  * 注意：此注解不自动包含其他任何注解功能，如需其他注解功能需要引入其他注解或自定义注解[@see @ZCustom]
  *
  * @author zhangzhen
- * @date 2023年10月31日
- *
- *
- * @author zhangzhen
  * @data 2024年3月13日 下午8:00:46
  *
  */
