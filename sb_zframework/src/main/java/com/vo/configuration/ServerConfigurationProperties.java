@@ -1,19 +1,20 @@
 package com.vo.configuration;
 
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZOrder;
 import com.vo.anno.ZValue;
 import com.vo.core.QPSEnum;
 import com.vo.enums.ZSessionStorageTypeEnum;
-import com.vo.validator.ZCustom;
 import com.vo.validator.ZClientQPSValidator;
-import com.vo.validator.ZServerQPSValidator;
+import com.vo.validator.ZCustom;
 import com.vo.validator.ZMax;
 import com.vo.validator.ZMin;
 import com.vo.validator.ZNotEmtpy;
 import com.vo.validator.ZNotNull;
+import com.vo.validator.ZServerQPSValidator;
 import com.vo.validator.ZSessionIdQPSValidator;
 import com.vo.validator.ZStartWith;
 
@@ -270,9 +271,7 @@ public class ServerConfigurationProperties {
 	}
 
 	public String[] getGzipContentType() {
-		final String[] a = this.gzipTypes.split(",");
-		return a;
+		return SCU.split(this.gzipTypes, ",");
 	}
-
 
 }
