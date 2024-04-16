@@ -1,6 +1,8 @@
 package com.vo.configuration;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Optional;
 
 import com.vo.anno.ZValue;
 import com.vo.exception.ValidatedException;
@@ -21,7 +23,11 @@ public class TaskResponsiveModeValidator implements ZCustomValidator {
 		field.setAccessible(true);
 		final String v = (String) field.get(object);
 
-		if (!TaskResponsiveModeEnum.QUEUE.name().equals(v) && !(TaskResponsiveModeEnum.IMMEDIATELY.name().equals(v))) {
+		final Optional<TaskResponsiveModeEnum> findAny =
+				Arrays.stream(TaskResponsiveModeEnum.values())
+				.filter(e -> e.name().equals(v)).findAny();
+
+		if (!findAny.isPresent()) {
 			final String message = field.getAnnotation(ZCustom.class).message();
 
 			final String pName = field.isAnnotationPresent(ZValue.class)
