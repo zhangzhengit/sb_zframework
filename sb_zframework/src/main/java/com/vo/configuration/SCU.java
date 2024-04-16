@@ -21,6 +21,7 @@ public class SCU {
 	 * @param regex
 	 * @return
 	 */
+	// FIXME 2024年4月16日 下午2:41:07 zhangzhen: 现有的String.split方法等修改了save action后再修改提交，否则自动改得太混乱提交时不好分辨
 	public static String[] split(final String string, final String regex) {
 
 		final Object rm = SCU.C.get(string);
