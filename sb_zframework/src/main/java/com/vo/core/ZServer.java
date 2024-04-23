@@ -40,7 +40,6 @@ public class ZServer extends Thread {
 
 	public static final String Z_SERVER_QPS = "ZServer_QPS";
 
-	public static final String DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX = "zframework-nio-http-thread-";
 
 	public static final int DEFAULT_HTTP_PORT = 80;
 
@@ -48,9 +47,9 @@ public class ZServer extends Thread {
 			.getSingletonByClass(ServerConfigurationProperties.class);
 
 	public final static ZE ZE = ZES.newZE(
-			SERVER_CONFIGURATION.getThreadCount(),
-			DEFAULT_ZFRAMEWORK_NIO_HTTP_THREAD_NAME_PREFIX,
-			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())
+			ZServer.SERVER_CONFIGURATION.getThreadCount(),
+			ZServer.SERVER_CONFIGURATION.getThreadName(),
+			TaskResponsiveModeEnum.IMMEDIATELY.name().equals(ZServer.SERVER_CONFIGURATION.getTaskResponsiveMode())
 					? ThreadModeEnum.IMMEDIATELY
 					: ThreadModeEnum.LAZY
 		);
@@ -62,11 +61,11 @@ public class ZServer extends Thread {
 
 	public ZServer(final int httpPort) {
 
-		final ThreadModeEnum threadMode = TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())
+		final ThreadModeEnum threadMode = TaskResponsiveModeEnum.IMMEDIATELY.name().equals(ZServer.SERVER_CONFIGURATION.getTaskResponsiveMode())
 				? ThreadModeEnum.IMMEDIATELY
 				: ThreadModeEnum.LAZY;
 
-		if(TaskResponsiveModeEnum.IMMEDIATELY.name().equals(SERVER_CONFIGURATION.getTaskResponsiveMode())) {
+		if(TaskResponsiveModeEnum.IMMEDIATELY.name().equals(ZServer.SERVER_CONFIGURATION.getTaskResponsiveMode())) {
 
 		}
 
@@ -78,10 +77,10 @@ public class ZServer extends Thread {
 	public void run() {
 		final ServerConfigurationProperties serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 		if (serverConfiguration.getSslEnable()) {
-			LOG.trace("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
+			ZServer.LOG.trace("SSL启用，启动SSLServer,port={}", serverConfiguration.getPort());
 			ZServer.startSSLServer();
 		} else {
-			LOG.trace("启动Server,port={}", this.httpPort);
+			ZServer.LOG.trace("启动Server,port={}", this.httpPort);
 			final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
 			nioLongConnectionServer.startNIOServer(this.httpPort);
 		}
@@ -92,9 +91,9 @@ public class ZServer extends Thread {
 		try {
 			// 加载密钥库文件
 			// 密钥库密码
-			final KeyStore keyStore = KeyStore.getInstance(SERVER_CONFIGURATION.getSslType());
-			final FileInputStream fis = new FileInputStream(SERVER_CONFIGURATION.getSslKeyStore());
-			final char[] password = SERVER_CONFIGURATION.getSslPassword().toCharArray();
+			final KeyStore keyStore = KeyStore.getInstance(ZServer.SERVER_CONFIGURATION.getSslType());
+			final FileInputStream fis = new FileInputStream(ZServer.SERVER_CONFIGURATION.getSslKeyStore());
+			final char[] password = ZServer.SERVER_CONFIGURATION.getSslPassword().toCharArray();
 			keyStore.load(fis, password);
 
 			// 初始化密钥管理器
@@ -112,19 +111,19 @@ public class ZServer extends Thread {
 			final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
 			sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
 
-			ZServer.LOG.trace("zSSLServer开始启动,serverPort={}", SERVER_CONFIGURATION.getPort());
+			ZServer.LOG.trace("zSSLServer开始启动,serverPort={}", ZServer.SERVER_CONFIGURATION.getPort());
 
 			// 创建ServerSocket并绑定SSL上下文
 			final ServerSocket serverSocket = sslContext.getServerSocketFactory()
-					.createServerSocket(SERVER_CONFIGURATION.getPort());
+					.createServerSocket(ZServer.SERVER_CONFIGURATION.getPort());
 
-			ZServer.LOG.trace("zSSLServer启动成功，等待连接,serverPort={}", SERVER_CONFIGURATION.getPort());
+			ZServer.LOG.trace("zSSLServer启动成功，等待连接,serverPort={}", ZServer.SERVER_CONFIGURATION.getPort());
 
 			// 启动服务器
 			while (true) {
 				final SSLSocket socket = (SSLSocket) serverSocket.accept();
 
-				final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER);
+				final boolean allow = QPSCounter.allow(ZServer.Z_SERVER_QPS, ZServer.SERVER_CONFIGURATION.getQps(), QPSEnum.SERVER);
 				if (!allow) {
 
 					final ZResponse response = new ZResponse(socket.getOutputStream());
@@ -132,7 +131,7 @@ public class ZServer extends Thread {
 					response
 							.httpStatus(HttpStatus.HTTP_403.getCode())
 							.contentType(HeaderEnum.JSON.getType())
-							.body(J.toJSONString(CR.error("zserver-超出QPS限制,qps = " + SERVER_CONFIGURATION.getQps()), Include.NON_NULL))
+							.body(J.toJSONString(CR.error("zserver-超出QPS限制,qps = " + ZServer.SERVER_CONFIGURATION.getQps()), Include.NON_NULL))
 							.write();
 
 					socket.close();
