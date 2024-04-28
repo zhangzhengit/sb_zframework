@@ -18,6 +18,8 @@ import com.vo.exception.StartupException;
  */
 public final class TaskRequestHandler extends Thread {
 
+	private static final String BOUNDARY = "boundary=";
+
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String NAME = "request-Dispatcher-Thread";
@@ -68,14 +70,43 @@ public final class TaskRequestHandler extends Thread {
 				final TaskRequest taskRequest = this.queue.take();
 				final String requestString = new String(taskRequest.getRequestData(), NioLongConnectionServer.CHARSET)
 						.intern();
+				System.out.println("取出一个任务-");
+//				System.	out.println(requestString);
+
+
 				final Task task = new Task(taskRequest.getSocketChannel());
 				final ZRequest request = task.handleRead(requestString);
+
+				final String contentType = request.getContentType();
+
+				// FIXME 2024年4月28日 下午10:05:40 zhangzhen: 这里在上传文件时，postman测试，一次请求可能会分为两次，还没查到原因，暂时如下处理：
+				// 判断如果是form-data，则看boundary值+--是否出现在最后，如果没有，则等待下次请求看，是则拼接为同一个请求
+
+
+				boolean isWanzheng = false;
+				if (contentType.toLowerCase().contains(HeaderEnum.FORM_DATA.getType())) {
+					final int bi = contentType.indexOf(BOUNDARY);
+					if (bi > -1) {
+						final String boundary = contentType.substring(bi + BOUNDARY.length());
+						final String boundaryEnd = boundary + "--";
+						if (requestString.lastIndexOf(boundaryEnd) > -1) {
+							isWanzheng = true;
+						}
+					}
+				}
 
 				if (Boolean.TRUE.equals(p.getPrintHttp())) {
 					LOG.debug("httpRequest={}", System.lineSeparator() + requestString);
 				}
 
-				this.requestValidator.handle(request, taskRequest);
+				if (isWanzheng) {
+					this.requestValidator.handle(request, taskRequest);
+				} else {
+					// FIXME 2024年4月28日 下午10:14:39 zhangzhen:
+					// 这个放一个map，K为boundary，V为请求string，在此
+					// 根据K取出V和V组成一个请求来处理
+				}
+
 			} catch (final Exception e) {
 				e.printStackTrace();
 				continue;

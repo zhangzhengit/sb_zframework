@@ -96,7 +96,7 @@ public class Task {
 	public static final String NEW_LINE = "\r\n";
 	private static final Map<Object, Object> CACHE_MAP = new WeakHashMap<>(1024, 1F);
 
-	private static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();;
+	private static final ThreadLocal<SocketChannel> SCTL = new ThreadLocal<>();
 	private final SocketChannel socketChannel;
 	private final Socket socket;
 	private BufferedInputStream bufferedInputStream;
@@ -181,7 +181,7 @@ public class Task {
 	private ZResponse handleNoMethodMatche(final ZRequest request, final RequestLine requestLine, final String path) throws Exception {
 		final Map<MethodEnum, Method> methodMap = ZControllerMap.getByPath(path);
 		if (CollUtil.isNotEmpty(methodMap)) {
-			final String methodString = methodMap.keySet().stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+			final String methodString = methodMap.keySet().stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			return new ZResponse(this.socketChannel)
 				.header(ZRequest.ALLOW, methodString)
 				.httpStatus(HttpStatus.HTTP_405.getCode())
@@ -455,7 +455,8 @@ public class Task {
 				if ((headerValue == null) && a.required()) {
 					throw new FormPairParseException("请求方法[" + path + "]的header[" + p.getName() + "]不存在");
 				}
-				parametersArray[pI++] = headerValue;
+				parametersArray[pI] = headerValue;
+				pI++;
 			} else if (p.isAnnotationPresent(ZCookieValue.class)) {
 				final ZCookieValue cookieValue = p.getAnnotation(ZCookieValue.class);
 				final String cookieName = StrUtil.isEmpty(cookieValue.name()) ? p.getName() : cookieValue.name();
@@ -470,26 +471,32 @@ public class Task {
 							.filter(cookie -> Objects.equals(cookie.getName(), cookieName)).findAny();
 					if (c.isPresent()) {
 						if (p.getType().getCanonicalName().equals(String.class.getCanonicalName())) {
-							parametersArray[pI++] = c.get().getValue();
+							parametersArray[pI] = c.get().getValue();
+							pI++;
 						} else if (p.getType().getCanonicalName().equals(ZCookie.class.getCanonicalName())) {
-							parametersArray[pI++] = c.get();
+							parametersArray[pI] = c.get();
+							pI++;
 						}
 					} else {
 						if (cookieValue.required()) {
 							throw new FormPairParseException("请求方法[" + path + "]缺少名为[" + cookieName + "]的Cookie");
 						}
-						parametersArray[pI++] = null;
+						parametersArray[pI] = null;
+						pI++;
 					}
 				}
 
 			} else if (p.getType().getCanonicalName().equals(ZRequest.class.getCanonicalName())) {
-				parametersArray[pI++] = request;
+				parametersArray[pI] = request;
+				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZResponse.class.getCanonicalName())) {
 				final ZResponse response = new ZResponse(this.outputStream, this.socketChannel);
-				parametersArray[pI++] = response;
+				parametersArray[pI] = response;
+				pI++;
 			} else if (p.getType().getCanonicalName().equals(ZModel.class.getCanonicalName())) {
 				final ZModel model = new ZModel();
-				parametersArray[pI++] = model;
+				parametersArray[pI] = model;
+				pI++;
 			} else if (p.isAnnotationPresent(ZRequestBody.class)) {
 				final String body = request.getBody();
 				if (StrUtil.isEmpty(body)) {
@@ -505,7 +512,8 @@ public class Task {
 
 				Task.checkZValidated(p, object);
 
-				parametersArray[pI++] = object;
+				parametersArray[pI] = object;
+				pI++;
 
 			} else if (p.isAnnotationPresent(ZRequestParam.class)) {
 				pI = this.hZRequestParam(parametersArray, request, requestLine, path, pI, p);
@@ -814,7 +822,7 @@ public class Task {
 
 			final int wenI = fullPath.indexOf("?");
 			if (wenI > -1) {
-				line.setQueryString(fullPath.substring("?".length() + wenI - 1));
+				line.setQueryString(fullPath.substring(("?".length() + wenI) - 1));
 
 				final Set<RequestParam> paramSet = Sets.newHashSet();
 				final String param = fullPath.substring("?".length() + wenI);
@@ -892,7 +900,7 @@ public class Task {
 		final List<String> x = request.getLineList();
 		for (int i = 1; i < x.size(); i++) {
 			final String l2 = x.get(i);
-			if (EMPTY_STRING.equals(l2) && (i < x.size()) && i + 1 < x.size()) {
+			if (EMPTY_STRING.equals(l2) && (i < x.size()) && ((i + 1) < x.size())) {
 
 				final String contentType = requestLine.getHeaderMap().get(ZRequest.CONTENT_TYPE);
 

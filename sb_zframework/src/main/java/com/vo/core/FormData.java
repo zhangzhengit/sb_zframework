@@ -43,7 +43,7 @@ public class FormData {
 		for (int i = 0; i < ss.length; i++) {
 			final String x = ss[i];
 			builder.append(x.trim());
-			if (i < ss.length - 1) {
+			if (i < (ss.length - 1)) {
 				builder.append(Task.NEW_LINE);
 			}
 		}
@@ -141,10 +141,10 @@ public class FormData {
 			}
 
 			start = i;
-			while (start < sp.length && i < sp.length) {
+			while ((start < sp.length) && (i < sp.length)) {
 				i++;
 				end = i;
-				if (i >= sp.length || sp[end].startsWith(k)) {
+				if ((i >= sp.length) || sp[end].startsWith(k)) {
 
 					final String[] one = Arrays.copyOfRange(sp, start + 1, end);
 //					System.out.println("one.length = " + one.length);
@@ -158,7 +158,7 @@ public class FormData {
 //					System.out.println("name =  " + name);
 
 					final String value = fff.getValue();
-//					System.out.println("value =  " + value);
+//					System.out.println("value.length =  " + value.length());
 
 					final String fileName = fff.getFileName();
 //					System.out.println("fileName =  " + fileName);

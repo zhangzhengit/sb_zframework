@@ -184,7 +184,7 @@ public class NioLongConnectionServer {
 			final List<Long> delete = new ArrayList<>(10);
 
 			for (final Long key : keySet) {
-				if (now - key >= keepAliveTimeout * 1000) {
+				if ((now - key) >= (keepAliveTimeout * 1000)) {
 					delete.add(key);
 				}
 			}
@@ -252,7 +252,7 @@ public class NioLongConnectionServer {
 				break;
 			}
 
-			if (readFirst && tR < BUFFER_SIZE) {
+			if (readFirst && (tR < BUFFER_SIZE)) {
 				array = new ZArray(Arrays.copyOfRange(byteBuffer.array(), 0, tR));
 				break;
 			}
@@ -267,7 +267,7 @@ public class NioLongConnectionServer {
 
 			array.add(byteBuffer.array(), 0, position);
 
-			if (!readFirst && tR < BUFFER_SIZE) {
+			if (!readFirst && (tR < BUFFER_SIZE)) {
 				break;
 			}
 
@@ -344,7 +344,7 @@ public class NioLongConnectionServer {
 		// 解析请求时，无匹配的Method
 		if (request.getRequestLine().getMethodEnum() == null) {
 			final MethodEnum[] values = MethodEnum.values();
-			final String methodString = Lists.newArrayList(values).stream().map(e -> e.getMethod()).collect(Collectors.joining(","));
+			final String methodString = Lists.newArrayList(values).stream().map(MethodEnum::getMethod).collect(Collectors.joining(","));
 			final CR<Object> error = CR.error(HttpStatus.HTTP_405.getCode(), HttpStatus.HTTP_405.getMessage());
 			new ZResponse(socketChannel)
 				.header(ZRequest.ALLOW, methodString)
@@ -364,7 +364,7 @@ public class NioLongConnectionServer {
 		try {
 
 			final ZResponse response = task.invoke(request);
-			if (response != null && !response.getWrite().get()) {
+			if ((response != null) && !response.getWrite().get()) {
 
 				if (Boolean.TRUE.equals(SERVER_CONFIGURATION.getResponseZSessionId())) {
 					final ZSession sessionFALSE = request.getSession(false);
@@ -383,7 +383,7 @@ public class NioLongConnectionServer {
 
 				if (keepAlive) {
 					response.header(CONNECTION, ConnectionEnum.KEEP_ALIVE.getValue());
-					SOCKET_CHANNEL_MAP.put(System.currentTimeMillis() / 1000 * 1000, new SS(socketChannel, key));
+					SOCKET_CHANNEL_MAP.put((System.currentTimeMillis() / 1000) * 1000, new SS(socketChannel, key));
 				}
 
 				final Map<String, String> responseHeaders = SERVER_CONFIGURATION.getResponseHeaders();
