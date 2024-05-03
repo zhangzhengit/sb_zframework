@@ -299,7 +299,10 @@ public class Task {
 					+ "@" + method.getName()
 					+ "@ZQPSLimitation" + '_'
 					+ request.getSession().getId();
-				if (!QPSCounter.allow(keyword, zqpsLimitation.qps(), null)) {
+
+				// FIXME 2024年5月3日 下午8:01:22 zhangzhen: 这是很早之前写的，现在做其他的发现了传为null导致bug，
+				// 先用QPSEnum.API_METHOD，以后再看是否合适
+				if (!QPSCounter.allow(keyword, zqpsLimitation.qps(), QPSEnum.API_METHOD)) {
 
 					final String message = "接口访问频繁，请稍后再试";
 

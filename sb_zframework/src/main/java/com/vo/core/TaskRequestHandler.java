@@ -84,7 +84,7 @@ public final class TaskRequestHandler extends Thread {
 
 
 				boolean isWanzheng = false;
-				if (contentType.toLowerCase().contains(HeaderEnum.FORM_DATA.getType())) {
+				if ((contentType != null) && contentType.toLowerCase().contains(HeaderEnum.FORM_DATA.getType())) {
 					final int bi = contentType.indexOf(BOUNDARY);
 					if (bi > -1) {
 						final String boundary = contentType.substring(bi + BOUNDARY.length());
@@ -105,6 +105,13 @@ public final class TaskRequestHandler extends Thread {
 					// FIXME 2024年4月28日 下午10:14:39 zhangzhen:
 					// 这个放一个map，K为boundary，V为请求string，在此
 					// 根据K取出V和V组成一个请求来处理
+
+					// FIXME 2024年5月3日 下午8:06:11 zhangzhen: 暂时为了走通流程，也和wanzheng的逻辑一直，
+
+					// 加这2行防止save action 自动去掉ifelse导致以后看不懂
+					final ZRequest request2 = request;
+					final TaskRequest taskRequest2 = taskRequest;
+					this.requestValidator.handle(request2, taskRequest2);
 				}
 
 			} catch (final Exception e) {
