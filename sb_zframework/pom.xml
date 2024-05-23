@@ -20,11 +20,13 @@
 	</properties>
 
 	<dependencies>
+
 		<dependency>
 			<groupId>com.vo</groupId>
 			<artifactId>zframework_core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -32,6 +34,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+
 				<configuration>
 					<excludes>
 						<exclude>
@@ -41,6 +44,7 @@
 					</excludes>
 					<classifier>execute</classifier>
 				</configuration>
+
 			</plugin>
 		</plugins>
 	</build>
