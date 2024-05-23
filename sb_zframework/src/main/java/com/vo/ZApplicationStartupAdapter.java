@@ -1,7 +1,12 @@
 package com.vo;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.Enumeration;
+import java.util.Properties;
 
 import com.google.common.collect.ImmutableCollection;
 import com.vo.anno.ZCommandLineRunner;
@@ -14,7 +19,9 @@ import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
+import com.vo.configuration.CommonConfigurationProperties;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.ZProperties;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
@@ -30,6 +37,7 @@ import com.vo.scanner.ZConfigurationScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZValueScanner;
+import com.vo.starter.ZStarter;
 import com.vo.validator.ZValidator;
 
 import cn.hutool.core.util.StrUtil;
@@ -173,6 +181,33 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	}
 
 	@Override
+	public void loadStarter() {
+
+		final ClassLoader classLoader = ZApplication.class.getClassLoader();
+		try {
+			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
+			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
+			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
+
+			while (resources.hasMoreElements()) {
+				final URL url = resources.nextElement();
+				final Properties properties = new Properties();
+				properties.load(url.openStream());
+
+				final int size = properties.size();
+
+				LOG.debug("/resources/META-INF/下文件size={}", size);
+				final String start = properties.getProperty("start");
+				System.out.println("start = " + start);
+
+				injectForStarter(start);
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
 	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
 			final ZServer zs = new ZServer(httpPort);
@@ -180,6 +215,29 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			zs.start();
 			ZSessionMap.sessionTimeoutJOB();
 		}
+	}
+
+
+	private static void injectForStarter(final String className) {
+		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
+				+ "ZApplicationStartupAdapter.injectForStarter()");
+
+		try {
+			final Class<?> cls = Class.forName(className);
+
+			final ZStarter starter = (ZStarter) cls.newInstance();
+
+			final Object scanPackageName = ZProperties.getInstance().getProperty("zrepository.scanPackageName");
+			final Object[] array = {scanPackageName};
+			final Object[] r = starter.start(array);
+			for (final Object object : r) {
+				ZContext.addBean(object.getClass(), object);
+			}
+
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

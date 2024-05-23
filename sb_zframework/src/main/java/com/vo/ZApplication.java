@@ -2,6 +2,7 @@ package com.vo;
 
 import java.io.IOException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
+import com.vo.starter.ZStarter;
 
 import cn.hutool.core.collection.CollUtil;
 
@@ -71,12 +73,10 @@ public class ZApplication {
 
 		ZProperties.getInstance().addProperty("server.scanPackage", scanPackageNameList);
 
-
 		final long t1 = System.currentTimeMillis();
 		ZMain.start(Lists.newArrayList(scanPackageNameList), httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
-		loadStarter();
 
 		final long freeMemory = Runtime.getRuntime().freeMemory();
 		final long totalMemory = Runtime.getRuntime().totalMemory();
@@ -99,7 +99,8 @@ public class ZApplication {
 
 
 	/**
-	 *	TODO 做一个类似spring.factories的功能，给zf做几个starter。先把zf中的通用类提取出来 一个common工程，然后zf也是依赖此common工程
+	 * TODO 做一个类似spring.factories的功能，给zf做几个starter。先把zf中的通用类提取出来
+	 * 一个common工程，然后zf也是依赖此common工程
 	 *
 	 * @author zhangzhen
 	 * @date 2024年2月17日
@@ -111,23 +112,19 @@ public class ZApplication {
 			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
 			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
 
-//			int c = 0;
 			while (resources.hasMoreElements()) {
 				final URL url = resources.nextElement();
 				final Properties properties = new Properties();
 				properties.load(url.openStream());
 
 				final int size = properties.size();
-//				c = size;
 
 				LOG.debug("/resources/META-INF/下文件size={}", size);
-				// FIXME 2024年2月17日 下午7:40:59 zhanghen: 读取，使用 @ZCP的读取方式。然后启动对应的类，先让启动类必须实现一个接口
+				final String start = properties.getProperty("start");
+				System.out.println("start = " + start);
+
+				injectForStarter(start);
 			}
-//			if (c == 0) {
-//				LOG.debug("/resources/META-INF/下无文件:{}", common.getStarterName());
-//			}else {
-//				LOG.debug("/resources/META-INF/文件个数=:{}", common.getStarterName());
-//			}
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -156,4 +153,25 @@ public class ZApplication {
 		throw new StartupException("获取程序启动类所在包名异常，当前包名为" + packageName + "，请确认启动类所在包名形式为A.B，如：com.vo");
 	}
 
+	private static void injectForStarter(final String className) {
+		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
+				+ "ZApplication.injectForStarter()");
+
+		try {
+			final Class<?> cls = Class.forName(className);
+
+			final ZStarter starter = (ZStarter) cls.newInstance();
+
+			final Object scanPackageName = ZProperties.getInstance().getProperty("zrepository.scanPackageName");
+			final Object[] array = {scanPackageName};
+			final Object[] r = starter.start(array);
+			for (final Object object : r) {
+				ZContext.addBean(object.getClass(), object);
+			}
+
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
+	}
 }

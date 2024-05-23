@@ -146,8 +146,13 @@ public interface ZApplicationStartupProcessor {
 	void runCommandLineRunner(ZApplicationStartupInfo startupInfo) throws Exception;
 
 	/**
+	 * 加载 starter
+	 */
+	void loadStarter();
+
+	/**
 	 * 启动http服务器
-	 * 
+	 *
 	 * @param httpPort
 	 * @param startupInfo
 	 *

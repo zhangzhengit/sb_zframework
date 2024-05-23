@@ -96,6 +96,8 @@ public final class ZMain {
 			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
 			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? ZContext.getBean(ServerConfigurationProperties.class).getPort() : Integer.valueOf(serverPortProperty);
 
+			processor.loadStarter();
+
 			processor.startHttpServer(serverPort, startupInfo);
 
 		} catch (final Exception e) {
