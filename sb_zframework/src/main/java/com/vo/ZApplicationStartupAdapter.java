@@ -202,6 +202,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 				injectForStarter(start);
 			}
+
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -226,14 +227,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			final Class<?> cls = Class.forName(className);
 
 			final ZStarter starter = (ZStarter) cls.newInstance();
-
-			final Object scanPackageName = ZProperties.getInstance().getProperty("zrepository.scanPackageName");
-			final Object[] array = {scanPackageName};
-			final Object[] r = starter.start(array);
-			for (final Object object : r) {
-				ZContext.addBean(object.getClass(), object);
-			}
-
+			starter.start();
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}

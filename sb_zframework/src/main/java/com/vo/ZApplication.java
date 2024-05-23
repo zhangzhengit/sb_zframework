@@ -98,39 +98,6 @@ public class ZApplication {
 	}
 
 
-	/**
-	 * TODO 做一个类似spring.factories的功能，给zf做几个starter。先把zf中的通用类提取出来
-	 * 一个common工程，然后zf也是依赖此common工程
-	 *
-	 * @author zhangzhen
-	 * @date 2024年2月17日
-	 */
-	private static void loadStarter() {
-		final ClassLoader classLoader = ZApplication.class.getClassLoader();
-		try {
-			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
-			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
-			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
-
-			while (resources.hasMoreElements()) {
-				final URL url = resources.nextElement();
-				final Properties properties = new Properties();
-				properties.load(url.openStream());
-
-				final int size = properties.size();
-
-				LOG.debug("/resources/META-INF/下文件size={}", size);
-				final String start = properties.getProperty("start");
-				System.out.println("start = " + start);
-
-				injectForStarter(start);
-			}
-		} catch (final IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-
 	private static String g() {
 		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
 		// 写死3
@@ -151,27 +118,5 @@ public class ZApplication {
 		}
 
 		throw new StartupException("获取程序启动类所在包名异常，当前包名为" + packageName + "，请确认启动类所在包名形式为A.B，如：com.vo");
-	}
-
-	private static void injectForStarter(final String className) {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "ZApplication.injectForStarter()");
-
-		try {
-			final Class<?> cls = Class.forName(className);
-
-			final ZStarter starter = (ZStarter) cls.newInstance();
-
-			final Object scanPackageName = ZProperties.getInstance().getProperty("zrepository.scanPackageName");
-			final Object[] array = {scanPackageName};
-			final Object[] r = starter.start(array);
-			for (final Object object : r) {
-				ZContext.addBean(object.getClass(), object);
-			}
-
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-
 	}
 }
