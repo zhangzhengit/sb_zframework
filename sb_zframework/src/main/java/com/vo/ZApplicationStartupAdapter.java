@@ -183,13 +183,16 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void loadStarter() {
 
+		LOG.info("开始初始化starter");
 		final ClassLoader classLoader = ZApplication.class.getClassLoader();
 		try {
 			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
 			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
 			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
 
+			int c = 0;
 			while (resources.hasMoreElements()) {
+				c++;
 				final URL url = resources.nextElement();
 				final Properties properties = new Properties();
 				properties.load(url.openStream());
@@ -198,11 +201,11 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 				LOG.debug("/resources/META-INF/下文件size={}", size);
 				final String start = properties.getProperty("start");
-				System.out.println("start = " + start);
 
 				injectForStarter(start);
 			}
 
+			LOG.info("初始化[{}]个starter结束", c);
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
@@ -220,8 +223,6 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 
 	private static void injectForStarter(final String className) {
-		System.out.println(Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t"
-				+ "ZApplicationStartupAdapter.injectForStarter()");
 
 		try {
 			final Class<?> cls = Class.forName(className);

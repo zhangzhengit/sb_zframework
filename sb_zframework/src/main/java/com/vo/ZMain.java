@@ -52,6 +52,10 @@ public final class ZMain {
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			processor.scanConfigurationProperties(startupInfo);
 
+			// 0.01
+			// @ZConfigurationProperties 初始化之后就开始执行starter
+			processor.loadStarter();
+
 			// 0.1 扫描 @ZConfiguration类，生成配置
 			processor.scanConfiguration(startupInfo);
 
@@ -95,8 +99,6 @@ public final class ZMain {
 			final String serverPortProperty = System.getProperty("server.port");
 			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
 			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? ZContext.getBean(ServerConfigurationProperties.class).getPort() : Integer.valueOf(serverPortProperty);
-
-			processor.loadStarter();
 
 			processor.startHttpServer(serverPort, startupInfo);
 
