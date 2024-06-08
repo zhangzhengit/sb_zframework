@@ -104,7 +104,7 @@ public final class ZMain {
 
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
-			LOG.error("程序启动失败，请检查代码。errorMessage=\n\t{}", message);
+			LOG.error("程序启动失败，请检查代码。\n\terrorMessage={}", message);
 			LOG.error("程序启动失败，具体原因请看上面日志");
 			System.exit(0);
 		}
