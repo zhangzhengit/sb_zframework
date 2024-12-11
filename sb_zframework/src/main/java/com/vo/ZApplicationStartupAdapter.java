@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
-import java.time.LocalDateTime;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import com.google.common.collect.ImmutableCollection;
 import com.vo.anno.ZCommandLineRunner;
 import com.vo.anno.ZCommandLineRunnerScanner;
 import com.vo.anno.ZComponent;
@@ -15,18 +15,15 @@ import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZController;
 import com.vo.anno.ZService;
-import com.google.common.collect.ImmutableCollection;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
 import com.vo.configuration.CommonConfigurationProperties;
 import com.vo.configuration.ServerConfigurationProperties;
-import com.vo.configuration.ZProperties;
+import com.vo.core.NioLongConnectionServer;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
-import com.vo.core.ZServer;
-import com.vo.core.ZSessionMap;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ZControllerAdviceScanner;
 import com.vo.scanner.ZApplicationEventPublisher;
@@ -213,14 +210,10 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
-		if (startupInfo.isHttpEnable()) {
-			final ZServer zs = new ZServer(httpPort);
-			zs.setName(ZMain.Z_SERVER_THREAD);
-			zs.start();
-			ZSessionMap.sessionTimeoutJOB();
-		}
+		LOG.trace("启动Server,port={}", httpPort);
+		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
+		nioLongConnectionServer.startNIOServer(httpPort);
 	}
-
 
 	private static void injectForStarter(final String className) {
 
