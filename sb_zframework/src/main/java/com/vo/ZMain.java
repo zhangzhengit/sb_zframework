@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.vo.apidoc.DocScanner;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -95,6 +96,10 @@ public final class ZMain {
 
 			// 执行 ZCommandLineRunner
 			processor.runCommandLineRunner(startupInfo);
+
+			// API文档
+			// FIXME 2024年12月17日 下午6:17:04 zhangzhen : 加一个参数：是否启动apidoc
+			DocScanner.scan(packageNameList.toArray(new String[]{}));
 
 			final String serverPortProperty = System.getProperty("server.port");
 			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
