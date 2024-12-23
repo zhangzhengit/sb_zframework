@@ -4,13 +4,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.vo.apidoc.DocScanner;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 
-import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 
 /**
@@ -29,10 +27,7 @@ public final class ZMain {
 	 */
 	public static final String COM_VO = "com.vo";
 
-	public static final String STATIC_RESOURCES_PROPERTY_NAME = "resource.path-" + UUID.randomUUID();
-
 	public static final String Z_SERVER_THREAD = "ZServer-Thread";
-
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
@@ -53,11 +48,11 @@ public final class ZMain {
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			processor.scanConfigurationProperties(startupInfo);
 
-			// 0.01
+			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
 			processor.loadStarter();
 
-			// 0.1 扫描 @ZConfiguration类，生成配置
+			// 0.2 扫描 @ZConfiguration类，生成配置
 			processor.scanConfiguration(startupInfo);
 
 			// 1 初始化 对象生成器
@@ -68,43 +63,45 @@ public final class ZMain {
 
 			// 3 创建 @ZController 对象
 			processor.scanController(startupInfo);
+
 			// 3.1 扫描 @ZControllerAdvice 的类
 			processor.scanControllerAdvice(startupInfo);
 
-			// 4 扫描组件的 @ZAutowired 字段 并注入值
+			// 4.1 扫描组件的 @ZAutowired 字段 并注入值
 			processor.injectAutowired(startupInfo);
 
-			// @ZAutowired 全部执行完了，判断一下必须的是否null
+			// 4.2@ZAutowired 全部执行完了，判断一下必须的是否null
 			processor.aftertAutowiredInject(startupInfo);
 
 			// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
 			processor.injectValue(startupInfo);
 
+			// 6 校验缓存注解是否正确使用了
 			processor.validatedCache(startupInfo);
 
+			// 7 设置静态资源的路径
 			processor.setStaticPath(startupInfo);
 
-			// 验证缓存注解配置是否合理
-			// 已放在 validatedCache 里了
-			//			ZCacheScanner.scanAndValidate();
-
-			// 打印一下配置类信息
+			// 8 打印一下配置类信息
 			processor.printZConfigurationProperties(startupInfo);
 
-			// 扫描自定义拦截器
+			// 9 扫描自定义拦截器
 			processor.scanHandlerInterceptor(startupInfo);
 
-			// 执行 ZCommandLineRunner
+			// 10 执行 ZCommandLineRunner
 			processor.runCommandLineRunner(startupInfo);
 
-			// API文档
+			// 11 API文档
 			// FIXME 2024年12月17日 下午6:17:04 zhangzhen : 加一个参数：是否启动apidoc
-			DocScanner.scan(packageNameList.toArray(new String[]{}));
+			//			DocScanner.scan(packageNameList.toArray(new String[]{}));
 
+			// 12 最后再校验一遍 @ZAutowired 字段都有值，因为在上次校验后可能被修改了
+			processor.aftertAutowiredInject(startupInfo);
+
+			// 13 启动http服务器
 			final String serverPortProperty = System.getProperty("server.port");
 			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
 			final Integer serverPort  = StrUtil.isEmpty(serverPortProperty) ? ZContext.getBean(ServerConfigurationProperties.class).getPort() : Integer.valueOf(serverPortProperty);
-
 			processor.startHttpServer(serverPort, startupInfo);
 
 		} catch (final Exception e) {

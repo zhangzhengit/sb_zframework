@@ -5,9 +5,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.vo.anno.ZCommandLineRunner;
 import com.vo.anno.ZCommandLineRunnerScanner;
 import com.vo.anno.ZComponent;
@@ -20,12 +23,14 @@ import com.vo.aop.ZCacheScanner;
 import com.vo.cache.ZCacheableValidator;
 import com.vo.configuration.CommonConfigurationProperties;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.core.DefaultHttpReader;
 import com.vo.core.NioLongConnectionServer;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZObjectGeneratorStarter;
 import com.vo.core.ZSingleton;
 import com.vo.exception.ZControllerAdviceScanner;
+import com.vo.html.ResourcesLoader;
 import com.vo.scanner.ZApplicationEventPublisher;
 import com.vo.scanner.ZAutowiredScanner;
 import com.vo.scanner.ZComponentScanner;
@@ -121,7 +126,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		final ServerConfigurationProperties serverConfiguration = ZSingleton
 				.getSingletonByClass(ServerConfigurationProperties.class);
 		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
-			System.setProperty(ZMain.STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
+			System.setProperty(ResourcesLoader.STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
 			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 		}
 	}
@@ -211,6 +216,21 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
 		LOG.trace("启动Server,port={}", httpPort);
+
+
+		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
+		// 因为一个http请求只需要解析一次就行了
+		final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
+		final ImmutableMap<String, Object> map = ZContext.all();
+		final ImmutableSet<Entry<String, Object>> es = map.entrySet();
+		for (final Entry<String, Object> e : es) {
+			final boolean equals = e.getValue().getClass().getSuperclass().equals(httpReader.getClass());
+			if (equals) {
+				ZContext.remove(DefaultHttpReader.class);
+				ZContext.addBean(DefaultHttpReader.class, e.getValue());
+			}
+		}
+
 		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
 		nioLongConnectionServer.startNIOServer(httpPort);
 	}
