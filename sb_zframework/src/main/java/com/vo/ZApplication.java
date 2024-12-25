@@ -1,27 +1,18 @@
 package com.vo;
 
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.vo.configuration.CommonConfigurationProperties;
+import com.vo.cache.CU;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
-import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
 import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
-import com.vo.starter.ZStarter;
-
-import cn.hutool.core.collection.CollUtil;
 
 /**
  *
@@ -53,7 +44,7 @@ public class ZApplication {
 		LOG.info("ZApplication开始启动，scanPackageName={},	={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
 
-		if (CollUtil.isEmpty(scanPackageNameList)) {
+		if (CU.isEmpty(scanPackageNameList)) {
 			throw new IllegalArgumentException("启动出错,scanPackageName 不能为空");
 		}
 
@@ -77,7 +68,6 @@ public class ZApplication {
 		ZMain.start(Lists.newArrayList(scanPackageNameList), httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
-
 		final long freeMemory = Runtime.getRuntime().freeMemory();
 		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
@@ -85,15 +75,15 @@ public class ZApplication {
 		final Object serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
 
 		LOG.info("ZApplication启动成功,耗时{}秒,freeMemory={}MB,totalMemory={}MB,maxMemory={}MB,ServerConfiguration={}",
-						((t2 - t1) / 1000),
-						freeMemory / 1024/1024,
-						totalMemory / 1024/1024,
-						maxMemory / 1024/1024,
-						serverConfiguration
-					);
+				((t2 - t1) / 1000),
+				freeMemory / 1024/1024,
+				totalMemory / 1024/1024,
+				maxMemory / 1024/1024,
+				serverConfiguration
+				);
 
 		final ZApplicationContext context =
-		new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList), httpEnable, args, ZProperties.getInstance());
+				new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList), httpEnable, args, ZProperties.getInstance());
 		return context;
 	}
 

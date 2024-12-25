@@ -20,6 +20,7 @@ import com.vo.anno.ZController;
 import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
+import com.vo.cache.STU;
 import com.vo.cache.ZCacheableValidator;
 import com.vo.configuration.CommonConfigurationProperties;
 import com.vo.configuration.ServerConfigurationProperties;
@@ -41,8 +42,6 @@ import com.vo.scanner.ZHandlerInterceptorScanner;
 import com.vo.scanner.ZValueScanner;
 import com.vo.starter.ZStarter;
 import com.vo.validator.ZValidator;
-
-import cn.hutool.core.util.StrUtil;
 
 /**
  * ZApplication 的启动流程适配类，如需自定义或查插入代码等，覆盖本类方法
@@ -125,7 +124,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	public void setStaticPath(final ZApplicationStartupInfo startupInfo) {
 		final ServerConfigurationProperties serverConfiguration = ZSingleton
 				.getSingletonByClass(ServerConfigurationProperties.class);
-		if (StrUtil.isNotEmpty(serverConfiguration.getStaticPath())) {
+		if (STU.isNotEmpty(serverConfiguration.getStaticPath())) {
 			System.setProperty(ResourcesLoader.STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
 			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 		}
