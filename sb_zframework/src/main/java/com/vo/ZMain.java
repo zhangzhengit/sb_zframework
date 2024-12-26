@@ -17,7 +17,7 @@ import com.vo.core.ZLog2;
  * @date 2023年6月12日
  *
  */
-public final class ZMain {
+final class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
