@@ -54,7 +54,7 @@ public class ZApplication {
 			cpl.add(packageName);
 		}
 
-		ZProperties.getInstance().addProperty("server.scanPackage", cpl);
+		ZProperties.addProperty("server.scanPackage", cpl);
 
 		final long t1 = System.currentTimeMillis();
 		ZMain.start(Lists.newArrayList(cpl), httpEnable, args);
