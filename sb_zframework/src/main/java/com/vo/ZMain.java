@@ -6,6 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.core.PortChecker;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
@@ -46,6 +47,11 @@ final class ZMain {
 
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			processor.scanConfigurationProperties(startupInfo);
+
+			// 0.01 校验端口号
+			// FIXME 2024年12月31日 下午6:34:24 zhangzhen : 看看把这一步放在最前面，要先更改 scanConfigurationProperties
+			// 把 ServerConfigurationProperties 和zf.properties 中的server.port读取出来然后才可以把本步放最前面
+			final Integer serverPort = checkPort();
 
 			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
@@ -98,9 +104,6 @@ final class ZMain {
 			processor.aftertAutowiredInject(startupInfo);
 
 			// 13 启动http服务器
-			final String serverPortProperty = System.getProperty("server.port");
-			// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
-			final Integer serverPort  = STU.isEmpty(serverPortProperty) ? ZContext.getBean(ServerConfigurationProperties.class).getPort() : Integer.valueOf(serverPortProperty);
 			processor.startHttpServer(serverPort, startupInfo);
 
 		} catch (final Exception e) {
@@ -109,6 +112,28 @@ final class ZMain {
 			LOG.error("程序启动失败，具体原因请看上面日志");
 			System.exit(0);
 		}
+	}
+
+	private static Integer checkPort() {
+		final ServerConfigurationProperties serverConfigurationProperties = ZContext
+				.getBean(ServerConfigurationProperties.class);
+
+		final String serverPortProperty = System.getProperty("server.port");
+		// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
+		final Integer serverPort = STU.isEmpty(serverPortProperty) ? serverConfigurationProperties.getPort()
+				: Integer.valueOf(serverPortProperty);
+
+		if (!PortChecker.isPortIllegal(serverPort)) {
+			LOG.error("端口[{}]不合法,请检查,更换端口在[{}]到[{}]之间", serverPort, PortChecker.PORT_MIN, PortChecker.PORT_MAX);
+			System.exit(0);
+		}
+
+		if (PortChecker.isPortInUse(serverPort)) {
+			LOG.error("端口[{}]已被占用,请检查,更换端口或者停掉正在使用此端口的进程?", serverPort);
+			System.exit(0);
+		}
+
+		return serverPort;
 	}
 
 	public static void main(final String[] args) {

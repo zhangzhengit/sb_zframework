@@ -44,7 +44,7 @@ public class ZApplication {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 
-		LOG.info("ZApplication开始启动，scanPackageName={},	={},args={}", scanPackageNameList, httpEnable,
+		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
 
 		final String packageName = g();
