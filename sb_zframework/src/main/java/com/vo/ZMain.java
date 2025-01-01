@@ -119,7 +119,6 @@ final class ZMain {
 				.getBean(ServerConfigurationProperties.class);
 
 		final String serverPortProperty = System.getProperty("server.port");
-		// TODO : 判断 -Dserver.port=XXX 传来的参数是否合理
 		final Integer serverPort = STU.isEmpty(serverPortProperty) ? serverConfigurationProperties.getPort()
 				: Integer.valueOf(serverPortProperty);
 
