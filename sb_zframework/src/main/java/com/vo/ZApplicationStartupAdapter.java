@@ -126,17 +126,15 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				.getSingletonByClass(ServerConfigurationProperties.class);
 		if (STU.isNotEmpty(serverConfiguration.getStaticPath())) {
 			System.setProperty(ResourcesLoader.STATIC_RESOURCES_PROPERTY_NAME, serverConfiguration.getStaticPath());
-			System.out.println("staticPath = " + serverConfiguration.getStaticPath());
 		}
 	}
-
 
 	@Override
 	public void printZConfigurationProperties(final ZApplicationStartupInfo startupInfo) {
 		if (Boolean.TRUE
 				.equals(ZContext.getBean(ServerConfigurationProperties.class).getPrintConfigurationProperties())) {
 
-			LOG.info("开始打印@{}配置类信息", ZConfigurationProperties.class.getSimpleName());
+			//			LOG.info("开始打印@{}配置类信息", ZConfigurationProperties.class.getSimpleName());
 
 			final ImmutableCollection<Object> bs = ZContext.all().values();
 			for (final Object bean : bs) {
@@ -151,7 +149,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 						final Object value = f.get(bean);
 						// FIXME 2023年11月8日 下午9:08:00 zhanghen: XXX 是否会打印出某些敏感信息？
 						// 新增注解标记下不打印？似乎没必要
-						LOG.info("配置项{}.{}={}", bean.getClass().getSimpleName(), f.getName(), value);
+						//						LOG.info("配置项{}.{}={}", bean.getClass().getSimpleName(), f.getName(), value);
 					} catch (IllegalArgumentException | IllegalAccessException e) {
 						e.printStackTrace();
 					}
@@ -159,7 +157,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 			}
 
-			LOG.info("打印@{}配置类信息完成", ZConfigurationProperties.class.getSimpleName());
+			//			LOG.info("打印@{}配置类信息完成", ZConfigurationProperties.class.getSimpleName());
 		}
 
 	}
@@ -215,7 +213,6 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
 		LOG.trace("启动Server,port={}", httpPort);
-
 
 		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
 		// 因为一个http请求只需要解析一次就行了

@@ -8,10 +8,8 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
-import com.vo.core.ZSingleton;
 import com.vo.exception.StartupException;
 
 /**
@@ -64,18 +62,14 @@ public class ZApplication {
 		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
-		final Object serverConfiguration = ZSingleton.getSingletonByClass(ServerConfigurationProperties.class);
-
-		LOG.info("ZApplication启动成功,耗时{}秒,freeMemory={}MB,totalMemory={}MB,maxMemory={}MB,ServerConfiguration={}",
+		LOG.info("ZApplication启动成功,耗时[{}]秒,freeMemory=[{}]MB,totalMemory=[{}]MB,maxMemory=[{}]MB",
 				((t2 - t1) / 1000),
-				freeMemory / 1024/1024,
-				totalMemory / 1024/1024,
-				maxMemory / 1024/1024,
-				serverConfiguration
-				);
+				freeMemory / 1024 / 1024,
+				totalMemory / 1024 / 1024,
+				maxMemory / 1024 / 1024);
 
-		final ZApplicationContext context =
-				new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList), httpEnable, args, ZProperties.getInstance());
+		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
+				httpEnable, args, ZProperties.getInstance());
 		return context;
 	}
 
