@@ -41,7 +41,7 @@ public class ZApplication {
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
-
+		Thread.currentThread().setName("zf-Thread");
 		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
 
@@ -51,8 +51,6 @@ public class ZApplication {
 		if (!findAny.isPresent()) {
 			cpl.add(packageName);
 		}
-
-		ZProperties.addProperty("server.scanPackage", cpl);
 
 		final long t1 = System.currentTimeMillis();
 		ZMain.start(Lists.newArrayList(cpl), httpEnable, args);
@@ -70,6 +68,7 @@ public class ZApplication {
 
 		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
+		//		httpEnable, args, ZProperties_DELETE.getInstance());
 		return context;
 	}
 

@@ -1,6 +1,6 @@
 package com.vo;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import java.util.Properties;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +42,7 @@ public final class ZApplicationContext {
 	/**
 	 * 配置文件信息
 	 */
-	private final PropertiesConfiguration properties;
+	private final Properties properties;
 
 	/**
 	 * 获取容器中所有的bean
