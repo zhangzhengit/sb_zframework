@@ -2,6 +2,7 @@ package com.vo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,6 +24,14 @@ import com.vo.exception.StartupException;
 public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	public static ZApplicationContext run(final String[] args) {
+		return run(Collections.emptyList(), true, args);
+	}
+
+	public static ZApplicationContext run(final boolean httpEnable, final String[] args) {
+		return run(Collections.emptyList(), httpEnable, args);
+	}
 
 	/**
 	 * 启动程序，注意：本方法是提供给程序的启动类的main方法来调用的，需要并且只需要启动类调用一次本方法。
