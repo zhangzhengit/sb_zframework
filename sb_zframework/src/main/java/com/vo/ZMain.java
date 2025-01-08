@@ -106,6 +106,9 @@ final class ZMain {
 			// 13 启动http服务器
 			processor.startHttpServer(serverPort, startupInfo);
 
+			// 14 画一个banner，无实际用途
+			processor.showBanner();
+
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
 			LOG.error("程序启动失败，请检查代码。\n\terrorMessage={}", message);

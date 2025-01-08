@@ -159,4 +159,9 @@ public interface ZApplicationStartupProcessor {
 	 */
 	void startHttpServer(int httpPort, ZApplicationStartupInfo startupInfo);
 
+	/**
+	 * 在最后在控制台中显示一个banner，无实际用途
+	 */
+	void showBanner();
+
 }

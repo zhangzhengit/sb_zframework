@@ -212,6 +212,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startHttpServer(final int httpPort, final ZApplicationStartupInfo startupInfo) {
+		if (!startupInfo.isHttpEnable()) {
+			return;
+		}
 
 		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
 		// 因为一个http请求只需要解析一次就行了
@@ -240,6 +243,22 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
 			e.printStackTrace();
 		}
+
+	}
+
+	@Override
+	public void showBanner() {
+		System.out.println();
+		System.out.println("------------vo:zframework------------------------------");
+		System.out.println("   vo            vo        vovovov                         ");
+		System.out.println("    vo          vo       vo       vo                       ");
+		System.out.println("     vo        vo       vo         vo                      ");
+		System.out.println("      vo      vo        vo         vo                      ");
+		System.out.println("       vo    vo          vo        vo                      ");
+		System.out.println("        vo  vo            vo      vo                       ");
+		System.out.println("         v o               vo    ov                        ");
+		System.out.println("          v                  ovov                        ");
+		System.out.println();
 
 	}
 
