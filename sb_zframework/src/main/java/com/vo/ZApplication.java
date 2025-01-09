@@ -70,19 +70,14 @@ public class ZApplication {
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
 
-		System.out.println("ZApplication启动成功,耗时["+((t2 - t1) / 1000)+"秒],"
-				+ "freeMemory=["+(freeMemory / 1024 / 1024)+"MB],totalMemory=["+(totalMemory / 1024 / 1024)+"MB],"
-				+ "maxMemory=["+(maxMemory / 1024 / 1024)+"MB]");
-
-		//		LOG.info("ZApplication启动成功,耗时[{}]秒,freeMemory=[{}]MB,totalMemory=[{}]MB,maxMemory=[{}]MB",
-		//				((t2 - t1) / 1000),
-		//				freeMemory / 1024 / 1024,
-		//				totalMemory / 1024 / 1024,
-		//				maxMemory / 1024 / 1024);
+		LOG.info("ZApplication启动成功,耗时[{}]秒,freeMemory=[{}]MB,totalMemory=[{}]MB,maxMemory=[{}]MB",
+				((t2 - t1) / 1000),
+				freeMemory / 1024 / 1024,
+				totalMemory / 1024 / 1024,
+				maxMemory / 1024 / 1024);
 
 		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
-		//		httpEnable, args, ZProperties_DELETE.getInstance());
 		return context;
 	}
 
