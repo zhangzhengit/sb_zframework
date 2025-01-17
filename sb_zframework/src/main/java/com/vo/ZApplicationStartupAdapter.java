@@ -1,9 +1,9 @@
 package com.vo;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -82,9 +82,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
 		final Class[] cA = { ZComponent.class, ZService.class };
-		for (final Class<? extends Annotation> cls : cA) {
+		Arrays.stream(cA).parallel().forEach(cls -> {
 			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
-		}
+		});
 	}
 
 	@Override
