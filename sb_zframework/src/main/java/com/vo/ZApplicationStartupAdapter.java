@@ -186,7 +186,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		final ClassLoader classLoader = ZApplication.class.getClassLoader();
 		try {
 			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
-			LOG.debug("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
+			LOG.info("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
 			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
 
 			int c = 0;
@@ -198,7 +198,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 				final int size = properties.size();
 
-				LOG.debug("/resources/META-INF/下文件size={}", size);
+				LOG.info("/resources/META-INF/下文件size={}", size);
 				final String start = properties.getProperty("start");
 
 				injectForStarter(start);

@@ -33,7 +33,7 @@ final class ZMain {
 
 		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
 
-		ZMain.LOG.trace("zframework开始启动");
+		ZMain.LOG.info("zframework开始启动");
 		final Set<String> pns = Sets.newHashSet(COM_VO);
 		pns.addAll(packageNameList);
 
