@@ -1,5 +1,7 @@
 package com.vo;
 
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -10,6 +12,8 @@ import com.vo.core.PortChecker;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.email.ZMail;
+import com.vo.email.ZMailNotificationConfigurationProperties;
 
 /**
  * 启动类
@@ -108,6 +112,55 @@ final class ZMain {
 
 			// 14 画一个banner，无实际用途
 			processor.showBanner();
+
+
+			// FIXME 2025年1月18日 下午7:35:17 zhangzhen : 这个通知功能也抽出一个接口，可以供用户自己实现
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+
+				LOG.warn("程序Shutdown");
+
+				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
+
+				final Boolean enable = mn.getEnable();
+				if (!Boolean.TRUE.equals(enable)) {
+					return;
+				}
+
+				final String projectPath = System.getProperty("user.dir");
+				final String projectName = projectPath.substring(projectPath.lastIndexOf(File.separator) + 1);
+
+				final String subject = "[" + projectName + "]程序停止通知";
+
+				final ZMail mail = ZContext.getBean(ZMail.class);
+				final String body =
+						"<html>\r\n"
+								+ "<head>\r\n"
+								+ "<meta charset=\"UTF-8\">\r\n"
+								+ "</head>\r\n"
+								+ "<body>\r\n"
+								+ "	<h1>程序停止通知</h1>\r\n"
+								+ "	<h3>如果不是你手动停止的，请立即查看原因。</h3>\r\n"
+								+ "	<h3>如果是由你手动停止的，请忽略此邮件。</h3>\r\n"
+								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"
+								+ "</body>\r\n"
+								+ "</html>";
+
+				final Set<String> rs = mn.getReceiver();
+				for (final String receiver : rs) {
+					mail.send(subject, body, receiver, "text/html;charset=UTF-8");
+				}
+
+			}));
+
+
+			// FIXME 2025年1月18日 下午7:54:25 zhangzhen : ZMNCP新增配置项：关注某些事件，触发时发邮件通知，比如：OOM
+
+			//			Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+			//				System.out.println(
+			//						Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZMain.start()-setDefaultUncaughtExceptionHandler-执行了");
+			//				System.out.println("t = " + t);
+			//				System.out.println("e = " + e);
+			//			});
 
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
