@@ -153,13 +153,45 @@ final class ZMain {
 			}));
 
 
-			// FIXME 2025年1月18日 下午7:54:25 zhangzhen : ZMNCP新增配置项：关注某些事件，触发时发邮件通知，比如：OOM
+
+			// FIXME 2025年1月18日 下午9:51:42 zhangzhen : setDUEH 暂时注释掉，考虑好是否支持
 
 			//			Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-			//				System.out.println(
-			//						Thread.currentThread().getName() + "\t" + LocalDateTime.now() + "\t" + "ZMain.start()-setDefaultUncaughtExceptionHandler-执行了");
-			//				System.out.println("t = " + t);
-			//				System.out.println("e = " + e);
+			//				LOG.error("thread=[{}],throwable=[{}]", t,e);
+			//
+			//				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
+			//				if (!Boolean.TRUE.equals(mn.getEnable()) || !Boolean.TRUE.equals(mn.getShutdownEvent())) {
+			//					return;
+			//				}
+			//
+			//
+			//				final String projectPath = System.getProperty("user.dir");
+			//				final String projectName = projectPath.substring(projectPath.lastIndexOf(File.separator) + 1);
+			//
+			//				final String subject = "[" + projectName + "]程序Exception通知";
+			//
+			//				final ZMail mail = ZContext.getBean(ZMail.class);
+			//				final String body =
+			//						"<html>\r\n"
+			//								+ "<head>\r\n"
+			//								+ "<meta charset=\"UTF-8\">\r\n"
+			//								+ "</head>\r\n"
+			//								+ "<body>\r\n"
+			//								+ "	<h1>程序Exception通知</h1>\r\n"
+			//								+ "	<h2>thread="+t+"</h2>\r\n"
+			//								+ "	<h2>throwable="+e+"</h2>\r\n"
+			//								+ "	<h3>请查看原因。</h3>\r\n"
+			//								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"
+			//								+ "</body>\r\n"
+			//								+ "</html>";
+			//
+			//				final Set<String> rs = mn.getReceiver();
+			//				for (final String receiver : rs) {
+			//					mail.send(subject, body, receiver, "text/html;charset=UTF-8");
+			//				}
+			//
+			//				//				System.out.println("ttttttttttt = " + t);
+			//				//				System.out.println("eeeeeeeeeee = " + e);
 			//			});
 
 		} catch (final Exception e) {
