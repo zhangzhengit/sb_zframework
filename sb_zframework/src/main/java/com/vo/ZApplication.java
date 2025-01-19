@@ -81,6 +81,10 @@ public class ZApplication {
 		return context;
 	}
 
+	public static String getAppName() {
+		return M.getAppName();
+	}
+
 	/**
 	 * 获取本类的run的调用者所在的包名
 	 *

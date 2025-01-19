@@ -1,6 +1,5 @@
 package com.vo;
 
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -126,10 +125,9 @@ final class ZMain {
 					return;
 				}
 
-				final String projectPath = System.getProperty("user.dir");
-				final String projectName = projectPath.substring(projectPath.lastIndexOf(File.separator) + 1);
+				final String projectName = ZApplication.getAppName();
 
-				final String subject = "[" + projectName + "]程序停止通知";
+				final String subject = "[" + projectName + "]程序[SHUTDOWN]通知";
 
 				final ZMail mail = ZContext.getBean(ZMail.class);
 				final String body =
@@ -138,7 +136,8 @@ final class ZMain {
 								+ "<meta charset=\"UTF-8\">\r\n"
 								+ "</head>\r\n"
 								+ "<body>\r\n"
-								+ "	<h1>程序停止通知</h1>\r\n"
+								+ "	<h1>["+projectName+"]程序[SHUTDOWN]通知</h1>\r\n"
+								+ "	<h2>["+projectName+"]程序已在机器["+M.getHostName()+"]上SHUTDOWN</h2>\r\n"
 								+ "	<h3>如果不是你手动停止的，请立即查看原因。</h3>\r\n"
 								+ "	<h3>如果是由你手动停止的，请忽略此邮件。</h3>\r\n"
 								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"
@@ -226,4 +225,5 @@ final class ZMain {
 	public static void main(final String[] args) {
 
 	}
+
 }
