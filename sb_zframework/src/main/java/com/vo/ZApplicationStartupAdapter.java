@@ -82,9 +82,17 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
 		final Class[] cA = { ZComponent.class, ZService.class };
-		Arrays.stream(cA).parallel().forEach(cls -> {
+		for (final Class cls : cA) {
 			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
-		});
+		}
+
+		// FIXME 2025年1月24日 下午6:22:14 zhangzhen : 下面的parallel注释掉，重新用foreach了
+		// 因为在panther x2 的armbian上会导致后面的NPE
+		//		Arrays.stream(cA)
+		//		.parallel()
+		//		.forEach(cls -> {
+		//			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
+		//		});
 	}
 
 	@Override
