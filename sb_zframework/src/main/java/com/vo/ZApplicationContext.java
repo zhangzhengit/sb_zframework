@@ -10,9 +10,6 @@ import com.vo.core.ZContext;
 import com.vo.scanner.ZApplicationEvent;
 import com.vo.scanner.ZApplicationEventPublisher;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  * 程序启动的信息
  *
@@ -20,8 +17,6 @@ import lombok.Data;
  * @date 2023年11月15日
  *
  */
-@Data
-@AllArgsConstructor
 public final class ZApplicationContext {
 
 	/**
@@ -109,6 +104,31 @@ public final class ZApplicationContext {
 	 */
 	public void publishEvent(final ZApplicationEvent event) {
 		ZContext.getBean(ZApplicationEventPublisher.class).publishEvent(event);
+	}
+
+	public ImmutableList<String> getScanPackageNameList() {
+		return scanPackageNameList;
+	}
+
+	public boolean isHttpEnable() {
+		return httpEnable;
+	}
+
+	public String[] getArgs() {
+		return args;
+	}
+
+	public Properties getProperties() {
+		return properties;
+	}
+
+	public ZApplicationContext(ImmutableList<String> scanPackageNameList, boolean httpEnable, String[] args,
+			Properties properties) {
+		super();
+		this.scanPackageNameList = scanPackageNameList;
+		this.httpEnable = httpEnable;
+		this.args = args;
+		this.properties = properties;
 	}
 
 }
