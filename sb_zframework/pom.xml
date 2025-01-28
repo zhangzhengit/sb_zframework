@@ -21,7 +21,7 @@
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
 			<version>1.10</version>
-<!-- 			<optional>true</optional> -->
+			<!-- <optional>true</optional> -->
 		</dependency>
 
 		<!-- <dependency> -->
@@ -40,6 +40,17 @@
 
 	<build>
 		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version> <!-- 使用插件的版本 -->
+				<configuration>
+					<source>1.8</source>  <!-- 指定 Java 源代码版本 -->
+					<target>1.8</target>  <!-- 指定编译后目标字节码的版本 -->
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
