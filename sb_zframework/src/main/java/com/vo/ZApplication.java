@@ -69,10 +69,11 @@ public class ZApplication {
 		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
+		final String className = gZAppName();
 
-		LOG.info("ZApplication启动成功,耗时[{}],freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
-				((t2 - t1) / 1000) >= 1 ? ((t2 - t1) / 1000) + "秒" : ((t2 - t1)) + "毫秒"
-				,
+		LOG.info("{}耗时{}秒启动成功.freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
+				className,
+				((t2 - t1) / 1000.0),
 				freeMemory / 1024 / 1024,
 				totalMemory / 1024 / 1024,
 				maxMemory / 1024 / 1024);
@@ -80,6 +81,18 @@ public class ZApplication {
 		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
 		return context;
+	}
+
+	private static String gZAppName() {
+		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
+		final StackTraceElement stackTraceElement = st[4];
+		final String className = stackTraceElement.getClassName();
+
+		final int i = className.lastIndexOf(".");
+		if (i <= -1) {
+			return className;
+		}
+		return className.substring(i + 1);
 	}
 
 	public static String getAppName() {
