@@ -71,11 +71,11 @@ public class ZApplication {
 
 
 		LOG.info("ZApplication启动成功,耗时[{}],freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
-				((t2 - t1) / 1000) >= 1 ? ((t2 - t1) / 1000) + "秒" : ((t2 - t1) / 1000.0) + "毫秒"
-						,
-						freeMemory / 1024 / 1024,
-						totalMemory / 1024 / 1024,
-						maxMemory / 1024 / 1024);
+				((t2 - t1) / 1000) >= 1 ? ((t2 - t1) / 1000) + "秒" : ((t2 - t1)) + "毫秒"
+				,
+				freeMemory / 1024 / 1024,
+				totalMemory / 1024 / 1024,
+				maxMemory / 1024 / 1024);
 
 		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
