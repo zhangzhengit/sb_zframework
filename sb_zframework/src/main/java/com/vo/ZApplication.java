@@ -71,7 +71,7 @@ public class ZApplication {
 
 		final String className = gZAppName();
 
-		LOG.info("{}耗时{}秒启动成功.freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
+		LOG.info("{}耗时[{}]秒启动成功.freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
 				className,
 				((t2 - t1) / 1000.0),
 				freeMemory / 1024 / 1024,
