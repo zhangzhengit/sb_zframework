@@ -71,16 +71,19 @@ public class ZApplication {
 
 		final String className = gZAppName();
 
-		LOG.info("{}耗时[{}]秒启动成功.freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
+		final String javaVmName = System.getProperty("java.vm.name");
+		final String javaVmVersion = System.getProperty("java.vm.version");
+		
+		LOG.info("{}成功启动,耗时[{}]秒在VM[{}].freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
 				className,
 				((t2 - t1) / 1000.0),
+				javaVmName + ' ' + javaVmVersion,
 				freeMemory / 1024 / 1024,
 				totalMemory / 1024 / 1024,
 				maxMemory / 1024 / 1024);
 
-		final ZApplicationContext context = new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
+		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
-		return context;
 	}
 
 	private static String gZAppName() {
