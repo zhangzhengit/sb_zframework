@@ -219,9 +219,14 @@ final class ZMain {
 		final ServerConfigurationProperties serverConfigurationProperties = ZContext
 				.getBean(ServerConfigurationProperties.class);
 
-		final String serverPortProperty = System.getProperty("server.port");
-		final Integer serverPort = STU.isEmpty(serverPortProperty) ? serverConfigurationProperties.getPort()
-				: Integer.valueOf(serverPortProperty);
+		// FIXME 2025年8月25日 下午8:55:26 zhangzhen: 暂时去掉支持 -Dkey=value形式的传参，
+		// 我觉得支持了--key=value形式就足够了？再多一种-D都四种了太多了，还容易写出bug
+		// 或者以后想好了再来重新支持-D
+//		final String serverPortProperty = System.getProperty("server.port");
+//		final Integer serverPort = STU.isEmpty(serverPortProperty) ? serverConfigurationProperties.getPort()
+//				: Integer.valueOf(serverPortProperty);
+
+		final Integer serverPort = serverConfigurationProperties.getPort();
 
 		if (!PortChecker.isPortIllegal(serverPort)) {
 			LOG.error("端口[{}]不合法,请检查,更换端口在[{}]到[{}]之间", serverPort, PortChecker.PORT_MIN, PortChecker.PORT_MAX);
