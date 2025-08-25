@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import com.vo.aop.ArgR;
 import com.vo.cache.STU;
 import com.vo.configuration.ServerConfigurationProperties;
+import com.vo.configuration.ZProperties;
 import com.vo.core.PortChecker;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -34,15 +36,27 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
+		ZMain.LOG.info("zframework开始启动");
+
 		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
 
-		ZMain.LOG.info("zframework开始启动");
 		final Set<String> pns = Sets.newHashSet(COM_VO);
 		pns.addAll(packageNameList);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
 		try {
+			
+			// 解析 --key=value 形式的参数
+			List<ArgR> argsList = ArgParser.p(args);
+			for (ArgR argR : argsList) {
+				ZProperties.arL.add(argR);
+			}
+			
+			// 加载 zframework.properties 配置文件
+			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
+			ZProperties.load();
+			
 			processor.startValidator(startupInfo);
 
 			// 校验 @ZEventListener 方法
