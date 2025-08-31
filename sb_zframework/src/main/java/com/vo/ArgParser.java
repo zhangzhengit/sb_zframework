@@ -11,7 +11,7 @@ import com.vo.cache.AU;
  * 解析 java 命令行中传来的参数
  * 自定义格式为 --myKey=myValue 的形式.
  * 如：--server.port=88 解析出结果为key=server.port value=80
- * 此配置优先级高于 zframework.properties配置文件，即：
+ * 此配置优先级高于 application.properties配置文件，即：
  * 	.p文件中有比如：server.port=80 同时指定了 java --server.port=88 -jar app.jar
  *  则程序会以88的端口来启动，其他配置项也是如此。
  *  

@@ -53,7 +53,7 @@ final class ZMain {
 				ZProperties.arL.add(argR);
 			}
 			
-			// 加载 zframework.properties 配置文件
+			// 加载 application.properties 配置文件
 			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
 			ZProperties.load();
 			
