@@ -1,12 +1,17 @@
 # 使用说明
-	# 配置文件: application.properties 支持零配置启动，配置类 @see ServerConfiguration 其中默认值。
+	# 配置文件: application.properties 支持零配置启动，配置默认值 @see @ZConfigurationProperties 标记的类中的默认值。
 	 如需自定义配置项，在application.properties中覆盖即可，如：server.port=8888 即可覆盖掉默认值80
-	 查找顺序从先到后如下：
-	 	1 jar文件同目录下
-	 	2 jar文件下config下
-	 	3 IDE中 src/main/resources目录下
-	 	4 IDE中 src/main/resources/config目录下
-	 按1 2 3 4查找，最后没找到则提示 [找不到配置文件]
+	 同时支持 java [jvm参数] -jar myApp.jar [应用参数] 形式启动
+	 [应用参数] 支持--key=value形式传参，@ZConfigurationProperties和@ZValue注解标记的值都可以使用本方式传参。
+	 优先级：--key=value >  application.properties > 代码中@ZConfigurationProperties和@ZValue的默认值
+	 
+	 application.properties 查找顺序从先到后如下：
+	 	1 jar文件下config下
+	 	2 jar文件同目录下
+	 	3 IDE中 src/main/resources/config目录下
+	 	4 IDE中 src/main/resources目录下
+	 
+	 最后还是没找到本配置文件，也无影响可正常启动
 	 
 	# 新建工程A
 		1、A引入 依赖
@@ -18,24 +23,17 @@
 		2、新建A工程的启动类AMain：
 			
 			public class AMain {
-			
-				public static void main(final String[] args) {
-					final String scanPackageName = "com.vo";
-					ZApplication.run(scanPackageName, true, args);
+
+				public static void main(String[] args) {
+					ZApplication.run(args);
 				}
-		
-			}
 			
-			即可。com.vo为AMain所在包名。
+			}
+
+			运行此类即可启动。
 			注意：AMain必须在顶级包下，其他包名必须以AMain所在包名为前缀，如：
-				com.vo.api、com.vo.repository等
+				com.vo.api、com.vo.repository、com.vo.aa、com.vo.aa.bb 等等
 	 
-	# 启动方式：
-		java -jar app.jar 
-		可使用 --key=value的形式来指定启动参数，
-		如：	server.port=99 来使用99端口号启动
-		注意：--key=value形式参数优先级高于zf.p配置文件高于代码中的默认值
-		
 	# 注解式声明Component、Controller
 	
 	@ZConfigurationProperties
@@ -277,15 +275,6 @@
 			
 		3、@ZCacheEvict
 			表示删除缓存，不管缓存中是否存在，都会执行所标记的方法，并且删除缓存
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	
