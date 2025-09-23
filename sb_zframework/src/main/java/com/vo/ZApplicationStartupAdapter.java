@@ -3,13 +3,13 @@ package com.vo;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.vo.anno.ZCommandLineRunner;
 import com.vo.anno.ZCommandLineRunnerScanner;
 import com.vo.anno.ZComponent;
@@ -143,7 +143,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 			//			LOG.info("开始打印@{}配置类信息", ZConfigurationProperties.class.getSimpleName());
 
-			final ImmutableCollection<Object> bs = ZContext.all().values();
+			final Collection<Object> bs = ZContext.all().values();
 			for (final Object bean : bs) {
 				if (!bean.getClass().isAnnotationPresent(ZConfigurationProperties.class)) {
 					continue;
@@ -226,8 +226,8 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
 		// 因为一个http请求只需要解析一次就行了
 		final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
-		final ImmutableMap<String, Object> map = ZContext.all();
-		final ImmutableSet<Entry<String, Object>> es = map.entrySet();
+		final Map<String, Object> map = ZContext.all();
+		final Set<Entry<String, Object>> es = map.entrySet();
 		for (final Entry<String, Object> e : es) {
 			final boolean equals = e.getValue().getClass().getSuperclass().equals(httpReader.getClass());
 			if (equals) {

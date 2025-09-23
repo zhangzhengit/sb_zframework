@@ -1,11 +1,11 @@
 package com.vo;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.vo.core.ZContext;
 import com.vo.scanner.ZApplicationEvent;
 import com.vo.scanner.ZApplicationEventPublisher;
@@ -45,9 +45,9 @@ public final class ZApplicationContext {
 	 * @return
 	 *
 	 */
-	public ImmutableCollection<Object> getBeans() {
-		final ImmutableMap<String, Object> map = ZContext.all();
-		final ImmutableCollection<Object> values = map.values();
+	public Collection<Object> getBeans() {
+		final Map<String, Object> map = ZContext.all();
+		final Collection<Object> values = map.values();
 		return values;
 	}
 
@@ -57,9 +57,9 @@ public final class ZApplicationContext {
 	 * @return
 	 *
 	 */
-	public ImmutableSet<String> getBeanNames() {
-		final ImmutableMap<String, Object> map = ZContext.all();
-		final ImmutableSet<String> ks = map.keySet();
+	public Set<String> getBeanNames() {
+		final Map<String, Object> map = ZContext.all();
+		final Set<String> ks = map.keySet();
 		return ks;
 	}
 
@@ -69,7 +69,7 @@ public final class ZApplicationContext {
 	 * @return
 	 *
 	 */
-	public ImmutableMap<String, Object> getBeanMap() {
+	public Map<String, Object> getBeanMap() {
 		return ZContext.all();
 	}
 
@@ -122,8 +122,8 @@ public final class ZApplicationContext {
 		return properties;
 	}
 
-	public ZApplicationContext(ImmutableList<String> scanPackageNameList, boolean httpEnable, String[] args,
-			Properties properties) {
+	public ZApplicationContext(final ImmutableList<String> scanPackageNameList, final boolean httpEnable, final String[] args,
+			final Properties properties) {
 		super();
 		this.scanPackageNameList = scanPackageNameList;
 		this.httpEnable = httpEnable;
