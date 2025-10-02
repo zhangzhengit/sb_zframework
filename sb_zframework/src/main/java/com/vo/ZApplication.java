@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.vo.configuration.ZProperties;
 import com.vo.core.ZLog2;
 import com.vo.exception.StartupException;
@@ -62,7 +60,7 @@ public class ZApplication {
 		}
 
 		final long t1 = System.currentTimeMillis();
-		ZMain.start(Lists.newArrayList(cpl), httpEnable, args);
+		ZMain.start(cpl, httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
 		final long freeMemory = Runtime.getRuntime().freeMemory();
@@ -82,7 +80,7 @@ public class ZApplication {
 				totalMemory / 1024 / 1024,
 				maxMemory / 1024 / 1024);
 
-		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
+		return new ZApplicationContext(Collections.unmodifiableList(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
 	}
 

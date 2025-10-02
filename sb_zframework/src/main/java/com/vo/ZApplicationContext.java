@@ -1,11 +1,11 @@
 package com.vo;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
 import com.vo.core.ZContext;
 import com.vo.scanner.ZApplicationEvent;
 import com.vo.scanner.ZApplicationEventPublisher;
@@ -22,7 +22,7 @@ public final class ZApplicationContext {
 	/**
 	 * 程序启动扫描的包铭
 	 */
-	private final ImmutableList<String> scanPackageNameList;
+	private final List<String> scanPackageNameList;
 
 	/**
 	 * 是否启用http服务器
@@ -47,8 +47,7 @@ public final class ZApplicationContext {
 	 */
 	public Collection<Object> getBeans() {
 		final Map<String, Object> map = ZContext.all();
-		final Collection<Object> values = map.values();
-		return values;
+		return map.values();
 	}
 
 	/**
@@ -59,11 +58,11 @@ public final class ZApplicationContext {
 	 */
 	public Set<String> getBeanNames() {
 		final Map<String, Object> map = ZContext.all();
-		final Set<String> ks = map.keySet();
-		return ks;
-	}
-
-	/**
+		final Set<String> v = map.keySet(); 
+		return v; 
+	} 
+ 
+	/** 
 	 * 获取容器中的beanMap
 	 *
 	 * @return
@@ -106,25 +105,24 @@ public final class ZApplicationContext {
 		ZContext.getBean(ZApplicationEventPublisher.class).publishEvent(event);
 	}
 
-	public ImmutableList<String> getScanPackageNameList() {
-		return scanPackageNameList;
+	public List<String> getScanPackageNameList() {
+		return this.scanPackageNameList;
 	}
 
 	public boolean isHttpEnable() {
-		return httpEnable;
+		return this.httpEnable;
 	}
 
 	public String[] getArgs() {
-		return args;
+		return this.args;
 	}
 
 	public Properties getProperties() {
-		return properties;
+		return this.properties;
 	}
 
-	public ZApplicationContext(final ImmutableList<String> scanPackageNameList, final boolean httpEnable, final String[] args,
+	public ZApplicationContext(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args,
 			final Properties properties) {
-		super();
 		this.scanPackageNameList = scanPackageNameList;
 		this.httpEnable = httpEnable;
 		this.args = args;
