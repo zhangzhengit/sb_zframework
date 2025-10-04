@@ -224,7 +224,7 @@ final class ZMain {
 //		final Integer serverPort = STU.isEmpty(serverPortProperty) ? serverConfigurationProperties.getPort()
 //				: Integer.valueOf(serverPortProperty);
 
-		final Integer serverPort = serverConfigurationProperties.getPort();
+		final int serverPort = serverConfigurationProperties.getPort();
 
 		if (!PortChecker.isPortIllegal(serverPort)) {
 			LOG.error("端口[{}]不合法,请检查,更换端口在[{}]到[{}]之间", serverPort, PortChecker.PORT_MIN, PortChecker.PORT_MAX);
