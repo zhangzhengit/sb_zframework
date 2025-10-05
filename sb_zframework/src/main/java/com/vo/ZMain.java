@@ -66,7 +66,7 @@ final class ZMain {
 			// 0.01 校验端口号
 			// FIXME 2024年12月31日 下午6:34:24 zhangzhen : 看看把这一步放在最前面，要先更改 scanConfigurationProperties
 			// 把 ServerConfigurationProperties 和zf.properties 中的server.port读取出来然后才可以把本步放最前面
-			final Integer serverPort = checkPort();
+			final int serverPort = checkPort();
 
 			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
@@ -132,8 +132,7 @@ final class ZMain {
 
 				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
 
-				final Boolean enable = mn.getEnable();
-				if (!Boolean.TRUE.equals(enable)) {
+				if (!mn.getEnable()) {
 					return;
 				}
 
@@ -213,7 +212,7 @@ final class ZMain {
 		}
 	}
 
-	private static Integer checkPort() {
+	private static int checkPort() {
 		final ServerConfigurationProperties serverConfigurationProperties = ZContext
 				.getBean(ServerConfigurationProperties.class);
 

@@ -138,8 +138,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void printZConfigurationProperties(final ZApplicationStartupInfo startupInfo) {
-		if (Boolean.TRUE
-				.equals(ZContext.getBean(ServerConfigurationProperties.class).getPrintConfigurationProperties())) {
+		if (ZContext.getBean(ServerConfigurationProperties.class).getPrintConfigurationProperties()) {
 
 			//			LOG.info("开始打印@{}配置类信息", ZConfigurationProperties.class.getSimpleName());
 
