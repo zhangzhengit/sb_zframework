@@ -122,7 +122,7 @@ final class ZMain {
 			processor.startHttpServer(serverPort, startupInfo);
 
 			// 14 画一个banner，无实际用途
-			if (ZContext.getBean(ServerConfigurationProperties.class).isShowBanner()) {
+			if (ZContext.getBean(ServerConfigurationProperties.class).getShowBanner()) {
 				processor.showBanner();
 			}
 
