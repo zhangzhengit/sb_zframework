@@ -16,6 +16,7 @@ import com.vo.anno.ZComponent;
 import com.vo.anno.ZConfiguration;
 import com.vo.anno.ZConfigurationProperties;
 import com.vo.anno.ZController;
+import com.vo.anno.ZRestController;
 import com.vo.anno.ZService;
 import com.vo.aop.ZAOP;
 import com.vo.aop.ZCacheScanner;
@@ -110,7 +111,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void injectAutowired(final ZApplicationStartupInfo startupInfo) {
-		final Class[] cA = { ZService.class, ZComponent.class, ZController.class, ZConfiguration.class, ZAOP.class };
+		final Class[] cA = { ZService.class, ZComponent.class, ZRestController.class,
+				ZController.class,
+				ZConfiguration.class, ZAOP.class };
 		for (final Class cls : cA) {
 			ZAutowiredScanner.inject(cls, startupInfo.getPackageNameList().toArray(new String[0]));
 		}
