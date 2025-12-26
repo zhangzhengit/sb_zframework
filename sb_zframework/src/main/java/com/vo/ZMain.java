@@ -8,10 +8,14 @@ import java.util.Set;
 import com.vo.aop.ArgR;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
+import com.vo.core.CU;
 import com.vo.core.PortChecker;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
 import com.vo.core.ZLog2;
+import com.vo.core.ZSession;
+import com.vo.core.ZSessionDB;
+import com.vo.core.ZSessionMap;
 import com.vo.email.ZMail;
 import com.vo.email.ZMailNotificationConfigurationProperties;
 
@@ -118,6 +122,14 @@ final class ZMain {
 			// 12 最后再校验一遍 @ZAutowired 字段都有值，因为在上次校验后可能被修改了
 			processor.aftertAutowiredInject(startupInfo);
 
+			
+			final List<ZSession> sl = ZSessionDB.loadValid(System.currentTimeMillis());
+			if (CU.isNotEmpty(sl)) {
+				for (final ZSession zSession : sl) {
+					ZSessionMap.put(zSession);
+				}
+			}
+			
 			// 13 启动http服务器
 			processor.startHttpServer(serverPort, startupInfo);
 
