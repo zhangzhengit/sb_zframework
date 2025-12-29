@@ -8,7 +8,6 @@ import java.util.Set;
 import com.vo.aop.ArgR;
 import com.vo.configuration.ServerConfigurationProperties;
 import com.vo.configuration.ZProperties;
-import com.vo.core.CU;
 import com.vo.core.PortChecker;
 import com.vo.core.Task;
 import com.vo.core.ZContext;
@@ -124,7 +123,7 @@ final class ZMain {
 
 			
 			final List<ZSession> sl = ZSessionDB.loadValid(System.currentTimeMillis());
-			if (CU.isNotEmpty(sl)) {
+			if (sl != null && sl.size() > 0) {
 				for (final ZSession zSession : sl) {
 					ZSessionMap.put(zSession);
 				}
