@@ -48,7 +48,7 @@ public class ZApplication {
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
-		Thread.currentThread().setName("zf-Thread");
+		Thread.currentThread().setName("zfT");
 		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
 
@@ -71,14 +71,16 @@ public class ZApplication {
 
 		final String javaVmName = System.getProperty("java.vm.name");
 		final String javaVmVersion = System.getProperty("java.vm.version");
-		
-		LOG.info("{}成功启动,耗时[{}]秒在VM[{}].freeMemory={}MB,totalMemory={}MB,maxMemory={}MB",
-				className,
-				((t2 - t1) / 1000.0),
-				javaVmName + ' ' + javaVmVersion,
-				freeMemory / 1024 / 1024,
-				totalMemory / 1024 / 1024,
-				maxMemory / 1024 / 1024);
+
+		LOG.info("APP耗时[{}]秒启动成功,maxMemory=[{}MB],VM=[{}]",
+//				className,
+				(t2 - t1) / 1000.0,
+				maxMemory / 1024 / 1024,
+				javaVmName + ' ' +
+				javaVmVersion
+//				freeMemory / 1024 / 1024,
+//				totalMemory / 1024 / 1024,
+				);
 
 		return new ZApplicationContext(Collections.unmodifiableList(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
