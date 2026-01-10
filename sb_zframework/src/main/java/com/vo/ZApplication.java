@@ -47,10 +47,11 @@ public class ZApplication {
 	 */
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
+		LOG.info("APP开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
+				Arrays.toString(args));
+
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 		Thread.currentThread().setName("zfT");
-		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
-				Arrays.toString(args));
 
 		final String packageName = g();
 		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
@@ -58,6 +59,7 @@ public class ZApplication {
 		if (!findAny.isPresent()) {
 			cpl.add(packageName);
 		}
+
 
 		final long t1 = System.currentTimeMillis();
 		ZMain.start(cpl, httpEnable, args);
@@ -72,7 +74,7 @@ public class ZApplication {
 		final String javaVmName = System.getProperty("java.vm.name");
 		final String javaVmVersion = System.getProperty("java.vm.version");
 
-		LOG.info("APP耗时[{}]秒启动成功,maxMemory=[{}MB],VM=[{}]",
+		LOG.info("APP启动成功耗时[{}]秒,maxMemory=[{}MB],VM=[{}]",
 //				className,
 				(t2 - t1) / 1000.0,
 				maxMemory / 1024 / 1024,
