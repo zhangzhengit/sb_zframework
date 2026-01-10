@@ -38,8 +38,6 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
-		ZMain.LOG.info("zframework开始启动");
-
 		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
 
 		final Set<String> pns = new HashSet<>();
@@ -49,15 +47,15 @@ final class ZMain {
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
 		try {
-			
+
 			// 解析 --key=value 形式的参数
 			final List<ArgR> argsList = ArgParser.p(args);
 			ZProperties.arL.addAll(argsList);
-			
+
 			// 加载 application.properties 配置文件
 			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
 			ZProperties.load();
-			
+
 			processor.startValidator(startupInfo);
 
 			// 校验 @ZEventListener 方法
@@ -121,14 +119,15 @@ final class ZMain {
 			// 12 最后再校验一遍 @ZAutowired 字段都有值，因为在上次校验后可能被修改了
 			processor.aftertAutowiredInject(startupInfo);
 
-			
-			final List<ZSession> sl = ZSessionDB.loadValid(System.currentTimeMillis());
-			if (sl != null && sl.size() > 0) {
-				for (final ZSession zSession : sl) {
-					ZSessionMap.put(zSession);
-				}
-			}
-			
+
+			// FIXME 2026年1月7日 23:52:51 zhangzhen : 暂时注释
+//			final List<ZSession> sl = ZSessionDB.loadValid(System.currentTimeMillis());
+//			if (sl != null && sl.size() > 0) {
+//				for (final ZSession zSession : sl) {
+//					ZSessionMap.put(zSession);
+//				}
+//			}
+
 			// 13 启动http服务器
 			processor.startHttpServer(serverPort, startupInfo);
 
