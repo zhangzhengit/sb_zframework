@@ -59,44 +59,21 @@ public class ZApplication {
 			cpl.add(packageName);
 		}
 
-
 		final long t1 = System.currentTimeMillis();
 		ZMain.start(cpl, httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
-		final long freeMemory = Runtime.getRuntime().freeMemory();
-		final long totalMemory = Runtime.getRuntime().totalMemory();
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
-		final String className = gZAppName();
-
 		final String javaVmName = System.getProperty("java.vm.name");
+
 		final String javaVmVersion = System.getProperty("java.vm.version");
 
-		LOG.info("APP启动成功耗时[{}]秒,maxMemory=[{}MB],VM=[{}]",
-//				className,
-				(t2 - t1) / 1000.0,
-				maxMemory / 1024 / 1024,
-				javaVmName + ' ' +
-				javaVmVersion
-//				freeMemory / 1024 / 1024,
-//				totalMemory / 1024 / 1024,
-				);
+		LOG.info("APP启动成功耗时[{}]秒,maxMemory=[{}MB],VM=[{}]", (t2 - t1) / 1000.0, maxMemory / 1024 / 1024,
+				javaVmName + ' ' + javaVmVersion);
 
 		return new ZApplicationContext(Collections.unmodifiableList(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
-	}
-
-	private static String gZAppName() {
-		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
-		final StackTraceElement stackTraceElement = st[4];
-		final String className = stackTraceElement.getClassName();
-
-		final int i = className.lastIndexOf(".");
-		if (i <= -1) {
-			return className;
-		}
-		return className.substring(i + 1);
 	}
 
 	public static String getAppName() {
