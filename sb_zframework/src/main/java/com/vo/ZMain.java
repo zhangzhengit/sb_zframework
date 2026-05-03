@@ -46,17 +46,15 @@ final class ZMain {
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
 		try {
-			
+
 			// 解析 --key=value 形式的参数
-			List<ArgR> argsList = ArgParser.p(args);
-			for (ArgR argR : argsList) {
-				ZProperties.arL.add(argR);
-			}
-			
+			final List<ArgR> argsList = ArgParser.p(args);
+			ZProperties.arL.addAll(argsList);
+
 			// 加载 application.properties 配置文件
 			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
 			ZProperties.load();
-			
+
 			processor.startValidator(startupInfo);
 
 			// 校验 @ZEventListener 方法
@@ -124,8 +122,9 @@ final class ZMain {
 			processor.startHttpServer(serverPort, startupInfo);
 
 			// 14 画一个banner，无实际用途
-			processor.showBanner();
-
+			if (ZContext.getBean(ServerConfigurationProperties.class).getShowBanner()) {
+				processor.showBanner();
+			}
 
 			// FIXME 2025年1月18日 下午7:35:17 zhangzhen : 这个通知功能也抽出一个接口，可以供用户自己实现
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
