@@ -51,7 +51,6 @@ public class ZApplication {
 				Arrays.toString(args));
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
-		Thread.currentThread().setName("zfT");
 
 		final String packageName = g();
 		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
