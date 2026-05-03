@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.vo.configuration.ZProperties;
-import com.vo.core.ZLog2;
 import com.vo.exception.StartupException;
+import com.vo.log.core.ZLog2;
 
 /**
  *
