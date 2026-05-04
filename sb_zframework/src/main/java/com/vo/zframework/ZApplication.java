@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.zframework;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.vo.configuration.ZProperties;
-import com.vo.exception.StartupException;
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.configuration.ZProperties;
+import com.vo.zframework.exception.StartupException;
 
 /**
  *
@@ -87,8 +87,8 @@ public class ZApplication {
 	 */
 	private static String g() {
 		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
-		// 写死3
-		final int s = 3;
+		// 写死4
+		final int s = 4;
 		final StackTraceElement stackTraceElement = st[s];
 		final String className = stackTraceElement.getClassName();
 
@@ -98,12 +98,15 @@ public class ZApplication {
 		}
 
 		final String packageName = className.substring(0, i);
-		final String regex = "\\w+\\.\\w+";
-		if (packageName.matches(regex)) {
+		final String regex2 = "\\w+\\.\\w+";
+		final String regex3 = "\\w+\\.\\w+.\\w+";
+		final String regex4 = "\\w+\\.\\w+.\\w+.\\w+";
+		if (packageName.matches(regex2) || packageName.matches(regex3) || packageName.matches(regex4)) {
 			return packageName;
 		}
 
-		final String message = "获取程序启动类所在包名异常，当前包名为" + packageName + "，请确认启动类所在包名形式为A.B，如：com.vo";
+		final String message = "获取程序启动类所在包名异常，当前包名为" + packageName
+				+ "，请确认启动类所在包名形式为A.B/A.B.C/A.B.C.D，如：com.vo/com.vo.app/com.vo.my.app";
 		LOG.error("启动失败,message=[{}]", message);
 		throw new StartupException(message);
 	}
