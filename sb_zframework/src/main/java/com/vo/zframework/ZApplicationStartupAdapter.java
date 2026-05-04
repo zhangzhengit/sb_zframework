@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.anno.ZAsync;
 import com.vo.zframework.anno.ZCommandLineRunner;
 import com.vo.zframework.anno.ZCommandLineRunnerScanner;
 import com.vo.zframework.anno.ZComponent;
@@ -33,6 +34,7 @@ import com.vo.zframework.core.ZSingleton;
 import com.vo.zframework.exception.ZControllerAdviceScanner;
 import com.vo.zframework.html.ResourcesLoader;
 import com.vo.zframework.scanner.ZApplicationEventPublisher;
+import com.vo.zframework.scanner.ZAsyncScanner;
 import com.vo.zframework.scanner.ZAutowiredScanner;
 import com.vo.zframework.scanner.ZComponentScanner;
 import com.vo.zframework.scanner.ZConfigurationPropertiesScanner;
@@ -277,6 +279,13 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
 		ZSynchronouslyScanner.scan(ZComponent.class, pn);
 		ZSynchronouslyScanner.scan(ZService.class, pn);
+	}
+
+	@Override
+	public void scanZAsync(final ZApplicationStartupInfo startupInfo) {
+		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
+		ZAsyncScanner.scan(ZComponent.class, pn);
+		ZAsyncScanner.scan(ZService.class, pn);
 	}
 
 }

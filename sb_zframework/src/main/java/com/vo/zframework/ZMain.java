@@ -75,6 +75,8 @@ final class ZMain {
 
 			// 2.1 扫描校验 @ZSynchronously 标记的方法
 			processor.scanZSynchronously(startupInfo);
+			// 2.2 扫描校验 @ZAsync 标记的方法
+			processor.scanZAsync(startupInfo);
 
 			// 3 创建 @ZController 对象
 			processor.scanController(startupInfo);
