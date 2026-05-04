@@ -10,7 +10,6 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.vo.log.core.ZLog2;
-import com.vo.zframework.M;
 import com.vo.zframework.configuration.ZProperties;
 import com.vo.zframework.exception.StartupException;
 
@@ -25,6 +24,8 @@ import com.vo.zframework.exception.StartupException;
 public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
+
+	public static final String APP_PACKAGE_NAME = "com.vo";
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
@@ -51,8 +52,12 @@ public class ZApplication {
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
+
 		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
 				Arrays.toString(args));
+
+		// 加入本工程的顶级包名
+		cpl.add(APP_PACKAGE_NAME);
 
 		final String packageName = g();
 		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
@@ -62,7 +67,7 @@ public class ZApplication {
 		}
 
 		final long t1 = System.currentTimeMillis();
-		ZMain.start(Lists.newArrayList(cpl), httpEnable, args);
+		ZMain.start(cpl, httpEnable, args);
 		final long t2 = System.currentTimeMillis();
 
 		final long maxMemory = Runtime.getRuntime().maxMemory();
@@ -75,18 +80,6 @@ public class ZApplication {
 
 		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
-	}
-
-	private static String gZAppName() {
-		final StackTraceElement[] st = Thread.currentThread().getStackTrace();
-		final StackTraceElement stackTraceElement = st[4];
-		final String className = stackTraceElement.getClassName();
-
-		final int i = className.lastIndexOf(".");
-		if (i <= -1) {
-			return className;
-		}
-		return className.substring(i + 1);
 	}
 
 	public static String getAppName() {
