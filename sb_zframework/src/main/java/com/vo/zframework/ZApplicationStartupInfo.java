@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.zframework;
 
 import java.util.List;
 

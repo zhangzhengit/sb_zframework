@@ -1,4 +1,4 @@
-package com.vo;
+package com.vo.zframework;
 
 import java.util.Collection;
 import java.util.Map;
@@ -6,9 +6,9 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import com.vo.core.ZContext;
-import com.vo.scanner.ZApplicationEvent;
-import com.vo.scanner.ZApplicationEventPublisher;
+import com.vo.zframework.core.ZContext;
+import com.vo.zframework.scanner.ZApplicationEvent;
+import com.vo.zframework.scanner.ZApplicationEventPublisher;
 
 /**
  * 程序启动的信息
