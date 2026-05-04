@@ -23,6 +23,8 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
+	private static final String APP_PACKAGE_NAME = "com.vo";
+
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
 	}
@@ -52,8 +54,12 @@ public class ZApplication {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 
+		// 加入本工程的顶级包名
+		cpl.add(APP_PACKAGE_NAME);
+
 		final String packageName = g();
-		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
+		final Optional<String> findAny =
+				cpl.stream().filter(p -> Objects.equals(p, packageName))
 				.findAny();
 		if (!findAny.isPresent()) {
 			cpl.add(packageName);
@@ -101,6 +107,7 @@ public class ZApplication {
 		final String regex2 = "\\w+\\.\\w+";
 		final String regex3 = "\\w+\\.\\w+.\\w+";
 		final String regex4 = "\\w+\\.\\w+.\\w+.\\w+";
+
 		if (packageName.matches(regex2) || packageName.matches(regex3) || packageName.matches(regex4)) {
 			return packageName;
 		}

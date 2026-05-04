@@ -1,12 +1,12 @@
 package com.vo.zframework;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.vo.log.core.ZLog2;
-import com.vo.zframework.M;
 import com.vo.zframework.aop.ArgR;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.configuration.ZProperties;
@@ -27,20 +27,13 @@ final class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	/**
-	 * 本应用所在的包
-	 */
-	public static final String COM_VO = "com.vo";
-
 	public static final String Z_SERVER_THREAD = "ZServer-Thread";
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
-		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
+		final List<String> x = new ArrayList<>(new HashSet<>(packageNameList));
 
-		final Set<String> pns = new HashSet<>();
-		pns.add(COM_VO);
-		pns.addAll(packageNameList);
+		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(x, httpEnable,  args);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
