@@ -33,12 +33,14 @@ import com.vo.zframework.core.ZSingleton;
 import com.vo.zframework.exception.ZControllerAdviceScanner;
 import com.vo.zframework.html.ResourcesLoader;
 import com.vo.zframework.scanner.ZApplicationEventPublisher;
+import com.vo.zframework.scanner.ZAsyncScanner;
 import com.vo.zframework.scanner.ZAutowiredScanner;
 import com.vo.zframework.scanner.ZComponentScanner;
 import com.vo.zframework.scanner.ZConfigurationPropertiesScanner;
 import com.vo.zframework.scanner.ZConfigurationScanner;
 import com.vo.zframework.scanner.ZControllerScanner;
 import com.vo.zframework.scanner.ZHandlerInterceptorScanner;
+import com.vo.zframework.scanner.ZSynchronouslyScanner;
 import com.vo.zframework.scanner.ZValueScanner;
 import com.vo.zframework.starter.ZStarter;
 import com.vo.zframework.validator.ZValidator;
@@ -270,6 +272,20 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		System.out.println("          v                  ovov                        ");
 		System.out.println();
 
+	}
+
+	@Override
+	public void scanZSynchronously(final ZApplicationStartupInfo startupInfo) {
+		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
+		ZSynchronouslyScanner.scan(ZComponent.class, pn);
+		ZSynchronouslyScanner.scan(ZService.class, pn);
+	}
+
+	@Override
+	public void scanZAsync(final ZApplicationStartupInfo startupInfo) {
+		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
+		ZAsyncScanner.scan(ZComponent.class, pn);
+		ZAsyncScanner.scan(ZService.class, pn);
 	}
 
 }

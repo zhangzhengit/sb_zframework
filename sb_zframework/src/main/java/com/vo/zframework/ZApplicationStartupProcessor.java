@@ -64,6 +64,20 @@ public interface ZApplicationStartupProcessor {
 	void scanComponent(ZApplicationStartupInfo startupInfo);
 
 	/**
+	 * 扫描 @ZSynchronously 注解标记的方法
+	 *
+	 * @param startupInfo
+	 */
+	void scanZSynchronously(ZApplicationStartupInfo startupInfo);
+
+	/**
+	 * 扫描 @ZAsync 注解标记的方法
+	 *
+	 * @param startupInfo
+	 */
+	void scanZAsync(ZApplicationStartupInfo startupInfo);
+
+	/**
 	 * 扫描 @ZControllerAdvice 的类，生成bean
 	 *
 	 * @param startupInfo
