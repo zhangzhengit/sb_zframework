@@ -39,6 +39,7 @@ import com.vo.scanner.ZConfigurationPropertiesScanner;
 import com.vo.scanner.ZConfigurationScanner;
 import com.vo.scanner.ZControllerScanner;
 import com.vo.scanner.ZHandlerInterceptorScanner;
+import com.vo.scanner.ZSynchronouslyScanner;
 import com.vo.scanner.ZValueScanner;
 import com.vo.starter.ZStarter;
 import com.vo.validator.ZValidator;
@@ -269,6 +270,13 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		System.out.println("          v                  ovov                        ");
 		System.out.println();
 
+	}
+
+	@Override
+	public void scanZSynchronously(final ZApplicationStartupInfo startupInfo) {
+		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
+		ZSynchronouslyScanner.scan(ZComponent.class, pn);
+		ZSynchronouslyScanner.scan(ZService.class, pn);
 	}
 
 }

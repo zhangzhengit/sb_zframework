@@ -79,6 +79,9 @@ final class ZMain {
 			// 2 创建 @ZComponent和@ZService 对象，如果类中有被代理的自定义注解，则创建此类的代理类
 			processor.scanComponent(startupInfo);
 
+			// 2.1 扫描校验 @ZSynchronously 标记的方法
+			processor.scanZSynchronously(startupInfo);
+
 			// 3 创建 @ZController 对象
 			processor.scanController(startupInfo);
 
