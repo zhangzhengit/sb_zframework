@@ -25,6 +25,7 @@ import com.vo.zframework.cache.STU;
 import com.vo.zframework.cache.ZCacheableValidator;
 import com.vo.zframework.configuration.CommonConfigurationProperties;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
+import com.vo.zframework.core.BIO;
 import com.vo.zframework.core.DefaultHttpReader;
 import com.vo.zframework.core.NioLongConnectionServer;
 import com.vo.zframework.core.ZContext;
@@ -241,8 +242,12 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			}
 		}
 
-		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
-		nioLongConnectionServer.startNIOServer(httpPort);
+		// FIXME 2026年5月24日 10:01:33 zhangzhen : 暂时改为BIO
+		final BIO bio =new BIO();
+		bio.start(httpPort);
+
+//		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
+//		nioLongConnectionServer.startNIOServer(httpPort);
 	}
 
 	private static void injectForStarter(final String className) {
