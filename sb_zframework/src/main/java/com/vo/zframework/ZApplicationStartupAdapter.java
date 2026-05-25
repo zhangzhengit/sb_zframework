@@ -244,7 +244,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		// FIXME 2026年5月24日 10:01:33 zhangzhen : 暂时改为BIO
 		final BIO bio =new BIO();
-		bio.start(httpPort);
+		bio.startServer(httpPort);
 
 //		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
 //		nioLongConnectionServer.startNIOServer(httpPort);
