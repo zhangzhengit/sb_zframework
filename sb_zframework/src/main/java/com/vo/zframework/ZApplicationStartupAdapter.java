@@ -25,11 +25,10 @@ import com.vo.zframework.cache.STU;
 import com.vo.zframework.cache.ZCacheableValidator;
 import com.vo.zframework.configuration.CommonConfigurationProperties;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
-import com.vo.zframework.core.BIO;
 import com.vo.zframework.core.DefaultHttpReader;
-import com.vo.zframework.core.NioLongConnectionServer;
 import com.vo.zframework.core.ZContext;
 import com.vo.zframework.core.ZObjectGeneratorStarter;
+import com.vo.zframework.core.ZServer;
 import com.vo.zframework.core.ZSingleton;
 import com.vo.zframework.exception.ZControllerAdviceScanner;
 import com.vo.zframework.html.ResourcesLoader;
@@ -242,12 +241,8 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			}
 		}
 
-		// FIXME 2026年5月24日 10:01:33 zhangzhen : 暂时改为BIO
-		final BIO bio =new BIO();
-		bio.startServer(httpPort);
-
-//		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
-//		nioLongConnectionServer.startNIOServer(httpPort);
+		final ZServer server = new ZServer();
+		server.startServer(httpPort);
 	}
 
 	private static void injectForStarter(final String className) {
