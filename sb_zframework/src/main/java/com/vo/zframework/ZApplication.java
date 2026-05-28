@@ -51,7 +51,7 @@ public class ZApplication {
 	 * @param args                java 命令行传来的参数
 	 */
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
-		
+
 		final long start = System.currentTimeMillis();
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
@@ -77,33 +77,29 @@ public class ZApplication {
 
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
-//		final String javaVmName = System.getProperty("java.vm.name");
+		final String javaVmName = System.getProperty("java.vm.name");
 		final String javaVmVersion = System.getProperty("java.vm.version");
 
+		LOG.debug("APP启动成功,耗时[{}]秒,maxMemory=[{}]MB,vm=[{}]", (end - start) / 1000.0, maxMemory / 1024 / 1024,
+				javaVmName + ' ' + javaVmVersion);
+
+		final ServerConfigurationProperties serverConfigurationProperties = ZContext
+				.getBean(ServerConfigurationProperties.class);
+
 		final String ok =
-						"\r\n"
-					 + "   ___  _  __\r\n"
+						"   ___  _  __\r\n"
 					 + "  / _ \\| |/ /\r\n"
 					 + " | | | | ' / \r\n"
 					 + " | |_| | . \\ \r\n"
 					 + "  \\___/|_|\\_\\"
 					 + "\r\n"
+					 + (httpEnable ? ("httpPort=" + serverConfigurationProperties.getPort()) : "")
+					 + "\r\n"
+					 + "启动耗时[" +((end - start) / 1000.0) + "]秒,maxMemory=["+(maxMemory / 1024 / 1024)+"]MB,vm=["+(javaVmName + ' ' + javaVmVersion)+"]"
 					 ;
 
-		if (httpEnable) {
+		System.out.println(ok);
 
-			final ServerConfigurationProperties serverConfigurationProperties = ZContext
-					.getBean(ServerConfigurationProperties.class);
-			LOG.debug("APP启动成功,{}httpPort={}\r\n启动耗时[{}]秒,maxMemory=[{}]MB,vm.version=[{}]",
-					ok,serverConfigurationProperties.getPort(),
-					(end - start) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
-		} else {
-
-			LOG.debug("APP启动成功,{}启动耗时[{}]秒,maxMemory=[{}]MB,vm.version=[{}]",
-					ok,
-					(end - start) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
-
-		}
 		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
 	}
