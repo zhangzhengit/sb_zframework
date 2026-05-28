@@ -2,11 +2,23 @@ package com.vo.zframework;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.anno.ZAsync;
+import com.vo.zframework.anno.ZAutowired;
+import com.vo.zframework.anno.ZCommandLineRunner;
+import com.vo.zframework.anno.ZComponent;
+import com.vo.zframework.anno.ZConfiguration;
+import com.vo.zframework.anno.ZConfigurationProperties;
+import com.vo.zframework.anno.ZController;
+import com.vo.zframework.anno.ZRestController;
+import com.vo.zframework.anno.ZService;
+import com.vo.zframework.anno.ZSynchronously;
+import com.vo.zframework.anno.ZValue;
 import com.vo.zframework.aop.ArgR;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.configuration.ZProperties;
@@ -15,6 +27,9 @@ import com.vo.zframework.core.Task;
 import com.vo.zframework.core.ZContext;
 import com.vo.zframework.email.ZMail;
 import com.vo.zframework.email.ZMailNotificationConfigurationProperties;
+import com.vo.zframework.exception.ZControllerAdvice;
+import com.vo.zframework.scanner.ZEventListener;
+import com.vo.zframework.scanner.ZHandlerInterceptor;
 
 /**
  * 启动类
@@ -31,7 +46,6 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
-		ZMain.LOG.info("zframework开始启动");
 
 		final List<String> x = new ArrayList<>(new HashSet<>(packageNameList));
 
@@ -42,19 +56,24 @@ final class ZMain {
 		try {
 
 			// 解析 --key=value 形式的参数
+			LOG.debug("解析命令行参数,args={}", Arrays.toString(args));
 			final List<ArgR> argsList = ArgParser.p(args);
 			ZProperties.arL.addAll(argsList);
 
 			// 加载 application.properties 配置文件
 			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
+			LOG.debug("加载" + ZProperties.PROPERTIES_2 + "配置文件");
 			ZProperties.load();
 
+			LOG.debug("校验ZValidator");
 			processor.startValidator(startupInfo);
 
 			// 校验 @ZEventListener 方法
+			LOG.debug("校验@" + ZEventListener.class.getSimpleName());
 			processor.startEventPublisher(startupInfo);
 
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
+			LOG.debug("创建@" + ZConfigurationProperties.class.getSimpleName() + "对象");
 			processor.scanConfigurationProperties(startupInfo);
 
 			// 0.01 校验端口号
@@ -64,39 +83,50 @@ final class ZMain {
 
 			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
+			LOG.debug("初始化自定义Starter");
 			processor.loadStarter();
 
 			// 0.2 扫描 @ZConfiguration类，生成配置
+			LOG.debug("创建@" + ZConfiguration.class.getSimpleName() + "对象");
 			processor.scanConfiguration(startupInfo);
 
 			// 1 初始化 对象生成器
+//			LOG.debug("开始创建@" + ZConfiguration.class.getCanonicalName() + "对象");
 			processor.startObjectGenerator(startupInfo);
 
 			// 2 创建 @ZComponent和@ZService 对象，如果类中有被代理的自定义注解，则创建此类的代理类
+			LOG.debug("创建@" + ZService.class.getSimpleName() + "和@" + ZComponent.class.getSimpleName() + "对象");
 			processor.scanComponent(startupInfo);
 
 			// 2.1 扫描校验 @ZSynchronously 标记的方法
+			LOG.debug("校验@" + ZSynchronously.class.getSimpleName());
 			processor.scanZSynchronously(startupInfo);
 
 			// 2.2 扫描校验 @ZAsync 标记的方法
+			LOG.debug("校验@" + ZAsync.class.getSimpleName());
 			processor.scanZAsync(startupInfo);
 
 			// 3 创建 @ZController 对象
+			LOG.debug("创建@" + ZController.class.getSimpleName() + "和@" + ZRestController.class.getSimpleName() + "对象");
 			processor.scanController(startupInfo);
 
 			// 3.1 扫描 @ZControllerAdvice 的类
+			LOG.debug("创建@" + ZControllerAdvice.class.getSimpleName());
 			processor.scanControllerAdvice(startupInfo);
 
 			// 4.1 扫描组件的 @ZAutowired 字段 并注入值
+			LOG.debug("注入@" + ZAutowired.class.getSimpleName());
 			processor.injectAutowired(startupInfo);
 
 			// 4.2@ZAutowired 全部执行完了，判断一下必须的是否null
 			processor.aftertAutowiredInject(startupInfo);
 
 			// 5 扫描组件的 @ZValue 字段 并注入配置文件的值
+			LOG.debug("注入@" + ZValue.class.getSimpleName());
 			processor.injectValue(startupInfo);
 
 			// 6 校验缓存注解是否正确使用了
+			LOG.debug("校验缓存注解");
 			processor.validatedCache(startupInfo);
 
 			// 7 设置静态资源的路径
@@ -106,9 +136,11 @@ final class ZMain {
 			processor.printZConfigurationProperties(startupInfo);
 
 			// 9 扫描自定义拦截器
+			LOG.debug("校验" + ZHandlerInterceptor.class.getSimpleName());
 			processor.scanHandlerInterceptor(startupInfo);
 
 			// 10 执行 ZCommandLineRunner
+			LOG.debug("执行" + ZCommandLineRunner.class.getSimpleName());
 			processor.runCommandLineRunner(startupInfo);
 
 			// 11 API文档
@@ -119,7 +151,10 @@ final class ZMain {
 			processor.aftertAutowiredInject(startupInfo);
 
 			// 13 启动http服务器
-			processor.startHttpServer(serverPort, startupInfo);
+			if (startupInfo.isHttpEnable()) {
+				LOG.debug("启动httpServer");
+				processor.startHttpServer(serverPort, startupInfo);
+			}
 
 			// 14 画一个banner，无实际用途
 			if (ZContext.getBean(ServerConfigurationProperties.class).getShowBanner()) {

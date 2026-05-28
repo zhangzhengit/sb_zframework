@@ -52,11 +52,13 @@ public class ZApplication {
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 
-		LOG.info("ZApplication开始启动，scanPackageName={},httpEnable={},args={}", scanPackageNameList, httpEnable,
-				Arrays.toString(args));
-
 		// 加入本工程的顶级包名
-		cpl.add(APP_PACKAGE_NAME);
+		if(!cpl.contains(APP_PACKAGE_NAME)) {
+			cpl.add(APP_PACKAGE_NAME);
+		}
+
+		LOG.debug("APP开始启动,扫描包名={},args={},httpEnable={}",
+				cpl, Arrays.toString(args), httpEnable);
 
 		final String packageName = g();
 		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
@@ -71,11 +73,11 @@ public class ZApplication {
 
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
-		final String javaVmName = System.getProperty("java.vm.name");
+//		final String javaVmName = System.getProperty("java.vm.name");
 		final String javaVmVersion = System.getProperty("java.vm.version");
 
-		LOG.info("APP启动成功耗时[{}]秒,maxMemory=[{}MB],VM=[{}]", (t2 - t1) / 1000.0, maxMemory / 1024 / 1024,
-				javaVmName + ' ' + javaVmVersion);
+		LOG.debug("APP启动成功,耗时{}秒,maxMemory={}MB,vm.version={}",
+				(t2 - t1) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
 
 		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
