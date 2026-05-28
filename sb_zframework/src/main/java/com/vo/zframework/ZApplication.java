@@ -9,7 +9,9 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.vo.log.core.ZLog2;
+import com.vo.zframework.configuration.ServerConfigurationProperties;
 import com.vo.zframework.configuration.ZProperties;
+import com.vo.zframework.core.ZContext;
 import com.vo.zframework.exception.StartupException;
 
 /**
@@ -49,6 +51,8 @@ public class ZApplication {
 	 * @param args                java 命令行传来的参数
 	 */
 	public static ZApplicationContext run(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args) {
+		
+		final long start = System.currentTimeMillis();
 
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 
@@ -67,18 +71,39 @@ public class ZApplication {
 			cpl.add(packageName);
 		}
 
-		final long t1 = System.currentTimeMillis();
+
 		ZMain.start(cpl, httpEnable, args);
-		final long t2 = System.currentTimeMillis();
+		final long end = System.currentTimeMillis();
 
 		final long maxMemory = Runtime.getRuntime().maxMemory();
 
 //		final String javaVmName = System.getProperty("java.vm.name");
 		final String javaVmVersion = System.getProperty("java.vm.version");
 
-		LOG.debug("APP启动成功,耗时{}秒,maxMemory={}MB,vm.version={}",
-				(t2 - t1) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
+		final String ok =
+						"\r\n"
+					 + "   ___  _  __\r\n"
+					 + "  / _ \\| |/ /\r\n"
+					 + " | | | | ' / \r\n"
+					 + " | |_| | . \\ \r\n"
+					 + "  \\___/|_|\\_\\"
+					 + "\r\n"
+					 ;
 
+		if (httpEnable) {
+
+			final ServerConfigurationProperties serverConfigurationProperties = ZContext
+					.getBean(ServerConfigurationProperties.class);
+			LOG.debug("APP启动成功,{}httpPort={}\r\n启动耗时[{}]秒,maxMemory=[{}]MB,vm.version=[{}]",
+					ok,serverConfigurationProperties.getPort(),
+					(end - start) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
+		} else {
+
+			LOG.debug("APP启动成功,{}启动耗时[{}]秒,maxMemory=[{}]MB,vm.version=[{}]",
+					ok,
+					(end - start) / 1000.0, maxMemory / 1024 / 1024, javaVmVersion);
+
+		}
 		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
 	}
