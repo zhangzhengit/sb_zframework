@@ -62,7 +62,7 @@ final class ZMain {
 
 			// 加载 application.properties 配置文件
 			// 在这一步，如果有--key=value形式的参数，则优先级高于.properties文件
-			LOG.debug("加载" + ZProperties.PROPERTIES_2 + "配置文件");
+			LOG.debug("加载" + ZProperties.DEFALUT_PROPERTIES_NAME + "配置文件");
 			ZProperties.load();
 
 			LOG.debug("校验ZValidator");
