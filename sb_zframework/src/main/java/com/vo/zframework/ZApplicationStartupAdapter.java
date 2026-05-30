@@ -2,6 +2,7 @@ package com.vo.zframework;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -25,11 +26,12 @@ import com.vo.zframework.cache.STU;
 import com.vo.zframework.cache.ZCacheableValidator;
 import com.vo.zframework.configuration.CommonConfigurationProperties;
 import com.vo.zframework.configuration.ServerConfigurationProperties;
-import com.vo.zframework.core.DefaultHttpReader;
+import com.vo.zframework.core.HttpRequestProcessor;
 import com.vo.zframework.core.ZContext;
 import com.vo.zframework.core.ZObjectGeneratorStarter;
 import com.vo.zframework.core.ZServer;
 import com.vo.zframework.core.ZSingleton;
+import com.vo.zframework.exception.StartupException;
 import com.vo.zframework.exception.ZControllerAdviceScanner;
 import com.vo.zframework.html.ResourcesLoader;
 import com.vo.zframework.scanner.ZApplicationEventPublisher;
@@ -213,7 +215,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				LOG.info("/resources/META-INF/下文件size={}", size);
 				final String start = properties.getProperty("start");
 
-				injectForStarter(start);
+				initializeStarter(start);
 			}
 
 //			LOG.info("初始化[{}]个starter结束", c);
@@ -228,16 +230,20 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			return;
 		}
 
-		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
-		// 因为一个http请求只需要解析一次就行了
-		final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
+		final HttpRequestProcessor httpReader = ZContext.getBean(HttpRequestProcessor.class);
 		final Map<String, Object> map = ZContext.all();
 		final Set<Entry<String, Object>> es = map.entrySet();
+		int childClassSize = 0;
 		for (final Entry<String, Object> e : es) {
 			final boolean equals = e.getValue().getClass().getSuperclass().equals(httpReader.getClass());
 			if (equals) {
-				ZContext.remove(DefaultHttpReader.class);
-				ZContext.addBean(DefaultHttpReader.class, e.getValue());
+				childClassSize++;
+				if (childClassSize > 1) {
+					throw new StartupException(HttpRequestProcessor.class.getSimpleName() + "只允许有一个子类");
+				}
+
+				ZContext.remove(HttpRequestProcessor.class);
+				ZContext.addBean(HttpRequestProcessor.class, e.getValue());
 			}
 		}
 
@@ -245,32 +251,16 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		server.startServer(httpPort);
 	}
 
-	private static void injectForStarter(final String className) {
+	private static void initializeStarter(final String className) {
 
 		try {
 			final Class<?> cls = Class.forName(className);
 
-			final ZStarter starter = (ZStarter) cls.newInstance();
+			final ZStarter starter = (ZStarter) cls.getDeclaredConstructor().newInstance();
 			starter.start();
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
-
-	}
-
-	@Override
-	public void showBanner() {
-		System.out.println();
-		System.out.println("------------vo:zframework------------------------------");
-		System.out.println("   vo            vo        vovovov                         ");
-		System.out.println("    vo          vo       vo       vo                       ");
-		System.out.println("     vo        vo       vo         vo                      ");
-		System.out.println("      vo      vo        vo         vo                      ");
-		System.out.println("       vo    vo          vo        vo                      ");
-		System.out.println("        vo  vo            vo      vo                       ");
-		System.out.println("         v o               vo    ov                        ");
-		System.out.println("          v                  ovov                        ");
-		System.out.println();
 
 	}
 
