@@ -127,15 +127,19 @@ public class ZApplication {
 		}
 
 		final String packageName = className.substring(0, i);
+		final String regex1 = "\\w+";
 		final String regex2 = "\\w+\\.\\w+";
 		final String regex3 = "\\w+\\.\\w+.\\w+";
 		final String regex4 = "\\w+\\.\\w+.\\w+.\\w+";
-		if (packageName.matches(regex2) || packageName.matches(regex3) || packageName.matches(regex4)) {
+		if (	   packageName.matches(regex1)
+				|| packageName.matches(regex2)
+				|| packageName.matches(regex3)
+				|| packageName.matches(regex4)) {
 			return packageName;
 		}
 
 		final String message = "获取程序启动类所在包名异常，当前包名为" + packageName
-				+ "，请确认启动类所在包名形式为A.B/A.B.C/A.B.C.D，如：com.vo/com.vo.app/com.vo.my.app";
+				+ "，请确认启动类所在包名形式为A/A.B/A.B.C/A.B.C.D，如：com/com.vo/com.vo.app/com.vo.my.app";
 		LOG.error("启动失败,message=[{}]", message);
 		throw new StartupException(message);
 	}
