@@ -1,4 +1,4 @@
-package com.vo.zframework;
+package vo.zframework;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,30 +7,30 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vo.zframework.anno.ZAsync;
-import com.vo.zframework.anno.ZAutowired;
-import com.vo.zframework.anno.ZCommandLineRunner;
-import com.vo.zframework.anno.ZComponent;
-import com.vo.zframework.anno.ZConfiguration;
-import com.vo.zframework.anno.ZConfigurationProperties;
-import com.vo.zframework.anno.ZController;
-import com.vo.zframework.anno.ZRestController;
-import com.vo.zframework.anno.ZService;
-import com.vo.zframework.anno.ZSynchronously;
-import com.vo.zframework.anno.ZValue;
-import com.vo.zframework.aop.ArgR;
-import com.vo.zframework.configuration.ServerConfigurationProperties;
-import com.vo.zframework.configuration.ZProperties;
-import com.vo.zframework.core.PortChecker;
-import com.vo.zframework.core.Task;
-import com.vo.zframework.core.ZContext;
-import com.vo.zframework.email.ZMail;
-import com.vo.zframework.email.ZMailNotificationConfigurationProperties;
-import com.vo.zframework.exception.ZControllerAdvice;
-import com.vo.zframework.scanner.ZEventListener;
-import com.vo.zframework.scanner.ZHandlerInterceptor;
-
 import vo.log.core.ZLog2;
+import vo.zframework.M;
+import vo.zframework.anno.ZAsync;
+import vo.zframework.anno.ZAutowired;
+import vo.zframework.anno.ZCommandLineRunner;
+import vo.zframework.anno.ZComponent;
+import vo.zframework.anno.ZConfiguration;
+import vo.zframework.anno.ZConfigurationProperties;
+import vo.zframework.anno.ZController;
+import vo.zframework.anno.ZRestController;
+import vo.zframework.anno.ZService;
+import vo.zframework.anno.ZSynchronously;
+import vo.zframework.anno.ZValue;
+import vo.zframework.aop.ArgR;
+import vo.zframework.configuration.ServerConfigurationProperties;
+import vo.zframework.configuration.ZProperties;
+import vo.zframework.core.PortChecker;
+import vo.zframework.core.Task;
+import vo.zframework.core.ZContext;
+import vo.zframework.email.ZMail;
+import vo.zframework.email.ZMailNotificationConfigurationProperties;
+import vo.zframework.exception.ZControllerAdvice;
+import vo.zframework.scanner.ZEventListener;
+import vo.zframework.scanner.ZHandlerInterceptor;
 
 /**
  * 启动类

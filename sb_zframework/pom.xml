@@ -4,11 +4,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.vo</groupId>
-	<artifactId>sb_zframework</artifactId>
+	<groupId>vo</groupId>
+	<artifactId>zframework</artifactId>
 	<version>1.0.0-SNAPSHOT-jdk21</version>
-	<name>sb_zframework</name>
-	<description>sb_zframework</description>
+	<name>zframework</name>
+	<description>zframework</description>
 
 	<properties>
 		<java.version>21</java.version>
@@ -17,7 +17,7 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>com.vo</groupId>
+			<groupId>vo</groupId>
 			<artifactId>zframework_core</artifactId>
 			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>

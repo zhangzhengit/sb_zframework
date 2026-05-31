@@ -1,4 +1,4 @@
-package com.vo.zframework;
+package vo.zframework;
 
 import java.util.Collection;
 import java.util.Map;
@@ -6,9 +6,10 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import com.vo.zframework.core.ZContext;
-import com.vo.zframework.scanner.ZApplicationEvent;
-import com.vo.zframework.scanner.ZApplicationEventPublisher;
+
+import vo.zframework.core.ZContext;
+import vo.zframework.scanner.ZApplicationEvent;
+import vo.zframework.scanner.ZApplicationEventPublisher;
 
 /**
  * 程序启动的信息
@@ -107,24 +108,23 @@ public final class ZApplicationContext {
 	}
 
 	public ImmutableList<String> getScanPackageNameList() {
-		return scanPackageNameList;
+		return this.scanPackageNameList;
 	}
 
 	public boolean isHttpEnable() {
-		return httpEnable;
+		return this.httpEnable;
 	}
 
 	public String[] getArgs() {
-		return args;
+		return this.args;
 	}
 
 	public Properties getProperties() {
-		return properties;
+		return this.properties;
 	}
 
 	public ZApplicationContext(final ImmutableList<String> scanPackageNameList, final boolean httpEnable, final String[] args,
 			final Properties properties) {
-		super();
 		this.scanPackageNameList = scanPackageNameList;
 		this.httpEnable = httpEnable;
 		this.args = args;
