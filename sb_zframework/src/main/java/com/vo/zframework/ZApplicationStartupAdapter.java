@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
-import com.vo.log.core.ZLog2;
-import com.vo.zframework.anno.ZAsync;
 import com.vo.zframework.anno.ZCommandLineRunner;
 import com.vo.zframework.anno.ZCommandLineRunnerScanner;
 import com.vo.zframework.anno.ZComponent;
@@ -45,6 +43,8 @@ import com.vo.zframework.scanner.ZSynchronouslyScanner;
 import com.vo.zframework.scanner.ZValueScanner;
 import com.vo.zframework.starter.ZStarter;
 import com.vo.zframework.validator.ZValidator;
+
+import vo.log.core.ZLog2;
 
 /**
  * ZApplication 的启动流程适配类，如需自定义或查插入代码等，覆盖本类方法
