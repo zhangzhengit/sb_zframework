@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.vo.zframework.configuration.ZProperties;
-import com.vo.zframework.exception.StartupException;
-
 import vo.log.core.ZLog2;
+import vo.zframework.M;
+import vo.zframework.configuration.ZProperties;
+import vo.zframework.exception.StartupException;
 
 /**
  *
@@ -24,7 +24,7 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	private static final String APP_PACKAGE_NAME = "com.vo";
+	private static final String APP_PACKAGE_NAME = "vo";
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
