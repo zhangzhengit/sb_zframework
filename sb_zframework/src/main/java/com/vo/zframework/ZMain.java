@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vo.log.core.ZLog2;
 import com.vo.zframework.anno.ZAsync;
 import com.vo.zframework.anno.ZAutowired;
 import com.vo.zframework.anno.ZCommandLineRunner;
@@ -30,6 +29,8 @@ import com.vo.zframework.email.ZMailNotificationConfigurationProperties;
 import com.vo.zframework.exception.ZControllerAdvice;
 import com.vo.zframework.scanner.ZEventListener;
 import com.vo.zframework.scanner.ZHandlerInterceptor;
+
+import vo.log.core.ZLog2;
 
 /**
  * 启动类
