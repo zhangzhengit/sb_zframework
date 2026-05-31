@@ -27,7 +27,7 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String APP_PACKAGE_NAME = "com.vo";
+	public static final String APP_PACKAGE_NAME = "vo";
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
