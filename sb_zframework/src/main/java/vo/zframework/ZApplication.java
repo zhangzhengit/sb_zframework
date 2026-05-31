@@ -58,19 +58,18 @@ public class ZApplication {
 		final List<String> cpl = scanPackageNameList.isEmpty() ? new ArrayList<>() : scanPackageNameList;
 
 		// 加入本工程的顶级包名
-		if(!cpl.contains(APP_PACKAGE_NAME)) {
+		if (!cpl.contains(APP_PACKAGE_NAME)) {
 			cpl.add(APP_PACKAGE_NAME);
+		}
+
+		final String appPackageName = g();
+
+		if(!cpl.contains(appPackageName)) {
+			cpl.add(appPackageName);
 		}
 
 		LOG.debug("APP开始启动,扫描包名={},args={},httpEnable={}",
 				cpl, Arrays.toString(args), httpEnable);
-
-		final String packageName = g();
-		final Optional<String> findAny = cpl.stream().filter(p -> Objects.equals(p, packageName))
-				.findAny();
-		if (!findAny.isPresent()) {
-			cpl.add(packageName);
-		}
 
 
 		ZMain.start(cpl, httpEnable, args);
