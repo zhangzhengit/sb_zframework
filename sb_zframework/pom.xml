@@ -5,10 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>vo</groupId>
-	<artifactId>zframework</artifactId>
+	<artifactId>sb_zframework</artifactId>
 	<version>1.0.0-SNAPSHOT-jdk21</version>
-	<name>zframework</name>
-	<description>zframework</description>
+	<name>sb_zframework</name>
+	<description>sb_zframework</description>
 
 	<properties>
 		<java.version>21</java.version>
