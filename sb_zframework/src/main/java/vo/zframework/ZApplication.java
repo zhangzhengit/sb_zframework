@@ -24,11 +24,7 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String APP_PACKAGE_NAME = "vo";
-	// FIXME 2026年6月23日 16:32:57 zhangzhen : 想改为下面的vo.zframework，但是
-	//改了后现有的vo.repository.actuator.SqlInvocationLogsConfigurationProperties这种类会扫描不到
-	// 写为vo只是巧合了，应该改，其他都要大改，改repository的启动流程
-//	public static final String APP_PACKAGE_NAME = "vo.zframework";
+	public static final String APP_PACKAGE_NAME = ZApplication.class.getPackageName();
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
@@ -36,6 +32,10 @@ public class ZApplication {
 
 	public static ZApplicationContext run(final boolean httpEnable, final String[] args) {
 		return run(Collections.emptyList(), httpEnable, args);
+	}
+
+	public static ZApplicationContext run(final List<String> scanPackageNameList, final String[] args) {
+		return run(scanPackageNameList, true, args);
 	}
 
 	/**
