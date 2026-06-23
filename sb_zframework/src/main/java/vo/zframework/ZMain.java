@@ -40,8 +40,6 @@ final class ZMain {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String Z_SERVER_THREAD = "ZServer-Thread";
-
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
 
