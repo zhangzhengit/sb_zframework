@@ -65,7 +65,7 @@ public class ZApplication {
 
 		final String appPackageName = g();
 
-		if(!cpl.contains(appPackageName)) {
+		if (!cpl.contains(appPackageName)) {
 			cpl.add(appPackageName);
 		}
 
