@@ -75,7 +75,9 @@ final class ZMain {
 			// 0.01 校验端口号
 			// FIXME 2024年12月31日 下午6:34:24 zhangzhen : 看看把这一步放在最前面，要先更改 scanConfigurationProperties
 			// 把 ServerConfigurationProperties 和zf.properties 中的server.port读取出来然后才可以把本步放最前面
-			final Integer serverPort = checkPort();
+			// FIXME 2026年6月23日 15:10:17 zhangzhen : 校验端口这一步想好放在哪里
+			// 原来想放在最前面，是想快速失败；由于启动时间差，放前面还是后面都有体验不好的情况
+			final Integer serverPort = checkPort(startupInfo);
 
 			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
@@ -241,9 +243,14 @@ final class ZMain {
 		}
 	}
 
-	private static Integer checkPort() {
+	private static Integer checkPort(final ZApplicationStartupInfo startupInfo) {
+
 		final ServerConfigurationProperties serverConfigurationProperties = ZContext
 				.getBean(ServerConfigurationProperties.class);
+
+		if (!startupInfo.isHttpEnable()) {
+			return serverConfigurationProperties.getPort();
+		}
 
 		// FIXME 2025年8月25日 下午8:55:26 zhangzhen: 暂时去掉支持 -Dkey=value形式的传参，
 		// 我觉得支持了--key=value形式就足够了？再多一种-D都四种了太多了，还容易写出bug
