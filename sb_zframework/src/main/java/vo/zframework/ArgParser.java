@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import vo.zframework.aop.ArgR;
-import vo.zframework.cache.AU;
-import vo.zframework.cache.STU;
+import vo.zframework.common.AU;
+import vo.zframework.common.STU;
 
 /**
  * 解析 java 命令行中传来的参数

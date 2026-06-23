@@ -8,8 +8,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import vo.log.core.ZLog2;
-import vo.zframework.configuration.ServerConfigurationProperties;
-import vo.zframework.configuration.ZProperties;
+import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.exception.StartupException;
 
@@ -26,6 +25,7 @@ public class ZApplication {
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
 	public static final String APP_PACKAGE_NAME = "vo";
+//	public static final String APP_PACKAGE_NAME = "vo.zframework";
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);

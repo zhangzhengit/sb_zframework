@@ -13,22 +13,20 @@ import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZCommandLineRunner;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.anno.ZConfiguration;
-import vo.zframework.anno.ZConfigurationProperties;
 import vo.zframework.anno.ZController;
 import vo.zframework.anno.ZRestController;
 import vo.zframework.anno.ZService;
 import vo.zframework.anno.ZSynchronously;
 import vo.zframework.anno.ZValue;
-import vo.zframework.aop.ArgR;
-import vo.zframework.configuration.ServerConfigurationProperties;
-import vo.zframework.configuration.ZProperties;
-import vo.zframework.core.PortChecker;
-import vo.zframework.core.Task;
+import vo.zframework.configuration.properties.ServerConfigurationProperties;
+import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.configuration.properties.ZMailNotificationConfigurationProperties;
 import vo.zframework.core.ZContext;
 import vo.zframework.email.ZMail;
-import vo.zframework.email.ZMailNotificationConfigurationProperties;
+import vo.zframework.event.ZEventListener;
 import vo.zframework.exception.ZControllerAdvice;
-import vo.zframework.scanner.ZEventListener;
+import vo.zframework.http.PortChecker;
+import vo.zframework.http.Task;
 import vo.zframework.scanner.ZHandlerInterceptor;
 
 /**
