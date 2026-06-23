@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 
 import vo.log.core.ZLog2;
-import vo.zframework.M;
 import vo.zframework.anno.ZAsync;
 import vo.zframework.anno.ZAutowired;
 import vo.zframework.anno.ZCommandLineRunner;
@@ -160,7 +159,7 @@ final class ZMain {
 			// FIXME 2025年1月18日 下午7:35:17 zhangzhen : 这个通知功能也抽出一个接口，可以供用户自己实现
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
-				LOG.warn("程序Shutdown");
+				LOG.warn("APP Shutdown");
 
 				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
 
@@ -239,9 +238,9 @@ final class ZMain {
 
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
-			LOG.error("程序启动失败，请检查代码。\n\terrorMessage={}", message);
+			LOG.error("APP启动失败，请检查代码。\n\terrorMessage={}", message);
 			ZApplication.printFAIL();
-			LOG.error("程序启动失败，具体原因请看上面日志");
+			LOG.error("APP启动失败，具体原因请看上面日志");
 			System.exit(0);
 		}
 	}
