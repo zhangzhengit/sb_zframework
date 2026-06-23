@@ -240,6 +240,7 @@ final class ZMain {
 		} catch (final Exception e) {
 			final String message = Task.gExceptionMessage(e);
 			LOG.error("程序启动失败，请检查代码。\n\terrorMessage={}", message);
+			ZApplication.printFAIL();
 			LOG.error("程序启动失败，具体原因请看上面日志");
 			System.exit(0);
 		}
@@ -259,11 +260,13 @@ final class ZMain {
 		final Integer serverPort = serverConfigurationProperties.getPort();
 
 		if (!PortChecker.isPortIllegal(serverPort)) {
+			ZApplication.printFAIL();
 			LOG.error("端口[{}]不合法,请检查,更换端口在[{}]到[{}]之间", serverPort, PortChecker.PORT_MIN, PortChecker.PORT_MAX);
 			System.exit(0);
 		}
 
 		if (PortChecker.isPortInUse(serverPort)) {
+			ZApplication.printFAIL();
 			LOG.error("端口[{}]已被占用,请检查,更换端口或者停掉正在使用此端口的进程?", serverPort);
 			System.exit(0);
 		}

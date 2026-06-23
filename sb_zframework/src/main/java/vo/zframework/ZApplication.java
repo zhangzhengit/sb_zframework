@@ -85,21 +85,33 @@ public class ZApplication {
 				.getBean(ServerConfigurationProperties.class);
 
 		final String ok =
-						"   ___  _  __\r\n"
-					 + "  / _ \\| |/ /\r\n"
-					 + " | | | | ' / \r\n"
-					 + " | |_| | . \\ \r\n"
-					 + "  \\___/|_|\\_\\"
-					 + "\r\n"
-					 + (httpEnable ? ("httpPort=" + serverConfigurationProperties.getPort()) : "")
-					 + "\r\n"
-					 + "启动耗时[" +((end - start) / 1000.0) + "]秒,maxMemory=["+(maxMemory / 1024 / 1024)+"]MB,vm=["+(javaVmName + ' ' + javaVmVersion)+"]"
-					 ;
+						  " ██████  ██   ██ \r\n"
+						+ "██    ██ ██  ██  \r\n"
+						+ "██    ██ █████   \r\n"
+						+ "██    ██ ██  ██  \r\n"
+						+ " ██████  ██   ██ \r\n"
+						+ "\r\n"
+						+ (httpEnable ? ("httpPort=" + serverConfigurationProperties.getPort()) : "")
+						+ "\r\n"
+						+ "启动耗时[" +((end - start) / 1000.0) + "]秒,maxMemory=["+(maxMemory / 1024 / 1024)+"]MB,vm=["+(javaVmName + ' ' + javaVmVersion)+"]"
+						;
 
 		System.out.println(ok);
 
 		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
+	}
+
+	public static void printFAIL() {
+		final String fail =
+				  "███████   █████   ███████  ██       \r\n"
+				+ "██       ██   ██     ██    ██       \r\n"
+				+ "█████    ███████     ██    ██       \r\n"
+				+ "██       ██   ██     ██    ██       \r\n"
+				+ "██       ██   ██  ███████  ███████  "
+				;
+
+		System.out.println(fail);
 	}
 
 	public static String getAppName() {
