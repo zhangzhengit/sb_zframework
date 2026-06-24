@@ -1,9 +1,11 @@
 package vo.zframework;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 
@@ -74,6 +76,16 @@ public class ZApplication {
 
 
 		ZMain.start(cpl, httpEnable, args);
+
+
+		final List<String> jol = ManagementFactory.getRuntimeMXBean().getInputArguments();
+		final String jos = jol.stream().map(s -> s).collect(Collectors.joining(" "));
+
+		LOG.debug("JVM Options=[{}]", jos);
+
+		final String aas = Arrays.stream(args).collect(Collectors.joining(" "));
+		LOG.debug("Application Arguments=[{}]", aas);
+
 		final long end = System.currentTimeMillis();
 
 		final long maxMemory = Runtime.getRuntime().maxMemory();
@@ -87,12 +99,17 @@ public class ZApplication {
 		final ServerConfigurationProperties serverConfigurationProperties = ZContext
 				.getBean(ServerConfigurationProperties.class);
 
+		System.out.println("JVM Options:");
+		System.out.println("[" + jos + "]");
+		System.out.println("Application Arguments:");
+		System.out.println("[" + aas + "]");
+
 		final String ok =
 						  " ██████  ██   ██ \r\n"
 						+ "██    ██ ██  ██  \r\n"
 						+ "██    ██ █████   \r\n"
 						+ "██    ██ ██  ██  \r\n"
-						+ " ██████  ██   ██ \r\n"
+						+ " ██████  ██   ██ "
 						+ "\r\n"
 						+ (httpEnable ? ("httpPort=" + serverConfigurationProperties.getPort()) : "")
 						+ "\r\n"
