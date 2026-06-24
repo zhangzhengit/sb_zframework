@@ -201,6 +201,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		try {
 			final CommonConfigurationProperties common = ZContext.getBean(CommonConfigurationProperties.class);
 //			LOG.info("/resources/META-INF/下指定的启动文件名称={}", common.getStarterName());
+			// FIXME 2026年6月24日 18:01:40 zhangzhen : 发现bug:这么指定name了，有多个的话只会找到一个,改为支持*.后缀的方式
 			final Enumeration<URL> resources = classLoader.getResources("META-INF/" + common.getStarterName());
 
 			int c = 0;
