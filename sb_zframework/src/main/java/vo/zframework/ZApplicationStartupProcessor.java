@@ -173,4 +173,11 @@ public interface ZApplicationStartupProcessor {
 	 */
 	void startHttpServer(int httpPort, ZApplicationStartupInfo startupInfo);
 
+	/**
+	 * 对静态资源进行预压缩
+	 *
+	 * @param startupInfo
+	 */
+	void preCompression(ZApplicationStartupInfo startupInfo);
+
 }

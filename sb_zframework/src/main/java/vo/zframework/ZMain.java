@@ -154,6 +154,9 @@ final class ZMain {
 				processor.startHttpServer(serverPort, startupInfo);
 			}
 
+			// 14 静态文件预压缩
+			processor.preCompression(startupInfo);
+
 			// FIXME 2025年1月18日 下午7:35:17 zhangzhen : 这个通知功能也抽出一个接口，可以供用户自己实现
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
