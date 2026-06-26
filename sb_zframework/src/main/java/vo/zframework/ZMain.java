@@ -238,8 +238,7 @@ final class ZMain {
 			//			});
 
 		} catch (final Exception e) {
-			final String message = Task.gExceptionMessage(e);
-			LOG.error("APP启动失败，请检查代码。\n\terrorMessage={}", message);
+			LOG.error("APP启动失败，请检查代码", e);
 			ZApplication.printFAIL();
 			LOG.error("APP启动失败，具体原因请看上面日志");
 			System.exit(0);
