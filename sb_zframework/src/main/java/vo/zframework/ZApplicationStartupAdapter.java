@@ -19,7 +19,7 @@ import vo.zframework.anno.ZConfiguration;
 import vo.zframework.anno.ZController;
 import vo.zframework.anno.ZRestController;
 import vo.zframework.anno.ZService;
-import vo.zframework.api.StaticResourcespreCompressionService;
+import vo.zframework.api.StaticResourcesPreCompressionService;
 import vo.zframework.bean.ZObjectGeneratorStarter;
 import vo.zframework.bean.ZSingleton;
 import vo.zframework.common.STU;
@@ -282,7 +282,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void preCompression(final ZApplicationStartupInfo startupInfo) {
-		StaticResourcespreCompressionService.preCompression();
+		StaticResourcesPreCompressionService.preCompression();
 	}
 
 }
