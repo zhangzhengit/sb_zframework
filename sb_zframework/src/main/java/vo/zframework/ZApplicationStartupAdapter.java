@@ -35,7 +35,6 @@ import vo.zframework.http.ZServer;
 import vo.zframework.http.request.HttpRequestProcessor;
 import vo.zframework.scanner.ZAsyncScanner;
 import vo.zframework.scanner.ZAutowiredScanner;
-import vo.zframework.scanner.ZCacheScanner;
 import vo.zframework.scanner.ZCommandLineRunnerScanner;
 import vo.zframework.scanner.ZComponentScanner;
 import vo.zframework.scanner.ZConfigurationPropertiesScanner;
@@ -133,7 +132,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void validatedCache(final ZApplicationStartupInfo startupInfo) {
 		ZCacheableValidator.validated(startupInfo.getPackageNameList().toArray(new String[0]));
-		ZCacheScanner.scanAndValidate();
+//		ZCacheScanner.scanAndValidate();
 	}
 
 	@Override
