@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableList;
-
 import vo.log.core.ZLog2;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.core.ZContext;
@@ -118,7 +116,7 @@ public class ZApplication {
 
 		System.out.println(ok);
 
-		return new ZApplicationContext(ImmutableList.copyOf(scanPackageNameList),
+		return new ZApplicationContext(List.copyOf(scanPackageNameList),
 				httpEnable, args, ZProperties.getInstance());
 	}
 

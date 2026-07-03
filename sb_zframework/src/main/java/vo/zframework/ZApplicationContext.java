@@ -1,11 +1,10 @@
 package vo.zframework;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import com.google.common.collect.ImmutableList;
 
 import vo.zframework.core.ZContext;
 import vo.zframework.event.ZApplicationEvent;
@@ -23,7 +22,7 @@ public final class ZApplicationContext {
 	/**
 	 * 程序启动扫描的包铭
 	 */
-	private final ImmutableList<String> scanPackageNameList;
+	private final List<String> scanPackageNameList;
 
 	/**
 	 * 是否启用http服务器
@@ -107,7 +106,7 @@ public final class ZApplicationContext {
 		ZContext.getBean(ZApplicationEventPublisher.class).publishEvent(event);
 	}
 
-	public ImmutableList<String> getScanPackageNameList() {
+	public List<String> getScanPackageNameList() {
 		return this.scanPackageNameList;
 	}
 
@@ -123,7 +122,7 @@ public final class ZApplicationContext {
 		return this.properties;
 	}
 
-	public ZApplicationContext(final ImmutableList<String> scanPackageNameList, final boolean httpEnable, final String[] args,
+	public ZApplicationContext(final List<String> scanPackageNameList, final boolean httpEnable, final String[] args,
 			final Properties properties) {
 		this.scanPackageNameList = scanPackageNameList;
 		this.httpEnable = httpEnable;
