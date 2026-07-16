@@ -3,11 +3,16 @@ package vo.zframework;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -17,8 +22,11 @@ import vo.zframework.anno.ZCommandLineRunner;
 import vo.zframework.anno.ZComponent;
 import vo.zframework.anno.ZConfiguration;
 import vo.zframework.anno.ZController;
+import vo.zframework.anno.ZPathVariable;
+import vo.zframework.anno.ZRequestMapping;
 import vo.zframework.anno.ZRestController;
 import vo.zframework.anno.ZService;
+import vo.zframework.api.StaticController;
 import vo.zframework.api.StaticResourcesPreCompressionService;
 import vo.zframework.bean.ZObjectGeneratorStarter;
 import vo.zframework.bean.ZSingleton;
@@ -27,10 +35,14 @@ import vo.zframework.configuration.properties.CommonConfigurationProperties;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
 import vo.zframework.core.ZContext;
+import vo.zframework.event.APIRouteR;
+import vo.zframework.event.IAPIRoute;
 import vo.zframework.event.ZApplicationEventPublisher;
 import vo.zframework.exception.StartupException;
 import vo.zframework.exception.ZControllerAdviceScanner;
 import vo.zframework.html.ResourcesLoader;
+import vo.zframework.http.ZControllerMap;
+import vo.zframework.http.ZRMethod;
 import vo.zframework.http.ZServer;
 import vo.zframework.http.request.HttpRequestProcessor;
 import vo.zframework.scanner.ZAsyncScanner;
@@ -46,6 +58,11 @@ import vo.zframework.scanner.ZValueScanner;
 import vo.zframework.starter.ZStarter;
 import vo.zframework.validator.ZCacheableValidator;
 import vo.zframework.validator.ZValidator;
+import vo.zframework.zclass.ZClass;
+import vo.zframework.zclass.ZField;
+import vo.zframework.zclass.ZMethod;
+import vo.zframework.zclass.ZMethodArg;
+import vo.zframework.zclass.ZPackage;
 
 /**
  * ZApplication 的启动流程适配类，如需自定义或查插入代码等，覆盖本类方法
@@ -109,8 +126,173 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanController(final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
+
 			ZControllerScanner.scanAndCreateObject(startupInfo.getPackageNameList().toArray(new String[0]));
+
+			final ZClass proxyZClass = this.gControllerProxyZClass();
+
+			final Object newInstance = proxyZClass.newInstance();
+
+			ZContext.addBean(IAPIRoute.class, newInstance);
+
 		}
+	}
+
+	private ZClass gControllerProxyZClass() {
+		// FIXME 2026年7月16日 10:02:17 zhangzhen : 动态生成接口方法路由代理类
+		final ZClass proxyZClass = new ZClass();
+		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setName("ZAPIRoute");
+		proxyZClass.setImplementsSet(Set.of(IAPIRoute.class.getCanonicalName()));
+
+		proxyZClass.addField(new ZField(APIRouteR.class.getName(), "MATCHED",
+				"new " + APIRouteR.class.getCanonicalName() + "(true);"));
+
+		final ZMethod routeMethod = new ZMethod();
+		routeMethod.setName("route");
+		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
+		routeMethod.setReturnType(APIRouteR.class.getCanonicalName());
+
+		routeMethod.setBodyReturn("return new " + APIRouteR.class.getCanonicalName()
+				+ "(false);");
+
+		final Object[] a = {};
+		routeMethod.setMethodArgList(List.of(
+				new ZMethodArg(String.class.getCanonicalName(), "path"),
+				new ZMethodArg(Object.class.getCanonicalName(), "controller"),
+				new ZMethodArg(ZRMethod.class.getCanonicalName(), "zrMethod"),
+				new ZMethodArg(a.getClass(), "parameters")));
+
+		proxyZClass.setMethodSet(Set.of(routeMethod));
+
+		final StringBuilder routeBody = new StringBuilder("switch (path) {");
+
+		final Map<Method, Object> mcmap = ZControllerMap.getMCMap();
+		final Set<Entry<Method, Object>> es = mcmap.entrySet();
+
+		int pI = 0;
+		for (final Entry<Method, Object> e : es) {
+			final Method method = e.getKey();
+
+			final Parameter[] mp = method.getParameters();
+			final Optional<Parameter> isZPVO = Arrays.stream(mp)
+			.filter(p -> p.isAnnotationPresent(ZPathVariable.class)).findAny();
+			if (isZPVO.isPresent()) {
+				// FIXME 2026年7月16日 16:57:08 zhangzhen : @ZPathVariable的有点不好匹配，先不支持
+				continue;
+			}
+
+			final Object controller = e.getValue();
+			if (controller.getClass().getCanonicalName().equals(StaticController.class.getCanonicalName())) {
+				// FIXME 2026年7月16日 16:57:47 zhangzhen : StaticController 里面都是正则的，也不好匹配，也暂时不支持
+				continue;
+			}
+
+			pI++;
+
+			final ZController zc = controller.getClass().getAnnotation(ZController.class);
+			final String prefix = zc != null ? zc.prefix() :  controller.getClass().getAnnotation(ZRestController.class).prefix();
+
+			final ZRequestMapping rm = method.getAnnotation(ZRequestMapping.class);
+
+			final boolean[] regex = rm.isRegex();
+
+			final String[] ma = rm.mapping();
+
+			ZApplicationStartupAdapter.newLine(routeBody);
+
+			routeBody.append("case \"")
+			.append(prefix)
+			// FIXME 2026年7月16日 17:46:01 zhangzhen : 不该写死ma[0]。而是foreach
+			// 并且isRegex为true的也跳过
+			.append(ma[0]).append("\"").append(':');
+
+			ZApplicationStartupAdapter.newLine(routeBody);
+
+			// 方法调用
+
+			routeBody.append(controller.getClass().getCanonicalName()).append(" ")
+			.append("controller").append(pI).append(" = ")
+			.append("(").append(controller.getClass().getCanonicalName()).append(")controller;");
+
+			ZApplicationStartupAdapter.newLine(routeBody);
+
+			final Class<?> returnType = method.getReturnType();
+			final int parameterCount = method.getParameterCount();
+
+			// void 方法
+			final boolean returnVOID = returnType.getCanonicalName().equals(void.class.getCanonicalName());
+			// 非void方法，需要return
+			if (parameterCount <= 0) {
+
+				if (!returnVOID) {
+					routeBody.append("return ");
+					routeBody.append("new ")
+					.append(APIRouteR.class.getCanonicalName())
+					.append("(")
+					;
+				}
+
+				routeBody
+				.append("controller").append(pI).append(".").append(method.getName()).append("()");
+
+			} else {
+
+				final Parameter[] parameters = method.getParameters();
+				final StringBuilder pb = new StringBuilder();
+				for (int i = 0; i < parameters.length; i++) {
+					final Parameter p = parameters[i];
+
+					final Class<?> type = p.getType();
+					pb.append("(")
+					.append(type.getCanonicalName())
+					.append(")")
+					.append("parameters[").append(i).append("]");
+					if (i < (parameters.length - 1)) {
+						pb.append(',');
+					}
+				}
+
+				if (!returnVOID) {
+					routeBody.append("return ");
+					routeBody.append("new ")
+					.append(APIRouteR.class.getCanonicalName())
+					.append("(")
+					;
+				}
+
+				routeBody
+				.append("controller").append(pI).append(".").append(method.getName()).append("(")
+				.append(pb)
+				.append(")")
+				;
+			}
+			if (!returnVOID) {
+				routeBody.append(");");
+			} else {
+				routeBody.append(";");
+			}
+
+			ZApplicationStartupAdapter.newLine(routeBody);
+
+			if (returnVOID) {
+				routeBody.append("return MATCHED;");
+			}
+		}
+
+		routeBody.append("default:\r\n"
+							+ "	break;\r\n"
+							+ "}	");
+
+		routeMethod.setBody(routeBody.toString());
+
+//		System.out.println("proxyZClass = ");
+//		System.out.println(proxyZClass.toString());
+		return proxyZClass;
+	}
+
+	private static void newLine(final StringBuilder routeBody) {
+		routeBody.append(ZMethod.NEW_LINE);
 	}
 
 	@Override
