@@ -1,6 +1,7 @@
 package vo.zframework;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -450,8 +451,8 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanZSynchronously(final ZApplicationStartupInfo startupInfo) {
 		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		ZSynchronouslyScanner.scan(ZComponent.class, pn);
-		ZSynchronouslyScanner.scan(ZService.class, pn);
+		final Class[] ca = { ZComponent.class, ZService.class };
+		ZSynchronouslyScanner.scan(ca, pn);
 	}
 
 	@Override
