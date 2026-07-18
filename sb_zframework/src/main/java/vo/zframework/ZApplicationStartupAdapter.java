@@ -462,8 +462,8 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanZAsync(final ZApplicationStartupInfo startupInfo) {
 		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		ZAsyncScanner.scan(ZComponent.class, pn);
-		ZAsyncScanner.scan(ZService.class, pn);
+		final Class[] ca = { ZComponent.class, ZService.class };
+		ZAsyncScanner.scan(ca, pn);
 	}
 
 	@Override
