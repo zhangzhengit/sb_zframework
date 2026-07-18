@@ -206,7 +206,11 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			.append(prefix)
 			// FIXME 2026年7月16日 17:46:01 zhangzhen : 不该写死ma[0]。而是foreach
 			// 并且isRegex为true的也跳过
-			.append(ma[0]).append("\"").append(':');
+			.append(ma[0])
+			.append('@')
+			.append(rm.method().getMethod())
+			.append("\"")
+			.append(':');
 
 			ZApplicationStartupAdapter.newLine(routeBody);
 
