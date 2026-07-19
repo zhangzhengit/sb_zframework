@@ -1,7 +1,6 @@
 package vo.zframework;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,6 +47,7 @@ import vo.zframework.http.ZServer;
 import vo.zframework.http.request.HttpRequestProcessor;
 import vo.zframework.scanner.ZAsyncScanner;
 import vo.zframework.scanner.ZAutowiredScanner;
+import vo.zframework.scanner.ZCacheScanner;
 import vo.zframework.scanner.ZCommandLineRunnerScanner;
 import vo.zframework.scanner.ZComponentScanner;
 import vo.zframework.scanner.ZConfigurationPropertiesScanner;
@@ -319,7 +319,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void validatedCache(final ZApplicationStartupInfo startupInfo) {
 		ZCacheableValidator.validated(startupInfo.getPackageNameList().toArray(new String[0]));
-//		ZCacheScanner.scanAndValidate();
+		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
+		final Class[] ca = { ZComponent.class, ZService.class };
+		ZCacheScanner.scan(ca,pn);
 	}
 
 	@Override
