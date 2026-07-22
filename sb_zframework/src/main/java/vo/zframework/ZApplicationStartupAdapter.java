@@ -166,7 +166,8 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		proxyZClass.setMethodSet(Set.of(routeMethod));
 
-		final StringBuilder routeBody = new StringBuilder("switch (path) {");
+		final StringBuilder routeBody = new StringBuilder("String key = path + \"@\" + zrMethod.getHttpMethod();");
+		routeBody.append("switch (key) {");
 
 		final Map<Method, Object> mcmap = ZControllerMap.getMCMap();
 		final Set<Entry<Method, Object>> es = mcmap.entrySet();
@@ -189,99 +190,106 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				continue;
 			}
 
-			pI++;
 
-			final ZController zc = controller.getClass().getAnnotation(ZController.class);
-			final String prefix = zc != null ? zc.prefix() :  controller.getClass().getAnnotation(ZRestController.class).prefix();
+			final String prefix = this.gCPrefix(controller);
 
-			final ZRequestMapping rm = method.getAnnotation(ZRequestMapping.class);
+			final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
 
-			final boolean[] regex = rm.isRegex();
+			final boolean[] isRegex = requestMapping.isRegex();
 
-			final String[] ma = rm.mapping();
-
-			ZApplicationStartupAdapter.newLine(routeBody);
-
-			routeBody.append("case \"")
-			.append(prefix)
-			// FIXME 2026年7月16日 17:46:01 zhangzhen : 不该写死ma[0]。而是foreach
-			// 并且isRegex为true的也跳过
-			.append(ma[0])
-			.append('@')
-			.append(rm.method().getMethod())
-			.append("\"")
-			.append(':');
-
-			ZApplicationStartupAdapter.newLine(routeBody);
-
-			// 方法调用
-
-			routeBody.append(controller.getClass().getCanonicalName()).append(" ")
-			.append("controller").append(pI).append(" = ")
-			.append("(").append(controller.getClass().getCanonicalName()).append(")controller;");
-
-			ZApplicationStartupAdapter.newLine(routeBody);
-
-			final Class<?> returnType = method.getReturnType();
-			final int parameterCount = method.getParameterCount();
-
-			// void 方法
-			final boolean returnVOID = returnType.getCanonicalName().equals(void.class.getCanonicalName());
-			// 非void方法，需要return
-			if (parameterCount <= 0) {
-
-				if (!returnVOID) {
-					routeBody.append("return ");
-					routeBody.append("new ")
-					.append(APIRouteR.class.getCanonicalName())
-					.append("(")
-					;
+			final String[] mappings = requestMapping.mapping();
+			// 对于同一个api的method，会生成多个case，也没问题，该不该为case A:case B:的形式问题都不大
+			for (int mi = 0; mi < mappings.length; mi++) {
+				if (isRegex[mi]) {
+					continue;
 				}
 
-				routeBody
-				.append("controller").append(pI).append(".").append(method.getName()).append("()");
+				pI++;
 
-			} else {
+				ZApplicationStartupAdapter.newLine(routeBody);
 
-				final Parameter[] parameters = method.getParameters();
-				final StringBuilder pb = new StringBuilder();
-				for (int i = 0; i < parameters.length; i++) {
-					final Parameter p = parameters[i];
+				routeBody.append("case \"")
+				.append(prefix)
+				// FIXME 2026年7月16日 17:46:01 zhangzhen : 不该写死ma[0]。而是foreach
+				// 并且isRegex为true的也跳过
+				.append(mappings[mi])
+				.append('@')
+				.append(requestMapping.method().getMethod())
+				.append("\"")
+				.append(':');
 
-					final Class<?> type = p.getType();
-					pb.append("(")
-					.append(type.getCanonicalName())
-					.append(")")
-					.append("parameters[").append(i).append("]");
-					if (i < (parameters.length - 1)) {
-						pb.append(',');
+				ZApplicationStartupAdapter.newLine(routeBody);
+
+				// 方法调用
+
+				routeBody.append(controller.getClass().getCanonicalName()).append(" ")
+				.append("controller").append(pI).append(" = ")
+				.append("(").append(controller.getClass().getCanonicalName()).append(")controller;");
+
+				ZApplicationStartupAdapter.newLine(routeBody);
+
+				final Class<?> returnType = method.getReturnType();
+				final int parameterCount = method.getParameterCount();
+
+
+				// void 方法
+				final boolean returnVOID = returnType.getCanonicalName().equals(void.class.getCanonicalName());
+				// 非void方法，需要return
+				if (parameterCount <= 0) {
+
+					if (!returnVOID) {
+						routeBody.append("return ");
+						routeBody.append("new ")
+						.append(APIRouteR.class.getCanonicalName())
+						.append("(")
+						;
 					}
-				}
 
-				if (!returnVOID) {
-					routeBody.append("return ");
-					routeBody.append("new ")
-					.append(APIRouteR.class.getCanonicalName())
-					.append("(")
+					routeBody
+					.append("controller").append(pI).append(".").append(method.getName()).append("()");
+
+				} else {
+
+					final Parameter[] parameters = method.getParameters();
+					final StringBuilder pb = new StringBuilder();
+					for (int i = 0; i < parameters.length; i++) {
+						final Parameter p = parameters[i];
+
+						final Class<?> type = p.getType();
+						pb.append("(")
+						.append(type.getCanonicalName())
+						.append(")")
+						.append("parameters[").append(i).append("]");
+						if (i < (parameters.length - 1)) {
+							pb.append(',');
+						}
+					}
+
+					if (!returnVOID) {
+						routeBody.append("return ");
+						routeBody.append("new ")
+						.append(APIRouteR.class.getCanonicalName())
+						.append("(")
+						;
+					}
+
+					routeBody
+					.append("controller").append(pI).append(".").append(method.getName()).append("(")
+					.append(pb)
+					.append(")")
 					;
 				}
+				if (!returnVOID) {
+					routeBody.append(");");
+				} else {
+					routeBody.append(";");
+				}
 
-				routeBody
-				.append("controller").append(pI).append(".").append(method.getName()).append("(")
-				.append(pb)
-				.append(")")
-				;
-			}
-			if (!returnVOID) {
-				routeBody.append(");");
-			} else {
-				routeBody.append(";");
-			}
+				ZApplicationStartupAdapter.newLine(routeBody);
 
-			ZApplicationStartupAdapter.newLine(routeBody);
-
-			if (returnVOID) {
-				routeBody.append("return MATCHED;");
+				if (returnVOID) {
+					routeBody.append("return MATCHED;");
+				}
 			}
 		}
 
@@ -291,9 +299,15 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		routeMethod.setBody(routeBody.toString());
 
-//		System.out.println("proxyZClass = ");
+//		System.out.println("apiproxyZClass = ");
 //		System.out.println(proxyZClass.toString());
 		return proxyZClass;
+	}
+
+	private String gCPrefix(final Object controller) {
+		final ZController zc = controller.getClass().getAnnotation(ZController.class);
+		final String prefix = zc != null ? zc.prefix() :  controller.getClass().getAnnotation(ZRestController.class).prefix();
+		return prefix;
 	}
 
 	private static void newLine(final StringBuilder routeBody) {
