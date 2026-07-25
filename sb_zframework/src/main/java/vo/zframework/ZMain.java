@@ -1,11 +1,9 @@
 package vo.zframework;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAsync;
@@ -20,13 +18,10 @@ import vo.zframework.anno.ZSynchronously;
 import vo.zframework.anno.ZValue;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
-import vo.zframework.configuration.properties.ZMailNotificationConfigurationProperties;
 import vo.zframework.core.ZContext;
-import vo.zframework.email.ZMail;
 import vo.zframework.event.ZEventListener;
 import vo.zframework.exception.ZControllerAdvice;
 import vo.zframework.http.PortChecker;
-import vo.zframework.http.Task;
 import vo.zframework.scanner.ZHandlerInterceptor;
 
 /**
@@ -158,42 +153,42 @@ final class ZMain {
 			processor.preCompression(startupInfo);
 
 			// FIXME 2025年1月18日 下午7:35:17 zhangzhen : 这个通知功能也抽出一个接口，可以供用户自己实现
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-
-				LOG.warn("APP Shutdown");
-
-				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
-
-				final Boolean enable = mn.getEnable();
-				if (!Boolean.TRUE.equals(enable)) {
-					return;
-				}
-
-				final String projectName = ZApplication.getAppName();
-
-				final String subject = "[" + projectName + "]程序[SHUTDOWN]通知";
-
-				final ZMail mail = ZContext.getBean(ZMail.class);
-				final String body =
-						"<html>\r\n"
-								+ "<head>\r\n"
-								+ "<meta charset=\"UTF-8\">\r\n"
-								+ "</head>\r\n"
-								+ "<body>\r\n"
-								+ "	<h1>["+projectName+"]程序[SHUTDOWN]通知</h1>\r\n"
-								+ "	<h2>["+projectName+"]程序已在机器["+M.getHostName()+"]上SHUTDOWN</h2>\r\n"
-								+ "	<h3>如果不是你手动停止的，请立即查看原因。</h3>\r\n"
-								+ "	<h3>如果是由你手动停止的，请忽略此邮件。</h3>\r\n"
-								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"
-								+ "</body>\r\n"
-								+ "</html>";
-
-				final Set<String> rs = mn.getReceiver();
-				for (final String receiver : rs) {
-					mail.send(subject, body, receiver, "text/html;charset=UTF-8");
-				}
-
-			}));
+//			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//
+//				LOG.warn("APP Shutdown");
+//
+//				final ZMailNotificationConfigurationProperties mn = ZContext.getBean(ZMailNotificationConfigurationProperties.class);
+//
+//				final Boolean enable = mn.getEnable();
+//				if (!Boolean.TRUE.equals(enable)) {
+//					return;
+//				}
+//
+//				final String projectName = ZApplication.getAppName();
+//
+//				final String subject = "[" + projectName + "]程序[SHUTDOWN]通知";
+//
+//				final ZMail mail = ZContext.getBean(ZMail.class);
+//				final String body =
+//						"<html>\r\n"
+//								+ "<head>\r\n"
+//								+ "<meta charset=\"UTF-8\">\r\n"
+//								+ "</head>\r\n"
+//								+ "<body>\r\n"
+//								+ "	<h1>["+projectName+"]程序[SHUTDOWN]通知</h1>\r\n"
+//								+ "	<h2>["+projectName+"]程序已在机器["+M.getHostName()+"]上SHUTDOWN</h2>\r\n"
+//								+ "	<h3>如果不是你手动停止的，请立即查看原因。</h3>\r\n"
+//								+ "	<h3>如果是由你手动停止的，请忽略此邮件。</h3>\r\n"
+//								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"
+//								+ "</body>\r\n"
+//								+ "</html>";
+//
+//				final Set<String> rs = mn.getReceiver();
+//				for (final String receiver : rs) {
+//					mail.send(subject, body, receiver, "text/html;charset=UTF-8");
+//				}
+//
+//			}));
 
 
 
