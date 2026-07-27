@@ -105,17 +105,10 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
 		final Class[] cA = { ZComponent.class, ZService.class };
-		for (final Class cls : cA) {
-			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
-		}
-
-		// FIXME 2025年1月24日 下午6:22:14 zhangzhen : 下面的parallel注释掉，重新用foreach了
-		// 因为在panther x2 的armbian上会导致后面的NPE
-		//		Arrays.stream(cA)
-		//		.parallel()
-		//		.forEach(cls -> {
-		//			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
-		//		});
+		Arrays.stream(cA)
+			  .parallel()
+		      .forEach(
+				cls -> ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0])));
 	}
 
 	@Override
@@ -129,13 +122,24 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	public void scanController(final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
 
-			ZControllerScanner.scanAndCreateObject(startupInfo.getPackageNameList().toArray(new String[0]));
+//			Thread.ofVirtual().start(() -> {
 
-			final ZClass proxyZClass = this.gControllerProxyZClass();
+				ZControllerScanner.scanAndCreateObject(startupInfo.getPackageNameList().toArray(new String[0]));
 
-			final Object newInstance = proxyZClass.newInstance();
 
-			ZContext.addBean(IAPIRoute.class, newInstance);
+				// 2
+				ZContext.addBeanAsync(IAPIRoute.class, () -> {
+					final ZClass proxyZClass = this.gControllerProxyZClass();
+					final Object newInstance = proxyZClass.newInstance();
+					return newInstance;
+				});
+//			});
+
+
+			// 1
+//			final ZClass proxyZClass = this.gControllerProxyZClass();
+//			final Object newInstance = proxyZClass.newInstance();
+//			ZContext.addBean(IAPIRoute.class, newInstance);
 
 		}
 	}
