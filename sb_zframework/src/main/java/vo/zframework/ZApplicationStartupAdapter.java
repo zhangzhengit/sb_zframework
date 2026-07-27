@@ -35,6 +35,7 @@ import vo.zframework.configuration.properties.CommonConfigurationProperties;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
 import vo.zframework.core.ZContext;
+import vo.zframework.enums.MethodEnum;
 import vo.zframework.event.APIRouteR;
 import vo.zframework.event.IAPIRoute;
 import vo.zframework.event.ZApplicationEventPublisher;
@@ -146,16 +147,35 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		proxyZClass.setName("ZAPIRoute");
 		proxyZClass.setImplementsSet(Set.of(IAPIRoute.class.getCanonicalName()));
 
+		proxyZClass.addField(new ZField(String.class.getName(), "GET",
+				MethodEnum.class.getCanonicalName() + ".GET.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "POST",
+				MethodEnum.class.getCanonicalName() + ".POST.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "PUT",
+				MethodEnum.class.getCanonicalName() + ".PUT.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "DELETE",
+				MethodEnum.class.getCanonicalName() + ".DELETE.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "HEAD",
+				MethodEnum.class.getCanonicalName() + ".HEAD.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "CONNECT",
+				MethodEnum.class.getCanonicalName() + ".CONNECT.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "TRACE",
+				MethodEnum.class.getCanonicalName() + ".TRACE.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "OPTIONS",
+				MethodEnum.class.getCanonicalName() + ".OPTIONS.getMethod()"));
+		proxyZClass.addField(new ZField(String.class.getName(), "PATCH",
+				MethodEnum.class.getCanonicalName() + ".PATCH.getMethod()"));
 		proxyZClass.addField(new ZField(APIRouteR.class.getName(), "MATCHED",
 				"new " + APIRouteR.class.getCanonicalName() + "(true);"));
+		proxyZClass.addField(new ZField(APIRouteR.class.getName(), "NOTMATCHED",
+				"new " + APIRouteR.class.getCanonicalName() + "(false);"));
 
 		final ZMethod routeMethod = new ZMethod();
 		routeMethod.setName("route");
 		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
 		routeMethod.setReturnType(APIRouteR.class.getCanonicalName());
 
-		routeMethod.setBodyReturn("return new " + APIRouteR.class.getCanonicalName()
-				+ "(false);");
+		routeMethod.setBodyReturn("return NOTMATCHED;");
 
 		final Object[] a = {};
 		routeMethod.setMethodArgList(List.of(
@@ -166,14 +186,66 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		proxyZClass.setMethodSet(Set.of(routeMethod));
 
-		final StringBuilder routeBody = new StringBuilder("String key = path + \"@\" + zrMethod.getHttpMethod();");
-		routeBody.append("switch (key) {");
+		final StringBuilder routeBody =
+				new StringBuilder("final String httpMethod = zrMethod.getHttpMethod();");
 
-		final Map<Method, Object> mcmap = ZControllerMap.getMCMap();
-		final Set<Entry<Method, Object>> es = mcmap.entrySet();
+		routeBody.append
+			("if (GET.equals(httpMethod)) {"
+				+ "GETAPI"
+				+ "} else if (POST.equals(httpMethod)) {"
+				+ "POSTAPI"
+				+ "} else if (PUT.equals(httpMethod)) {"
+				+ "PUTAPI"
+				+ "} else if (DELETE.equals(httpMethod)) {"
+				+ "DELETEAPI"
+				+ "} else if (HEAD.equals(httpMethod)) {"
+				+ "HEADAPI"
+				+ "} else if (CONNECT.equals(httpMethod)) {"
+				+ "CONNECTAPI"
+				+ "} else if (TRACE.equals(httpMethod)) {"
+				+ "TRACEAPI"
+				+ "} else if (OPTIONS.equals(httpMethod)) {"
+				+ "OPTIONSAPI"
+				+ "} else if (PATCH.equals(httpMethod)) {"
+				+ "PATCHAPI"
+				+ "}");
+
+		final StringBuilder get = ZApplicationStartupAdapter.gMethod(MethodEnum.GET);
+		final StringBuilder post = ZApplicationStartupAdapter.gMethod(MethodEnum.POST);
+		final StringBuilder put = ZApplicationStartupAdapter.gMethod(MethodEnum.PUT);
+		final StringBuilder delete = ZApplicationStartupAdapter.gMethod(MethodEnum.DELETE);
+		final StringBuilder head = ZApplicationStartupAdapter.gMethod(MethodEnum.HEAD);
+		final StringBuilder CONNECT = ZApplicationStartupAdapter.gMethod(MethodEnum.CONNECT);
+		final StringBuilder TRACE = ZApplicationStartupAdapter.gMethod(MethodEnum.TRACE);
+		final StringBuilder OPTIONS = ZApplicationStartupAdapter.gMethod(MethodEnum.OPTIONS);
+		final StringBuilder PATCH = ZApplicationStartupAdapter.gMethod(MethodEnum.PATCH);
+
+		final String body = routeBody.toString()
+				.replace("GETAPI", get)
+				.replace("POSTAPI", post)
+				.replace("PUTAPI", put)
+				.replace("DELETEAPI", delete)
+				.replace("HEADAPI", head)
+				.replace("CONNECTAPI", CONNECT)
+				.replace("TRACEAPI", TRACE)
+				.replace("OPTIONSAPI", OPTIONS)
+				.replace("PATCHAPI", PATCH)
+				;
+
+		routeMethod.setBody(body);
+
+//		System.out.println("apiproxyZClass = ");
+//		System.out.println(proxyZClass.toString());
+		return proxyZClass;
+	}
+
+	private static StringBuilder gMethod(final MethodEnum methodEnum) {
+
+		final StringBuilder switchcase = new StringBuilder("switch (path) {");
 
 		int pI = 0;
-		for (final Entry<Method, Object> e : es) {
+
+		for (final Entry<Method, Object> e : ZControllerMap.getMCMap().entrySet()) {
 			final Method method = e.getKey();
 
 			final Parameter[] mp = method.getParameters();
@@ -191,10 +263,9 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 			}
 
 
-			final String prefix = this.gCPrefix(controller);
+			final String prefix = ZApplicationStartupAdapter.gCPrefix(controller);
 
 			final ZRequestMapping requestMapping = method.getAnnotation(ZRequestMapping.class);
-
 			final boolean[] isRegex = requestMapping.isRegex();
 
 			final String[] mappings = requestMapping.mapping();
@@ -204,29 +275,22 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 					continue;
 				}
 
+				if (requestMapping.method() != methodEnum) {
+					continue;
+				}
+
 				pI++;
 
-				ZApplicationStartupAdapter.newLine(routeBody);
+				switchcase.append("case \"").append(prefix).append(mappings[mi]).append("\":");
 
-				routeBody.append("case \"")
-				.append(prefix)
-				// FIXME 2026年7月16日 17:46:01 zhangzhen : 不该写死ma[0]。而是foreach
-				// 并且isRegex为true的也跳过
-				.append(mappings[mi])
-				.append('@')
-				.append(requestMapping.method().getMethod())
-				.append("\"")
-				.append(':');
-
-				ZApplicationStartupAdapter.newLine(routeBody);
+				ZApplicationStartupAdapter.newLine(switchcase);
 
 				// 方法调用
-
-				routeBody.append(controller.getClass().getCanonicalName()).append(" ")
+				switchcase.append(controller.getClass().getCanonicalName()).append(" ")
 				.append("controller").append(pI).append(" = ")
 				.append("(").append(controller.getClass().getCanonicalName()).append(")controller;");
 
-				ZApplicationStartupAdapter.newLine(routeBody);
+				ZApplicationStartupAdapter.newLine(switchcase);
 
 				final Class<?> returnType = method.getReturnType();
 				final int parameterCount = method.getParameterCount();
@@ -238,14 +302,14 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				if (parameterCount <= 0) {
 
 					if (!returnVOID) {
-						routeBody.append("return ");
-						routeBody.append("new ")
+						switchcase.append("return ");
+						switchcase.append("new ")
 						.append(APIRouteR.class.getCanonicalName())
 						.append("(")
 						;
 					}
 
-					routeBody
+					switchcase
 					.append("controller").append(pI).append(".").append(method.getName()).append("()");
 
 				} else {
@@ -266,45 +330,40 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 					}
 
 					if (!returnVOID) {
-						routeBody.append("return ");
-						routeBody.append("new ")
+						switchcase.append("return ");
+						switchcase.append("new ")
 						.append(APIRouteR.class.getCanonicalName())
 						.append("(")
 						;
 					}
 
-					routeBody
+					switchcase
 					.append("controller").append(pI).append(".").append(method.getName()).append("(")
 					.append(pb)
 					.append(")")
 					;
 				}
 				if (!returnVOID) {
-					routeBody.append(");");
+					switchcase.append(");");
 				} else {
-					routeBody.append(";");
+					switchcase.append(";");
 				}
 
-				ZApplicationStartupAdapter.newLine(routeBody);
+				ZApplicationStartupAdapter.newLine(switchcase);
 
 				if (returnVOID) {
-					routeBody.append("return MATCHED;");
+					switchcase.append("return MATCHED;");
 				}
 			}
 		}
 
-		routeBody.append("default:\r\n"
-							+ "	break;\r\n"
+		switchcase.append("default:"
+							+ "	break;"
 							+ "}	");
-
-		routeMethod.setBody(routeBody.toString());
-
-//		System.out.println("apiproxyZClass = ");
-//		System.out.println(proxyZClass.toString());
-		return proxyZClass;
+		return switchcase;
 	}
 
-	private String gCPrefix(final Object controller) {
+	private static String gCPrefix(final Object controller) {
 		final ZController zc = controller.getClass().getAnnotation(ZController.class);
 		final String prefix = zc != null ? zc.prefix() :  controller.getClass().getAnnotation(ZRestController.class).prefix();
 		return prefix;
