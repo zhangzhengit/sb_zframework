@@ -104,7 +104,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
-		final Class[] annotationClass = new Class[] { ZComponent.class, ZService.class };
+		final Class[] annotationClass = { ZComponent.class, ZService.class };
 		ZComponentScanner.scanAndCreate(annotationClass, startupInfo.getPackageNameList().toArray(new String[0]));
 	}
 
