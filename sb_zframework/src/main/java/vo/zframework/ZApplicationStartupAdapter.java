@@ -34,6 +34,7 @@ import vo.zframework.common.STU;
 import vo.zframework.configuration.properties.CommonConfigurationProperties;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.enums.MethodEnum;
 import vo.zframework.event.ZApplicationEventPublisher;
@@ -79,39 +80,38 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startValidator(final ZApplicationStartupInfo startupInfo) {
-		ZValidator.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZValidator.start(startupInfo);
 	}
 
 	@Override
 	public void startEventPublisher(final ZApplicationStartupInfo startupInfo) {
-		ZApplicationEventPublisher.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZApplicationEventPublisher.start(startupInfo.getPackageNameArray());
 	}
 
 	@Override
 	public void scanConfigurationProperties(final ZApplicationStartupInfo startupInfo) throws Exception {
-		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo.getPackageNameArray());
 	}
 
 	@Override
 	public void scanConfiguration(final ZApplicationStartupInfo startupInfo) throws Exception {
-		ZConfigurationScanner.scanAndCreate(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZConfigurationScanner.scanAndCreate(startupInfo.getPackageNameArray());
 	}
 
 	@Override
 	public void startObjectGenerator(final ZApplicationStartupInfo startupInfo) {
-		ZObjectGeneratorStarter.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZObjectGeneratorStarter.start(startupInfo);
 	}
 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
-		final Class[] annotationClass = { ZComponent.class, ZService.class };
-		ZComponentScanner.scanAndCreate(annotationClass, startupInfo.getPackageNameList().toArray(new String[0]));
+		ZComponentScanner.scanAndCreate(startupInfo);
 	}
 
 	@Override
 	public void scanControllerAdvice(final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
-			ZControllerAdviceScanner.scan(startupInfo.getPackageNameList().toArray(new String[0]));
+			ZControllerAdviceScanner.scan(startupInfo);
 		}
 	}
 
@@ -121,8 +121,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 //			Thread.ofVirtual().start(() -> {
 
-				ZControllerScanner.scanAndCreateObject(startupInfo.getPackageNameList().toArray(new String[0]));
-
+				ZControllerScanner.scanAndCreateObject(startupInfo);
 
 				// 2
 				ZContext.addBeanAsync(IAPIRoute.class, () -> {
@@ -381,21 +380,19 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				ZController.class,
 				ZConfiguration.class, ZAOP.class };
 		for (final Class cls : cA) {
-			ZAutowiredScanner.inject(cls, startupInfo.getPackageNameList().toArray(new String[0]));
+			ZAutowiredScanner.inject(cls, startupInfo);
 		}
 	}
 
 	@Override
 	public void injectValue(final ZApplicationStartupInfo startupInfo) {
-		ZValueScanner.inject(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZValueScanner.inject(startupInfo);
 	}
 
 	@Override
 	public void validatedCache(final ZApplicationStartupInfo startupInfo) {
-		ZCacheableValidator.validated(startupInfo.getPackageNameList().toArray(new String[0]));
-		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		final Class[] ca = { ZComponent.class, ZService.class };
-		ZCacheScanner.scan(ca,pn);
+		ZCacheableValidator.validated(startupInfo.getPackageNameArray());
+		ZCacheScanner.scan(startupInfo);
 	}
 
 	@Override
@@ -441,17 +438,17 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void aftertAutowiredInject(final ZApplicationStartupInfo startupInfo) {
-		ZAutowiredScanner.after();
+		ZAutowiredScanner.after(startupInfo);
 	}
 
 	@Override
 	public void scanHandlerInterceptor(final ZApplicationStartupInfo startupInfo) {
-		ZHandlerInterceptorScanner.scan();
+		ZHandlerInterceptorScanner.scan(startupInfo);
 	}
 
 	@Override
 	public void runCommandLineRunner(final ZApplicationStartupInfo startupInfo) throws Exception {
-		for (final Object zclr : ZCommandLineRunnerScanner.scan(startupInfo.getPackageNameList().toArray(new String[0]))) {
+		for (final Object zclr : ZCommandLineRunnerScanner.scan(startupInfo.getPackageNameArray())) {
 			((ZCommandLineRunner) zclr).run(startupInfo.getArgs());
 		}
 	}
@@ -530,16 +527,12 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void scanZSynchronously(final ZApplicationStartupInfo startupInfo) {
-		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		final Class[] ca = { ZComponent.class, ZService.class };
-		ZSynchronouslyScanner.scan(ca, pn);
+		ZSynchronouslyScanner.scan(startupInfo);
 	}
 
 	@Override
 	public void scanZAsync(final ZApplicationStartupInfo startupInfo) {
-		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		final Class[] ca = { ZComponent.class, ZService.class };
-		ZAsyncScanner.scan(ca, pn);
+		ZAsyncScanner.scan(startupInfo);
 	}
 
 	@Override

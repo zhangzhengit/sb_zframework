@@ -1,9 +1,9 @@
 package vo.zframework;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import vo.log.core.ZLog2;
 import vo.zframework.anno.ZAsync;
@@ -18,10 +18,12 @@ import vo.zframework.anno.ZSynchronously;
 import vo.zframework.anno.ZValue;
 import vo.zframework.configuration.properties.ServerConfigurationProperties;
 import vo.zframework.configuration.properties.ZConfigurationProperties;
+import vo.zframework.core.ZApplicationStartupInfo;
 import vo.zframework.core.ZContext;
 import vo.zframework.event.ZEventListener;
 import vo.zframework.exception.ZControllerAdvice;
 import vo.zframework.http.PortChecker;
+import vo.zframework.scanner.ClassMap;
 import vo.zframework.scanner.ZHandlerInterceptor;
 
 /**
@@ -37,10 +39,10 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
+		final CompletableFuture<Set<Class<?>>> future = CompletableFuture
+				.supplyAsync(() -> ClassMap.scanPackage(packageNameList.toArray(new String[0])));
 
-		final List<String> x = new ArrayList<>(new HashSet<>(packageNameList));
-
-		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(x, httpEnable,  args);
+		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args,future);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
@@ -72,7 +74,7 @@ final class ZMain {
 			// 把 ServerConfigurationProperties 和zf.properties 中的server.port读取出来然后才可以把本步放最前面
 			// FIXME 2026年6月23日 15:10:17 zhangzhen : 校验端口这一步想好放在哪里
 			// 原来想放在最前面，是想快速失败；由于启动时间差，放前面还是后面都有体验不好的情况
-			final Integer serverPort = checkPort(startupInfo);
+			final int serverPort = checkPort(startupInfo);
 
 			// 0.1
 			// @ZConfigurationProperties 初始化之后就开始执行starter
@@ -240,7 +242,7 @@ final class ZMain {
 		}
 	}
 
-	private static Integer checkPort(final ZApplicationStartupInfo startupInfo) {
+	private static int checkPort(final ZApplicationStartupInfo startupInfo) {
 
 		final ServerConfigurationProperties serverConfigurationProperties = ZContext
 				.getBean(ServerConfigurationProperties.class);

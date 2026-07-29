@@ -1,5 +1,7 @@
 package vo.zframework;
 
+import vo.zframework.core.ZApplicationStartupInfo;
+
 /**
  *
  * 程序启动流程，按方法定义顺序从上到下执行
