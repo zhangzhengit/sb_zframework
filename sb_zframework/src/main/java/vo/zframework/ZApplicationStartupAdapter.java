@@ -90,7 +90,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void scanConfigurationProperties(final ZApplicationStartupInfo startupInfo) throws Exception {
-		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo.getPackageNameArray());
+		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo);
 	}
 
 	@Override
