@@ -85,7 +85,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startEventPublisher(final ZApplicationStartupInfo startupInfo) {
-		ZApplicationEventPublisher.start(startupInfo.getPackageNameArray());
+		ZApplicationEventPublisher.start(startupInfo);
 	}
 
 	@Override
