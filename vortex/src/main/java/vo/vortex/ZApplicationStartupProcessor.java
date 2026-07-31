@@ -1,6 +1,6 @@
 package vo.vortex;
 
-import vo.zframework.core.ZApplicationStartupInfo;
+import vo.vortex.core.ZApplicationStartupInfo;
 
 /**
  *
