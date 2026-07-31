@@ -18,7 +18,7 @@
 
 		<dependency>
 			<groupId>vo</groupId>
-			<artifactId>zframework_core</artifactId>
+			<artifactId>vortex-core</artifactId>
 			<version>1.0.0-SNAPSHOT-jdk21</version>
 		</dependency>
 
