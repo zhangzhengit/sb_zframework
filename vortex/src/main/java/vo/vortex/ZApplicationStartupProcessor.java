@@ -1,4 +1,4 @@
-package vo.zframework;
+package vo.vortex;
 
 import vo.zframework.core.ZApplicationStartupInfo;
 
