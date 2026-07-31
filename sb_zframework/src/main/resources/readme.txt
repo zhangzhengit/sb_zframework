@@ -17,7 +17,7 @@
 		1、A引入 依赖
 			<dependency>
 				<groupId>com.vo</groupId>
-				<artifactId>sb_zframework</artifactId>
+				<artifactId>vortex</artifactId>
 				<version>1.0-SNAPSHOT</version>
 			</dependency>
 		2、新建A工程的启动类AMain：

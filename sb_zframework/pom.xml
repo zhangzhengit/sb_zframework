@@ -5,10 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>vo</groupId>
-	<artifactId>sb_zframework</artifactId>
+	<artifactId>vortex</artifactId>
 	<version>1.0.0-SNAPSHOT-jdk21</version>
-	<name>sb_zframework</name>
-	<description>sb_zframework</description>
+	<name>vortex</name>
+	<description>vortex</description>
 
 	<properties>
 		<java.version>21</java.version>
