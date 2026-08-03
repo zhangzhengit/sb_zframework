@@ -16,11 +16,13 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
+import vo.log.common.STU;
 import vo.log.core.ZLog2;
 import vo.vortex.anno.ZAOP;
 import vo.vortex.anno.ZCommandLineRunner;
 import vo.vortex.anno.ZComponent;
 import vo.vortex.anno.ZConfiguration;
+import vo.vortex.anno.ZConfigurationProperties;
 import vo.vortex.anno.ZController;
 import vo.vortex.anno.ZPathVariable;
 import vo.vortex.anno.ZRequestMapping;
@@ -30,10 +32,8 @@ import vo.vortex.api.StaticController;
 import vo.vortex.api.StaticResourcesPreCompressionService;
 import vo.vortex.bean.ZObjectGeneratorStarter;
 import vo.vortex.bean.ZSingleton;
-import vo.vortex.common.STU;
 import vo.vortex.configuration.properties.CommonConfigurationProperties;
 import vo.vortex.configuration.properties.ServerConfigurationProperties;
-import vo.vortex.configuration.properties.ZConfigurationProperties;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
 import vo.vortex.enums.MethodEnum;
@@ -85,7 +85,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startEventPublisher(final ZApplicationStartupInfo startupInfo) {
-		ZApplicationEventPublisher.start(startupInfo);
+		ZApplicationEventPublisher.start(startupInfo,null);
 	}
 
 	@Override

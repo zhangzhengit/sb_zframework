@@ -11,17 +11,17 @@ import vo.vortex.anno.ZAutowired;
 import vo.vortex.anno.ZCommandLineRunner;
 import vo.vortex.anno.ZComponent;
 import vo.vortex.anno.ZConfiguration;
+import vo.vortex.anno.ZConfigurationProperties;
 import vo.vortex.anno.ZController;
+import vo.vortex.anno.ZControllerAdvice;
+import vo.vortex.anno.ZEventListener;
 import vo.vortex.anno.ZRestController;
 import vo.vortex.anno.ZService;
 import vo.vortex.anno.ZSynchronously;
 import vo.vortex.anno.ZValue;
 import vo.vortex.configuration.properties.ServerConfigurationProperties;
-import vo.vortex.configuration.properties.ZConfigurationProperties;
 import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
-import vo.vortex.event.ZEventListener;
-import vo.vortex.exception.ZControllerAdvice;
 import vo.vortex.http.PortChecker;
 import vo.vortex.scanner.ClassMap;
 import vo.vortex.scanner.ZHandlerInterceptor;
@@ -42,7 +42,7 @@ final class ZMain {
 		final CompletableFuture<Set<Class<?>>> future = CompletableFuture
 				.supplyAsync(() -> ClassMap.scanPackage(packageNameList.toArray(new String[0])));
 
-		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args,future);
+		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
