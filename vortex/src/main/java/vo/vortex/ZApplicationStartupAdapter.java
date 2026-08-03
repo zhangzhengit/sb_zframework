@@ -143,7 +143,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	private ZClass gControllerProxyZClass() {
 		// FIXME 2026年7月16日 10:02:17 zhangzhen : 动态生成接口方法路由代理类
 		final ZClass proxyZClass = new ZClass();
-		proxyZClass.setPackage1(new ZPackage("vo.zframework.generated"));
+		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName("ZAPIRoute");
 		proxyZClass.setImplementsSet(Set.of(IAPIRoute.class.getCanonicalName()));
 
