@@ -1,4 +1,4 @@
-package com.vo;
+package vo.vortex;
 
 import java.util.Collection;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.vo.core.ZContext;
-import com.vo.scanner.ZApplicationEvent;
-import com.vo.scanner.ZApplicationEventPublisher;
+import vo.vortex.core.ZContext;
+import vo.vortex.event.ZApplicationEvent;
+import vo.vortex.event.ZApplicationEventPublisher;
 
 /**
  * 程序启动的信息
@@ -47,7 +47,8 @@ public final class ZApplicationContext {
 	 */
 	public Collection<Object> getBeans() {
 		final Map<String, Object> map = ZContext.all();
-		return map.values();
+		final Collection<Object> values = map.values();
+		return values;
 	}
 
 	/**
@@ -58,11 +59,11 @@ public final class ZApplicationContext {
 	 */
 	public Set<String> getBeanNames() {
 		final Map<String, Object> map = ZContext.all();
-		final Set<String> v = map.keySet(); 
-		return v; 
-	} 
- 
-	/** 
+		final Set<String> ks = map.keySet();
+		return ks;
+	}
+
+	/**
 	 * 获取容器中的beanMap
 	 *
 	 * @return
