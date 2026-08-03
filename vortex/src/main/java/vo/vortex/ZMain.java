@@ -39,9 +39,6 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
-		final CompletableFuture<Set<Class<?>>> future = CompletableFuture
-				.supplyAsync(() -> ClassMap.scanPackage(packageNameList.toArray(new String[0])));
-
 		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
