@@ -1,4 +1,4 @@
-package com.vo.zframework;
+package vo.vortex;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.Set;
 
 import vo.log.core.ZLog2;
-import vo.zframework.M;
-import vo.zframework.aop.ArgR;
-import vo.zframework.configuration.ServerConfigurationProperties;
-import vo.zframework.configuration.ZProperties;
-import vo.zframework.core.PortChecker;
-import vo.zframework.core.Task;
-import vo.zframework.core.ZContext;
-import vo.zframework.email.ZMail;
-import vo.zframework.email.ZMailNotificationConfigurationProperties;
+import vo.vortex.aop.ArgR;
+import vo.vortex.configuration.ServerConfigurationProperties;
+import vo.vortex.configuration.ZProperties;
+import vo.vortex.core.PortChecker;
+import vo.vortex.core.Task;
+import vo.vortex.core.ZContext;
+import vo.vortex.email.ZMail;
+import vo.vortex.email.ZMailNotificationConfigurationProperties;
+import vo.vortex.exception.ZControllerAdviceThrowable;
 
 /**
  * 启动类
@@ -156,7 +156,7 @@ final class ZMain {
 								+ "</head>\r\n"
 								+ "<body>\r\n"
 								+ "	<h1>["+projectName+"]程序[SHUTDOWN]通知</h1>\r\n"
-								+ "	<h2>["+projectName+"]程序已在机器["+M.getHostName()+"]上SHUTDOWN</h2>\r\n"
+								+ "	<h2>["+projectName+"]程序已在机器["+ZControllerAdviceThrowable.getHostName()+"]上SHUTDOWN</h2>\r\n"
 								+ "	<h3>如果不是你手动停止的，请立即查看原因。</h3>\r\n"
 								+ "	<h3>如果是由你手动停止的，请忽略此邮件。</h3>\r\n"
 								+ "	<h3>发送时间："+LocalDateTime.now()+"</h3>\r\n"

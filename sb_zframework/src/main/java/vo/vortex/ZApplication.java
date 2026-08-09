@@ -1,4 +1,4 @@
-package com.vo.zframework;
+package vo.vortex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +8,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import vo.log.core.ZLog2;
-import vo.zframework.M;
-import vo.zframework.configuration.ZProperties;
-import vo.zframework.exception.StartupException;
+import vo.vortex.configuration.ZProperties;
+import vo.vortex.exception.StartupException;
 
 /**
  *

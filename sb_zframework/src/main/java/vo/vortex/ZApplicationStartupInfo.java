@@ -1,4 +1,4 @@
-package com.vo.zframework;
+package vo.vortex;
 
 import java.util.List;
 

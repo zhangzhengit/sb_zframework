@@ -1,11 +1,11 @@
-package com.vo.zframework;
+package vo.vortex;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import vo.zframework.aop.ArgR;
-import vo.zframework.cache.AU;
+import vo.vortex.aop.ArgR;
+import vo.vortex.cache.AU;
 
 /**
  * 解析 java 命令行中传来的参数
