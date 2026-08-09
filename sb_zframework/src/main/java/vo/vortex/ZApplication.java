@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import vo.log.core.ZLog2;
-import vo.vortex.configuration.ZProperties;
 import vo.vortex.exception.StartupException;
 
 /**

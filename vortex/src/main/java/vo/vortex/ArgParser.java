@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import vo.vortex.common.AU;
+import vo.vortex.common.STU;
 
 /**
  * 解析 java 命令行中传来的参数
@@ -29,7 +30,7 @@ import vo.vortex.common.AU;
  */
 public class ArgParser {
 
-	private static final char SPACE = ' ';
+	private static final char SPACE = STU.SPACE_CHAR;
 	public static String PREFIX = "--";
 
 //	public static void main(String[] args) {

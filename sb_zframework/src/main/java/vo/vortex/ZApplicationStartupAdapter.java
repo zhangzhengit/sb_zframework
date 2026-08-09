@@ -5,36 +5,34 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
+
+import org.checkerframework.checker.units.qual.s;
 
 import vo.log.core.ZLog2;
+import vo.vortex.anno.ZAOP;
 import vo.vortex.anno.ZCommandLineRunner;
-import vo.vortex.anno.ZCommandLineRunnerScanner;
 import vo.vortex.anno.ZComponent;
 import vo.vortex.anno.ZConfiguration;
-import vo.vortex.anno.ZConfigurationProperties;
 import vo.vortex.anno.ZController;
 import vo.vortex.anno.ZRestController;
 import vo.vortex.anno.ZService;
-import vo.vortex.aop.ZAOP;
-import vo.vortex.aop.ZCacheScanner;
-import vo.vortex.cache.STU;
-import vo.vortex.cache.ZCacheableValidator;
-import vo.vortex.configuration.CommonConfigurationProperties;
-import vo.vortex.configuration.ServerConfigurationProperties;
-import vo.vortex.core.DefaultHttpReader;
-import vo.vortex.core.NioLongConnectionServer;
+import vo.vortex.bean.ZObjectGeneratorStarter;
+import vo.vortex.bean.ZSingleton;
+import vo.vortex.common.STU;
+import vo.vortex.configuration.properties.CommonConfigurationProperties;
+import vo.vortex.configuration.properties.ServerConfigurationProperties;
+import vo.vortex.configuration.properties.ZConfigurationProperties;
+import vo.vortex.core.ZApplicationStartupInfo;
 import vo.vortex.core.ZContext;
-import vo.vortex.core.ZObjectGeneratorStarter;
-import vo.vortex.core.ZSingleton;
+import vo.vortex.event.ZApplicationEventPublisher;
 import vo.vortex.exception.ZControllerAdviceScanner;
 import vo.vortex.html.ResourcesLoader;
-import vo.vortex.scanner.ZApplicationEventPublisher;
+import vo.vortex.http.ZServer;
 import vo.vortex.scanner.ZAsyncScanner;
 import vo.vortex.scanner.ZAutowiredScanner;
+import vo.vortex.scanner.ZCacheScanner;
+import vo.vortex.scanner.ZCommandLineRunnerScanner;
 import vo.vortex.scanner.ZComponentScanner;
 import vo.vortex.scanner.ZConfigurationPropertiesScanner;
 import vo.vortex.scanner.ZConfigurationScanner;
@@ -43,6 +41,7 @@ import vo.vortex.scanner.ZHandlerInterceptorScanner;
 import vo.vortex.scanner.ZSynchronouslyScanner;
 import vo.vortex.scanner.ZValueScanner;
 import vo.vortex.starter.ZStarter;
+import vo.vortex.validator.ZCacheableValidator;
 import vo.vortex.validator.ZValidator;
 
 /**
@@ -58,17 +57,17 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startValidator(final ZApplicationStartupInfo startupInfo) {
-		ZValidator.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZValidator.start(startupInfo);
 	}
 
 	@Override
 	public void startEventPublisher(final ZApplicationStartupInfo startupInfo) {
-		ZApplicationEventPublisher.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZApplicationEventPublisher.start(startupInfo);
 	}
 
 	@Override
 	public void scanConfigurationProperties(final ZApplicationStartupInfo startupInfo) throws Exception {
-		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZConfigurationPropertiesScanner.scanAndCreate(startupInfo);
 	}
 
 	@Override
@@ -78,16 +77,12 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void startObjectGenerator(final ZApplicationStartupInfo startupInfo) {
-		ZObjectGeneratorStarter.start(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZObjectGeneratorStarter.start(startupInfo);
 	}
 
 	@Override
 	public void scanComponent(final ZApplicationStartupInfo startupInfo) {
-		final Class[] cA = { ZComponent.class, ZService.class };
-		for (final Class cls : cA) {
-			ZComponentScanner.scanAndCreate(cls, startupInfo.getPackageNameList().toArray(new String[0]));
-		}
-
+		ZComponentScanner.scanAndCreate(startupInfo);
 		// FIXME 2025年1月24日 下午6:22:14 zhangzhen : 下面的parallel注释掉，重新用foreach了
 		// 因为在panther x2 的armbian上会导致后面的NPE
 		//		Arrays.stream(cA)
@@ -100,14 +95,14 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 	@Override
 	public void scanControllerAdvice(final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
-			ZControllerAdviceScanner.scan(startupInfo.getPackageNameList().toArray(new String[0]));
+			ZControllerAdviceScanner.scan(startupInfo);
 		}
 	}
 
 	@Override
 	public void scanController(final ZApplicationStartupInfo startupInfo) {
 		if (startupInfo.isHttpEnable()) {
-			ZControllerScanner.scanAndCreateObject(startupInfo.getPackageNameList().toArray(new String[0]));
+			ZControllerScanner.scanAndCreateObject(startupInfo);
 		}
 	}
 
@@ -117,19 +112,19 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 				ZController.class,
 				ZConfiguration.class, ZAOP.class };
 		for (final Class cls : cA) {
-			ZAutowiredScanner.inject(cls, startupInfo.getPackageNameList().toArray(new String[0]));
+			ZAutowiredScanner.inject(cls, startupInfo);
 		}
 	}
 
 	@Override
 	public void injectValue(final ZApplicationStartupInfo startupInfo) {
-		ZValueScanner.inject(startupInfo.getPackageNameList().toArray(new String[0]));
+		ZValueScanner.inject(startupInfo);
 	}
 
 	@Override
 	public void validatedCache(final ZApplicationStartupInfo startupInfo) {
 		ZCacheableValidator.validated(startupInfo.getPackageNameList().toArray(new String[0]));
-		ZCacheScanner.scanAndValidate();
+		ZCacheScanner.scan(startupInfo);
 	}
 
 	@Override
@@ -175,12 +170,12 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void aftertAutowiredInject(final ZApplicationStartupInfo startupInfo) {
-		ZAutowiredScanner.after();
+		ZAutowiredScanner.after(startupInfo);
 	}
 
 	@Override
 	public void scanHandlerInterceptor(final ZApplicationStartupInfo startupInfo) {
-		ZHandlerInterceptorScanner.scan();
+		ZHandlerInterceptorScanner.scan(startupInfo);
 	}
 
 	@Override
@@ -229,19 +224,22 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		// FIXME 2024年12月22日 下午3:20:44 zhangzhen : 添加一个启动校验：DefaultHttpReader 子类最多允许有一个带 @ZComponent注解
 		// 因为一个http请求只需要解析一次就行了
-		final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
-		final Map<String, Object> map = ZContext.all();
-		final Set<Entry<String, Object>> es = map.entrySet();
-		for (final Entry<String, Object> e : es) {
-			final boolean equals = e.getValue().getClass().getSuperclass().equals(httpReader.getClass());
-			if (equals) {
-				ZContext.remove(DefaultHttpReader.class);
-				ZContext.addBean(DefaultHttpReader.class, e.getValue());
-			}
-		}
+//		final DefaultHttpReader httpReader = ZContext.getBean(DefaultHttpReader.class);
+//		final Map<String, Object> map = ZContext.all();
+//		final Set<Entry<String, Object>> es = map.entrySet();
+//		for (final Entry<String, Object> e : es) {
+//			final boolean equals = e.getValue().getClass().getSuperclass().equals(httpReader.getClass());
+//			if (equals) {
+//				ZContext.remove(DefaultHttpReader.class);
+//				ZContext.addBean(DefaultHttpReader.class, e.getValue());
+//			}
+//		}
+//
+//		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
+//		nioLongConnectionServer.startNIOServer(httpPort);
 
-		final NioLongConnectionServer nioLongConnectionServer = new NioLongConnectionServer();
-		nioLongConnectionServer.startNIOServer(httpPort);
+		final ZServer server = new ZServer();
+		server.startServer(httpPort);
 	}
 
 	private static void injectForStarter(final String className) {
@@ -275,16 +273,12 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 	@Override
 	public void scanZSynchronously(final ZApplicationStartupInfo startupInfo) {
-		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		ZSynchronouslyScanner.scan(ZComponent.class, pn);
-		ZSynchronouslyScanner.scan(ZService.class, pn);
+		ZSynchronouslyScanner.scan(startupInfo);
 	}
 
 	@Override
 	public void scanZAsync(final ZApplicationStartupInfo startupInfo) {
-		final String[] pn = startupInfo.getPackageNameList().toArray(new String[0]);
-		ZAsyncScanner.scan(ZComponent.class, pn);
-		ZAsyncScanner.scan(ZService.class, pn);
+		ZAsyncScanner.scan(startupInfo);
 	}
 
 }
