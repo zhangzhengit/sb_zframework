@@ -9,7 +9,6 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -30,6 +29,7 @@ import vo.vortex.api.StaticController;
 import vo.vortex.api.StaticResourcesPreCompressionService;
 import vo.vortex.bean.ZObjectGeneratorStarter;
 import vo.vortex.bean.ZSingleton;
+import vo.vortex.common.CU;
 import vo.vortex.common.STU;
 import vo.vortex.configuration.properties.CommonConfigurationProperties;
 import vo.vortex.configuration.properties.ServerConfigurationProperties;
@@ -145,7 +145,7 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 		final ZClass proxyZClass = new ZClass();
 		proxyZClass.setPackage1(new ZPackage("vo.vortex.generated"));
 		proxyZClass.setName("ZAPIRoute");
-		proxyZClass.setImplementsSet(Set.of(IAPIRoute.class.getCanonicalName()));
+		proxyZClass.setImplementsSet(CU.ofSet(IAPIRoute.class.getCanonicalName()));
 
 		proxyZClass.addField(new ZField(String.class.getName(), "GET",
 				MethodEnum.class.getCanonicalName() + ".GET.getMethod()"));
@@ -172,19 +172,19 @@ public class ZApplicationStartupAdapter implements ZApplicationStartupProcessor 
 
 		final ZMethod routeMethod = new ZMethod();
 		routeMethod.setName("route");
-		routeMethod.setThrowsE(List.of(Exception.class.getCanonicalName()));
+		routeMethod.setThrowsE(CU.ofList(Exception.class.getCanonicalName()));
 		routeMethod.setReturnType(APIRouteR.class.getCanonicalName());
 
 		routeMethod.setBodyReturn("return NOTMATCHED;");
 
 		final Object[] a = {};
-		routeMethod.setMethodArgList(List.of(
+		routeMethod.setMethodArgList(CU.ofList(
 				new ZMethodArg(String.class.getCanonicalName(), "path"),
 				new ZMethodArg(Object.class.getCanonicalName(), "controller"),
 				new ZMethodArg(ZRMethod.class.getCanonicalName(), "zrMethod"),
 				new ZMethodArg(a.getClass(), "parameters")));
 
-		proxyZClass.setMethodSet(Set.of(routeMethod));
+		proxyZClass.setMethodSet(CU.ofSet(routeMethod));
 
 		final StringBuilder routeBody =
 				new StringBuilder("final String httpMethod = zrMethod.getHttpMethod();");

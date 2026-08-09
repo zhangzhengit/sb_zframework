@@ -39,10 +39,7 @@ final class ZMain {
 
 	public static void start(final List<String> packageNameList, final boolean httpEnable, final String[] args) {
 
-		final CompletableFuture<Set<Class<?>>> future = CompletableFuture
-				.supplyAsync(() -> ClassMap.scanPackage(packageNameList.toArray(new String[0])));
-
-		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable,  args,future);
+		final ZApplicationStartupInfo startupInfo = new ZApplicationStartupInfo(packageNameList, httpEnable, args);
 
 		final ZApplicationStartupProcessor processor = new ZApplicationStartupAdapter();
 
@@ -61,13 +58,14 @@ final class ZMain {
 			LOG.debug("校验ZValidator");
 			processor.startValidator(startupInfo);
 
-			// 校验 @ZEventListener 方法
-			LOG.debug("校验@" + ZEventListener.class.getSimpleName());
-			processor.startEventPublisher(startupInfo);
 
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			LOG.debug("创建@" + ZConfigurationProperties.class.getSimpleName() + "对象");
 			processor.scanConfigurationProperties(startupInfo);
+
+			// 校验 @ZEventListener 方法
+			LOG.debug("校验@" + ZEventListener.class.getSimpleName());
+			processor.startEventPublisher(startupInfo);
 
 			// 0.01 校验端口号
 			// FIXME 2024年12月31日 下午6:34:24 zhangzhen : 看看把这一步放在最前面，要先更改 scanConfigurationProperties

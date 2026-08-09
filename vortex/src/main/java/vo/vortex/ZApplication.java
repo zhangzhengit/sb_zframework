@@ -24,7 +24,7 @@ public class ZApplication {
 
 	private static final ZLog2 LOG = ZLog2.getInstance();
 
-	public static final String APP_PACKAGE_NAME = ZApplication.class.getPackageName();
+	public static final String APP_PACKAGE_NAME = ZApplication.class.getPackage().getName();
 
 	public static ZApplicationContext run(final String[] args) {
 		return run(Collections.emptyList(), true, args);
@@ -116,8 +116,7 @@ public class ZApplication {
 
 		System.out.println(ok);
 
-		return new ZApplicationContext(List.copyOf(scanPackageNameList),
-				httpEnable, args, ZProperties.getInstance());
+		return new ZApplicationContext(scanPackageNameList, httpEnable, args, ZProperties.getInstance());
 	}
 
 	public static void printFAIL() {
