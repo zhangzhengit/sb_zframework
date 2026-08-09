@@ -44,11 +44,11 @@ final class ZMain {
 
 			processor.startValidator(startupInfo);
 
-			// 校验 @ZEventListener 方法
-			processor.startEventPublisher(startupInfo);
-
 			// 0 读取 @ZConfigurationProperties 配置，创建配置类
 			processor.scanConfigurationProperties(startupInfo);
+
+			// 校验 @ZEventListener 方法
+			processor.startEventPublisher(startupInfo);
 
 			// 0.01 校验端口号
 			// FIXME 2024年12月31日 下午6:34:24 zhangzhen : 看看把这一步放在最前面，要先更改 scanConfigurationProperties
